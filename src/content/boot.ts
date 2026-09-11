@@ -142,16 +142,32 @@ function canControlPlayback() {
   return Boolean(me && state.controllers.includes(me));
 }
 
-function canAcceptSyncFrom(from?: string, sentAt?: number) {
-  if (from && from === myPeerId()) return false;
-  if (Date.now() < ignoreIncomingUntil) return false;
-  if (sentAt && lastControlSentAt && sentAt < lastControlSentAt) return false;
+function isController(from?: string) {
+  if (!from) return false;
+  if (from === hostPeerId()) return true;
   const state = getState();
   if (state.controllers.includes("*")) return true;
-  const hostId = hostPeerId();
-  if (!from) return state.party?.role === "guest";
-  if (from === hostId) return true;
   return state.controllers.includes(from);
+}
+
+function canAcceptSyncFrom(
+  from?: string,
+  sentAt?: number,
+  mode?: "control" | "heartbeat" | "followup",
+) {
+  if (from && from === myPeerId()) return false;
+  if (!isController(from) && from !== hostPeerId()) {
+    if (!from) return getState().party?.role === "guest";
+    return false;
+  }
+  const isControl = mode === "control";
+  if (isControl) {
+    if (sentAt && lastControlSentAt && sentAt < lastControlSentAt) return false;
+    return true;
+  }
+  if (Date.now() < ignoreIncomingUntil) return false;
+  if (sentAt && lastControlSentAt && sentAt <= lastControlSentAt) return false;
+  return true;
 }
 
 function applyControllers(list: string[]) {
@@ -231,9 +247,10 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
   if (applying.current || Date.now() < suppressOutUntil || adapter.isAdPlaying()) return;
   const player = adapter.getState();
   if (!player) return;
+  const sentAt = Date.now();
   if (reason === "control") {
     ignoreIncomingUntil = Date.now() + 1200;
-    lastControlSentAt = Date.now();
+    lastControlSentAt = sentAt;
     const action = classifyPlayback(player);
     if (action) postPlaybackNotice(action, player.time);
   } else {
@@ -245,12 +262,13 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
       type: "sync",
       paused: player.paused,
       time: player.time,
-      sentAt: Date.now(),
+      sentAt,
       platform: adapter.platform,
       contentId: adapter.getContentId() || "",
       watchUrl: currentWatchUrl(adapter, party.roomId),
       from: myPeerId() || undefined,
       controllers: party.role === "host" ? withHostController(state.controllers) : undefined,
+      mode: reason,
     } satisfies ProtocolMessage,
   });
 }
@@ -320,12 +338,21 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     applyControllers(message.controllers);
   }
   if (message.type === "sync") {
-    if (!canAcceptSyncFrom(message.from, message.sentAt)) return;
+    const mode = message.mode ?? "control";
+    if (!canAcceptSyncFrom(message.from, message.sentAt, mode)) return;
+    const local = adapter.getState();
+    if (mode !== "control" && local && local.paused !== message.paused && message.from !== hostPeerId()) {
+      return;
+    }
     lastSync = { paused: message.paused, time: message.time, sentAt: message.sentAt };
+    if (mode === "control") {
+      lastControlSentAt = Math.max(lastControlSentAt, message.sentAt);
+      ignoreIncomingUntil = Date.now() + 800;
+    }
     suppressOutUntil = Date.now() + 800;
     const result = await applyHostSync(adapter, message, applying);
     if (result === "gesture") setState({ needsGesture: true });
-    if (getState().party?.role === "host") {
+    if (getState().party?.role === "host" && mode === "control") {
       window.clearTimeout(hostFollowupTimer);
       hostFollowupTimer = window.setTimeout(() => {
         if (Date.now() < ignoreIncomingUntil) return;

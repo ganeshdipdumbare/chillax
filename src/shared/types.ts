@@ -84,6 +84,7 @@ export type ProtocolMessage =
       from?: string;
       guestPlayback?: boolean;
       controllers?: string[];
+      mode?: "control" | "heartbeat" | "followup";
     }
   | { type: "control-policy"; controllers: string[]; guestPlayback?: boolean }
   | {
