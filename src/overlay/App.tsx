@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chat } from "./Chat";
-import { CloseIcon, CopyIcon, IconButton } from "./icons";
+import { CloseIcon, CopyIcon, HideIcon, IconButton } from "./icons";
 import { AvatarFace } from "./AvatarFace";
 import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
@@ -24,10 +24,13 @@ export function OverlayApp({ session }: { session: SessionController }) {
   }), []);
 
   const canWatch = state.isWatchPage && Boolean(state.contentId);
-  const inParty = state.status === "in-party" || state.status === "connecting";
+  const docked = state.status === "in-party";
+  const connecting = state.status === "connecting";
+  const needMedia = docked || connecting;
+  const lounge = !docked;
 
   useEffect(() => {
-    if (!inParty) {
+    if (!needMedia) {
       session.registerMediaWindow(null);
       return;
     }
@@ -46,7 +49,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
       iframe.removeEventListener("load", onLoad);
       session.registerMediaWindow(null);
     };
-  }, [session, inParty]);
+  }, [session, needMedia]);
 
   const people = useMemo(
     () =>
@@ -60,14 +63,27 @@ export function OverlayApp({ session }: { session: SessionController }) {
     [state.participants],
   );
 
+  const panelClass = [
+    "panel",
+    state.overlayOpen ? null : "is-collapsed",
+    state.overlayOpen && lounge ? "is-lounge" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <>
-      {!inParty || state.overlayOpen ? null : (
-        <button className="tab" type="button" onClick={() => session.toggleOverlay(true)}>
-          Chat
+      {!docked || state.overlayOpen ? null : (
+        <button
+          className="tab"
+          type="button"
+          title="Show chat — you are still in the party"
+          onClick={() => session.toggleOverlay(true)}
+        >
+          Show chat
         </button>
       )}
-      <div className={state.overlayOpen ? "panel" : "panel is-collapsed"}>
+      <div className={panelClass}>
       <ReactionSky bursts={state.bursts} />
       <header className="header">
         <div className="brand">
@@ -92,9 +108,21 @@ export function OverlayApp({ session }: { session: SessionController }) {
             <CopyIcon />
           </IconButton>
         ) : null}
-        <IconButton label="Hide chat" onClick={() => session.toggleOverlay(false)}>
-          <CloseIcon />
-        </IconButton>
+        {docked ? (
+          <button
+            className="text-btn"
+            type="button"
+            title="Hide chat — you stay in the party"
+            onClick={() => session.toggleOverlay(false)}
+          >
+            Hide chat
+            <HideIcon />
+          </button>
+        ) : (
+          <IconButton label="Close Chillax" onClick={() => session.toggleOverlay(false)}>
+            <CloseIcon />
+          </IconButton>
+        )}
       </header>
 
       <div className="body">
@@ -116,8 +144,17 @@ export function OverlayApp({ session }: { session: SessionController }) {
             {state.error}
           </div>
         ) : null}
+        {needMedia ? (
+          <iframe
+            ref={iframeRef}
+            className={docked && state.overlayOpen ? "media-frame" : "media-frame is-hid"}
+            title="Chillax voice and video"
+            allow="camera; microphone; autoplay"
+            src={mediaPageUrl()}
+          />
+        ) : null}
 
-        {!inParty ? (
+        {lounge ? (
           <div className="idle">
             <div className="hero">
               <div className="storyboard">
@@ -125,7 +162,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               </div>
               <strong>Make the couch bigger.</strong>
               <span className="lede">
-                Pick a face, start a party, react in real time.
+                Pick a face, start a party, then chat on the right.
               </span>
             </div>
             <label>
@@ -144,52 +181,75 @@ export function OverlayApp({ session }: { session: SessionController }) {
                 onChange={(id) => void session.setAvatar(id)}
               />
             </label>
-            <button
-              className="primary"
-              type="button"
-              disabled={!canWatch || state.status === "connecting"}
-              onClick={() => session.startParty()}
-            >
-              {canWatch ? "Start the night" : "Open a video to start"}
-            </button>
-            <label>
-              Join with code
-              <input
-                type="text"
-                value={joinCode}
-                placeholder="cxab12cd"
-                onChange={(event) => setJoinCode(event.target.value)}
-              />
-            </label>
-            <button
-              className="ghost"
-              type="button"
-              disabled={!canWatch || !joinCode.trim()}
-              onClick={() => session.joinParty(joinCode.trim())}
-            >
-              Slide into this party
-            </button>
-          </div>
-        ) : (
-          <>
-            <iframe
-              ref={iframeRef}
-              className="media-frame"
-              title="Chillax voice and video"
-              allow="camera; microphone; autoplay"
-              src={mediaPageUrl()}
-            />
-            {state.status === "connecting" ? (
-              <div className="party-code">
+            {connecting ? (
+              <div className="join-form">
+                <p className="lede">{state.callDetail || "Connecting…"}</p>
                 <button className="ghost" type="button" onClick={() => session.leaveParty()}>
                   Cancel
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <>
+                <button
+                  className="primary"
+                  type="button"
+                  disabled={!canWatch}
+                  onClick={() => session.startParty()}
+                >
+                  {canWatch ? "Start the night" : "Open a video to start"}
+                </button>
+                <form
+                  className="join-form"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    session.joinParty(joinCode);
+                  }}
+                >
+                  <label>
+                    Join with code
+                    <input
+                      type="text"
+                      value={joinCode}
+                      placeholder="cxab12cd"
+                      autoComplete="off"
+                      spellCheck={false}
+                      onChange={(event) => setJoinCode(event.target.value)}
+                    />
+                  </label>
+                  <button className="ghost" type="submit" disabled={!joinCode.trim()}>
+                    Slide into this party
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        ) : (
+          <>
             {state.party ? (
               <div className="party-code">
                 <strong className="code-pill">{copied ? "Invite copied" : state.party.roomId}</strong>
-                <button className="ghost" type="button" onClick={() => session.leaveParty()}>
+                {state.party.role === "host" ? (
+                  <button
+                    className="control-toggle"
+                    type="button"
+                    aria-pressed={state.guestPlayback}
+                    onClick={() => session.setGuestPlayback(!state.guestPlayback)}
+                  >
+                    <span>
+                      {state.guestPlayback
+                        ? "Friends can play, pause, and seek"
+                        : "Only you control playback"}
+                    </span>
+                    <span className="switch" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <p className="control-hint">
+                    {state.guestPlayback
+                      ? "You can play, pause, and seek for everyone."
+                      : "Playback follows the host."}
+                  </p>
+                )}
+                <button className="ghost is-leave" type="button" onClick={() => session.leaveParty()}>
                   Leave party
                 </button>
               </div>
@@ -202,10 +262,12 @@ export function OverlayApp({ session }: { session: SessionController }) {
               onReact={(emoji) => session.sendReaction(emoji)}
             />
             <p className="status">
-              {state.callDetail ||
-                (state.callConnected
-                  ? "Voice is P2P. Camera starts off. Smash a reaction."
-                  : "Call could not connect. Chat and reactions may still work.")}
+              {state.status === "connecting"
+                ? state.callDetail || "Connecting…"
+                : state.callDetail ||
+                  (state.callConnected
+                    ? "Voice is P2P. Camera starts off. Smash a reaction."
+                    : "Call could not connect. Chat and reactions may still work.")}
             </p>
           </>
         )}

@@ -151,8 +151,10 @@ export function MediaApp() {
     roomRef.current = room;
     try {
       if (init.role === "host") {
+        setStatus("Opening your party…");
         await room.startHost(init.roomId, stream, init.nickname, init.avatarId || "fox");
       } else {
+        setStatus("Looking for that party…");
         await room.join(init.roomId, stream, init.nickname, init.avatarId || "fox");
       }
       if (generation !== generationRef.current) {

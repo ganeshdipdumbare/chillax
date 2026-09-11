@@ -1,8 +1,16 @@
 # Chillax
 
-Free Chrome watch party for **YouTube** and **Netflix**: synced playback, group chat, voice/video, avatars, and emoji reactions.
+<p align="center">
+  <img src="public/art/lounge.svg" width="560" alt="Two blob friends on a couch watching a movie" />
+</p>
+
+<p align="center"><strong>Make the couch bigger.</strong></p>
+
+Free Chrome watch party for **YouTube** and **Netflix**: synced playback, group chat, voice/video, avatars, and emoji that float up the screen.
 
 Everyone uses their own YouTube or Netflix account. Chillax does not skip, hide, or block platform ads, and it does not re-stream or decrypt video.
+
+The overlay is a cream dotted storyboard on night purple — blob buddies, mint / lilac / butter sparkles — not a generic dark sidebar.
 
 ## Install (unpacked, for you)
 
@@ -48,7 +56,7 @@ npm run pack-site
 npx vercel deploy --prod
 ```
 
-The site is `install.html` plus `chillax-<version>.zip`. They download, unzip, and follow the steps. Chrome still will not install from a webpage the way the Web Store does.
+The site is `install.html` plus the storyboard art and `chillax-<version>.zip`. They download, unzip, and follow the steps. Chrome still will not install from a webpage the way the Web Store does.
 
 Without Vercel, pack locally:
 
@@ -62,25 +70,35 @@ They must leave the unzipped folder on disk. After Chrome restarts, if a “Disa
 
 ## Storybook
 
-UI pieces (avatars, chat, reactions, call tiles) run in isolation:
+UI pieces (avatars, chat, reactions, lounge art) run in isolation:
 
 ```bash
 npm run storybook
 ```
 
-Open [http://localhost:6006](http://localhost:6006). Static export: `npm run build-storybook`.
+Open [http://localhost:6006](http://localhost:6006). Static export: `npm run build-storybook`. Look at **Lounge / FullSidebar** for the floating setup card and the right-side chat dock.
 
 ## How to party
 
+<p align="center">
+  <img src="public/art/dock.svg" width="420" alt="Movie on the left, party chat docked on the right" />
+</p>
+
 1. Host opens the same video everyone will watch.
-2. Pick an avatar, then **Start the night** in the Chillax sidebar or popup.
-3. Copy the invite link (YouTube query `?chillax=`, Netflix hash `#chillax=`).
-4. Guests install Chillax, open the link, and allow the microphone when prompted.
-5. Camera starts **off**. Mute is one click. Use the reaction bar under chat. Parties cap at **8** people.
+2. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code).
+3. Chat **docks on the right**. The movie stays on the left. **Hide chat** tucks the panel without leaving; **Leave party** is the pink control.
+4. Copy the invite link (YouTube query `?chillax=`, Netflix hash `#chillax=`).
+5. Guests install Chillax, open the link, and allow the microphone when prompted.
+6. Camera starts **off**. Mute is one click. Use the reaction bar under chat. Parties cap at **8** people.
+7. Hosts keep playback by default (**Only you control playback**). Turn on **Friends can play, pause, and seek** if you want guests to drive.
 
 If Netflix strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. They must already be on the same title.
 
 A YouTube host cannot sync a Netflix guest.
+
+<p align="center">
+  <img src="public/art/popcorn.svg" width="280" alt="A smiling popcorn bucket with a soda" />
+</p>
 
 ## Voice and video
 
@@ -136,8 +154,8 @@ In the dashboard, **New item** → upload `chillax-extension.zip`.
 You will need:
 
 - **Icon:** 128×128 Cx mark (already at `public/icons/icon128.png`).
-- **Screenshots:** at least one 1280×800 or 640×400 of the sidebar on YouTube (and Netflix if you can). No other product’s trademarks in a misleading way. Crop so Chillax is obviously a separate overlay, not YouTube/Netflix UI.
-- **Small promo tile** (optional): 440×280.
+- **Screenshots:** at least one 1280×800 or 640×400 of the overlay on YouTube (and Netflix if you can). Crop so Chillax is obviously a separate overlay, not YouTube/Netflix UI. The cream storyboard and Cx conic mark are the look — not a generic dark drawer.
+- **Small promo tile** (optional): 440×280. [public/art/lounge.svg](public/art/lounge.svg) is the same drawing as the overlay.
 - **Name:** Chillax
 - **Summary:** Watch YouTube and Netflix together with synced playback, chat, and voice/video.
 - **Category:** Social or Fun (pick the closest).
@@ -180,7 +198,7 @@ If rejected, Google emails a reason. Fix, bump the version, upload a new zip.
 
 Use two Chrome profiles with the unpacked extension.
 
-- YouTube: same video, play/pause/seek follow the host, chat and reactions appear in the sidebar, SPA navigation still finds the player.
+- YouTube: same video; play/pause/seek follow the host unless the host turns on “Friends can play, pause, and seek”; chat and reactions appear in the right dock; SPA navigation still finds the player.
 - Voice/video: mic both ways; camera tiles only in the Chillax panel; mute and camera-off; movie audio still plays.
 - Netflix: logged-in profiles that can play the same title; hash invite or join-with-code; wrong-title prompt if IDs differ.
 

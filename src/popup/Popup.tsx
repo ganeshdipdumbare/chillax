@@ -117,29 +117,31 @@ export function Popup() {
               >
                 Start the night
               </button>
-              <label>
-                Join with code
-                <input
-                  type="text"
-                  value={joinCode}
-                  placeholder="cxab12cd"
-                  onChange={(event) => setJoinCode(event.target.value)}
-                />
-              </label>
-              <button
-                className="ghost"
-                type="button"
-                disabled={!joinCode.trim()}
-                onClick={() =>
-                  void send({ type: "CHILLAX_JOIN", roomId: joinCode.trim() }).then(refresh)
-                }
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void send({ type: "CHILLAX_JOIN", roomId: joinCode }).then(refresh);
+                }}
               >
-                Slide into this party
-              </button>
+                <label>
+                  Join with code
+                  <input
+                    type="text"
+                    value={joinCode}
+                    placeholder="cxab12cd"
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(event) => setJoinCode(event.target.value)}
+                  />
+                </label>
+                <button className="ghost" type="submit" disabled={!joinCode.trim()}>
+                  Slide into this party
+                </button>
+              </form>
             </>
           )}
           <button className="ghost" type="button" onClick={() => void send({ type: "CHILLAX_TOGGLE_OVERLAY" })}>
-            Toggle sidebar
+            Show or hide chat
           </button>
         </>
       ) : null}

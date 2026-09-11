@@ -35,6 +35,17 @@ export function CloseIcon() {
   );
 }
 
+export function HideIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06L7.28 12.78a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"
+      />
+    </svg>
+  );
+}
+
 export function CopyIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">

@@ -12,14 +12,37 @@ export function randomRoomId(): string {
 }
 
 export function parseRoomToken(href = location.href): string | null {
-  const url = new URL(href);
-  const fromQuery = url.searchParams.get(TOKEN_KEY);
-  if (fromQuery) return fromQuery.trim();
-  const hash = url.hash.replace(/^#/, "");
-  if (!hash) return null;
-  const params = new URLSearchParams(hash);
-  const fromHash = params.get(TOKEN_KEY);
-  return fromHash?.trim() || null;
+  try {
+    const url = new URL(href);
+    const fromQuery = url.searchParams.get(TOKEN_KEY);
+    if (fromQuery) return fromQuery.trim();
+    const hash = url.hash.replace(/^#/, "");
+    if (!hash) return null;
+    const params = new URLSearchParams(hash);
+    const fromHash = params.get(TOKEN_KEY);
+    return fromHash?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizeRoomCode(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let candidate = trimmed;
+  const named = /(?:^|[?&#/])chillax=([^&\s#]+)/i.exec(trimmed);
+  if (named?.[1]) {
+    try {
+      candidate = decodeURIComponent(named[1]);
+    } catch {
+      candidate = named[1];
+    }
+  } else {
+    const fromUrl = parseRoomToken(trimmed);
+    if (fromUrl) candidate = fromUrl;
+  }
+  const compact = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return compact.match(new RegExp(`cx[${ROOM_CHARS}]{6}`))?.[0] ?? null;
 }
 
 export function buildInviteUrl(

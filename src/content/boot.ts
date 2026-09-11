@@ -3,6 +3,7 @@ import {
   buildInviteUrl,
   clearTokenFromLocation,
   extensionOrigin,
+  normalizeRoomCode,
   randomRoomId,
   writeTokenToLocation,
 } from "../shared/ids";
@@ -54,9 +55,26 @@ function stopHeartbeat() {
   }
 }
 
+function canSendSync() {
+  const state = getState();
+  if (state.status !== "in-party" || !state.party) return false;
+  return state.party.role === "host" || state.guestPlayback;
+}
+
+function sendControlPolicy() {
+  const state = getState();
+  if (state.party?.role !== "host") return;
+  sendToMedia({
+    type: "send-protocol",
+    message: { type: "control-policy", guestPlayback: state.guestPlayback } satisfies ProtocolMessage,
+  });
+}
+
 function broadcastSync(adapter: PlayerAdapter) {
   const state = getState();
-  if (state.party?.role !== "host" || state.status !== "in-party") return;
+  if (!canSendSync()) return;
+  const party = state.party;
+  if (!party) return;
   if (applying.current || adapter.isAdPlaying()) return;
   const player = adapter.getState();
   if (!player) return;
@@ -69,7 +87,8 @@ function broadcastSync(adapter: PlayerAdapter) {
       sentAt: Date.now(),
       platform: adapter.platform,
       contentId: adapter.getContentId() || "",
-      watchUrl: currentWatchUrl(adapter, state.party.roomId),
+      watchUrl: currentWatchUrl(adapter, party.roomId),
+      guestPlayback: party.role === "host" ? state.guestPlayback : undefined,
     } satisfies ProtocolMessage,
   });
 }
@@ -107,6 +126,14 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     addBurst(message.emoji);
     return;
   }
+  if (message.type === "control-policy") {
+    if (state.party?.role === "host") return;
+    setState({ guestPlayback: message.guestPlayback });
+    return;
+  }
+  if (message.type === "hello") {
+    if (state.party?.role === "host") sendControlPolicy();
+  }
   if (message.type === "sync" || message.type === "hello") {
     const contentId = adapter.getContentId();
     if (
@@ -120,9 +147,23 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     }
     setState({ wrongTitle: null });
   }
-  if (message.type === "sync" && state.party?.role === "guest") {
-    const result = await applyHostSync(adapter, message, applying);
-    if (result === "gesture") setState({ needsGesture: true });
+  if (message.type === "sync" && typeof message.guestPlayback === "boolean" && state.party?.role !== "host") {
+    setState({ guestPlayback: message.guestPlayback });
+  }
+  if (message.type === "sync") {
+    const role = getState().party?.role;
+    if (role === "host") {
+      if (!getState().guestPlayback) return;
+      const result = await applyHostSync(adapter, message, applying);
+      if (result === "gesture") setState({ needsGesture: true });
+      applying.current = false;
+      broadcastSync(adapter);
+      return;
+    }
+    if (role === "guest") {
+      const result = await applyHostSync(adapter, message, applying);
+      if (result === "gesture") setState({ needsGesture: true });
+    }
   }
 }
 
@@ -153,6 +194,8 @@ export async function boot(adapter: PlayerAdapter) {
         status: "connecting",
         error: null,
         overlayOpen: true,
+        callDetail: "Opening your party…",
+        guestPlayback: false,
         messages: [],
         participants: [],
         bursts: [],
@@ -162,8 +205,14 @@ export async function boot(adapter: PlayerAdapter) {
     joinParty: (roomId: string) => {
       const status = getState().status;
       if (status === "connecting" || status === "in-party") return;
-      const code = roomId.replace(/^#/, "").trim();
-      if (!code) return;
+      const code = normalizeRoomCode(roomId);
+      if (!code) {
+        setState({
+          error: "That doesn’t look like a party code. Paste the invite link or the cx-code.",
+          overlayOpen: true,
+        });
+        return;
+      }
       if (!adapter.isWatchPage()) {
         setState({
           error: "Open the same video or title as the host, then join.",
@@ -177,6 +226,8 @@ export async function boot(adapter: PlayerAdapter) {
         status: "connecting",
         error: null,
         overlayOpen: true,
+        callDetail: "Looking for that party…",
+        guestPlayback: false,
         messages: [],
         participants: [],
         bursts: [],
@@ -198,6 +249,7 @@ export async function boot(adapter: PlayerAdapter) {
         participants: [],
         bursts: [],
         callDetail: null,
+        guestPlayback: false,
         overlayOpen: false,
       });
       pushPageOffset(adapter.platform, false);
@@ -247,6 +299,12 @@ export async function boot(adapter: PlayerAdapter) {
       const next = open ?? !getState().overlayOpen;
       setState({ overlayOpen: next });
       pushPageOffset(adapter.platform, next);
+    },
+    setGuestPlayback: (on: boolean) => {
+      if (getState().party?.role !== "host") return;
+      setState({ guestPlayback: on });
+      sendControlPolicy();
+      broadcastSync(adapter);
     },
     enablePlayback: () => {
       void adapter.play();
@@ -316,7 +374,9 @@ export async function boot(adapter: PlayerAdapter) {
         status: "in-party",
         party: { role, roomId, inviteUrl },
         error: null,
+        callDetail: null,
       });
+      pushPageOffset(adapter.platform, true);
       if (role === "host") {
         startHeartbeat(adapter);
         broadcastSync(adapter);

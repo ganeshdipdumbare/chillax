@@ -12,6 +12,22 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
   };
   const onKey = (event: KeyboardEvent) => {
     if (!typingInOverlay()) return;
+    const active = shadow.activeElement;
+    if (
+      (event.key === "Enter" || event.key === "NumpadEnter") &&
+      !event.repeat &&
+      !event.isComposing &&
+      active instanceof HTMLElement &&
+      active.tagName === "INPUT"
+    ) {
+      const form = active.closest("form");
+      if (form) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        form.requestSubmit();
+        return;
+      }
+    }
     event.stopImmediatePropagation();
   };
   for (const type of ["keydown", "keyup", "keypress"] as const) {

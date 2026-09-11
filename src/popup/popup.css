@@ -18,6 +18,11 @@ main {
   padding: 16px;
 }
 
+form {
+  display: grid;
+  gap: 10px;
+}
+
 .brand {
   display: flex;
   gap: 10px;

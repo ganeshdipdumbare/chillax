@@ -51,6 +51,7 @@ export type ContentState = {
   wrongTitle: { hostUrl: string; hostContentId: string } | null;
   needsGesture: boolean;
   overlayOpen: boolean;
+  guestPlayback: boolean;
 };
 
 export type ProtocolMessage =
@@ -76,7 +77,9 @@ export type ProtocolMessage =
       platform: Platform;
       contentId: string;
       watchUrl: string;
+      guestPlayback?: boolean;
     }
+  | { type: "control-policy"; guestPlayback: boolean }
   | {
       type: "media-state";
       peerId: string;

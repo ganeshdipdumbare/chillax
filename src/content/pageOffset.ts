@@ -1,4 +1,5 @@
 import { OVERLAY_RESERVE } from "../shared/constants";
+import { getState } from "../shared/store";
 
 const STYLE_ID = "chillax-page-offset";
 const HOST_ID = "chillax-root";
@@ -14,8 +15,11 @@ const PINNED_PROPS = [
 ] as const;
 
 let resizeTimer = 0;
+let restoreTimer = 0;
+let theaterTimer = 0;
 let layoutGen = 0;
 let pinning = false;
+let fsReserve = 0;
 let hostGuard: MutationObserver | null = null;
 let fsLayoutGuard: MutationObserver | null = null;
 let pinnedEls: HTMLElement[] = [];
@@ -69,6 +73,16 @@ html.chillax-overlay-open:not(.chillax-fs) #player-theater-container,
 html.chillax-overlay-open:not(.chillax-fs) #player-wide-container,
 html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #full-bleed-container,
 html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[full-bleed-player] #full-bleed-container,
+html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[fullscreen] #full-bleed-container {
+  position: relative !important;
+  width: calc(100vw - ${space}) !important;
+  max-width: calc(100vw - ${space}) !important;
+  left: 0 !important;
+  right: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9;
+}
 html.chillax-overlay-open:not(.chillax-fs) #movie_player,
 html.chillax-overlay-open:not(.chillax-fs) .html5-video-player,
 html.chillax-overlay-open:not(.chillax-fs) .html5-video-container {
@@ -76,15 +90,7 @@ html.chillax-overlay-open:not(.chillax-fs) .html5-video-container {
   width: 100% !important;
   max-width: 100% !important;
   left: 0 !important;
-  right: 0 !important;
-}
-html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #full-bleed-container,
-html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[full-bleed-player] #full-bleed-container,
-html.chillax-overlay-open:not(.chillax-fs) #player-theater-container,
-html.chillax-overlay-open:not(.chillax-fs) #player-wide-container {
-  height: auto !important;
-  max-height: none !important;
-  aspect-ratio: 16 / 9;
+  right: auto !important;
 }
 html.chillax-overlay-open:not(.chillax-fs) video.html5-main-video,
 html.chillax-overlay-open:not(.chillax-fs) video.video-stream {
@@ -96,8 +102,8 @@ html.chillax-overlay-open:not(.chillax-fs) .watch-video--player-view,
 html.chillax-overlay-open:not(.chillax-fs) [data-uia="player"],
 html.chillax-overlay-open:not(.chillax-fs) .nfp,
 html.chillax-overlay-open:not(.chillax-fs) .nfp.AkiraPlayer {
-  width: 100% !important;
-  max-width: 100% !important;
+  width: calc(100vw - ${space}) !important;
+  max-width: calc(100vw - ${space}) !important;
 }
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-bottom,
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-top,
@@ -118,30 +124,67 @@ function exitYouTubeTheater() {
   document.querySelector<HTMLElement>(".ytp-size-button")?.click();
 }
 
+function scheduleExitTheater() {
+  window.clearTimeout(theaterTimer);
+  exitYouTubeTheater();
+  theaterTimer = window.setTimeout(exitYouTubeTheater, 280);
+}
+
 function youtubePlayer() {
   return document.querySelector("#movie_player") as
     | (HTMLElement & { setSize?: (w: number, h: number) => void })
     | null;
 }
 
-function sizePlayerToReserve(reserve: number) {
-  const gen = ++layoutGen;
-  const apply = () => {
-    if (gen !== layoutGen) return;
-    const { width, height } = leftoverSize(reserve);
-    if (document.fullscreenElement) {
-      youtubePlayer()?.setSize?.(width, height);
-      if (reserve > 0) {
-        clearPinnedStyles();
-        applyFullscreenPlayerLayout(reserve);
-      }
-    } else {
-      window.dispatchEvent(new Event("resize"));
-    }
+function leftoverWidth() {
+  return Math.max(160, window.innerWidth - OVERLAY_RESERVE);
+}
+
+function windowedPlayerSize(capToReserve = false) {
+  const cap = leftoverWidth();
+  const box =
+    document.querySelector<HTMLElement>("#ytd-player") ||
+    document.querySelector<HTMLElement>("#player-container") ||
+    document.querySelector<HTMLElement>("[data-uia='player']") ||
+    youtubePlayer();
+  const width = Math.max(160, Math.round(box?.clientWidth || cap));
+  const measured = Math.round(box?.clientHeight || 0);
+  const height = measured >= 90 ? measured : Math.round((width * 9) / 16);
+  if (!capToReserve) return { width, height };
+  const docked = Math.min(width, cap);
+  return {
+    width: docked,
+    height: measured >= 90 ? Math.min(measured, window.innerHeight) : Math.round((docked * 9) / 16),
   };
-  apply();
+}
+
+function sizePlayerToReserve(reserve: number, restore = false) {
+  const gen = ++layoutGen;
+  const apply = (emitResize: boolean) => {
+    if (gen !== layoutGen) return;
+    placeHost();
+    if (document.fullscreenElement) {
+      const { width, height } = leftoverSize(reserve);
+      youtubePlayer()?.setSize?.(width, height);
+      clearPinnedStyles();
+      applyFullscreenPlayerLayout(reserve);
+      return;
+    }
+    if (restore) {
+      const { width, height } = windowedPlayerSize();
+      youtubePlayer()?.setSize?.(width, height);
+      if (emitResize) window.dispatchEvent(new Event("resize"));
+      return;
+    }
+    if (emitResize) window.dispatchEvent(new Event("resize"));
+    const { width, height } = windowedPlayerSize(true);
+    youtubePlayer()?.setSize?.(width, height);
+  };
+  apply(true);
   window.clearTimeout(resizeTimer);
-  resizeTimer = window.setTimeout(apply, 80);
+  window.clearTimeout(restoreTimer);
+  resizeTimer = window.setTimeout(() => apply(false), 80);
+  restoreTimer = window.setTimeout(() => apply(false), 280);
 }
 
 function fullscreenTarget(): Element {
@@ -248,7 +291,7 @@ function watchFullscreenLayout(active: boolean) {
   clearPinnedStyles();
   const fs = document.fullscreenElement;
   if (!active || !(fs instanceof HTMLElement)) return;
-  applyFullscreenPlayerLayout(OVERLAY_RESERVE);
+  applyFullscreenPlayerLayout(fsReserve);
   let debounce = 0;
   fsLayoutGuard = new MutationObserver(() => {
     if (pinning || !document.fullscreenElement) return;
@@ -256,7 +299,7 @@ function watchFullscreenLayout(active: boolean) {
     debounce = window.setTimeout(() => {
       if (pinning || !document.fullscreenElement) return;
       clearPinnedStyles();
-      applyFullscreenPlayerLayout(OVERLAY_RESERVE);
+      applyFullscreenPlayerLayout(fsReserve);
     }, 50);
   });
   fsLayoutGuard.observe(fs, {
@@ -266,35 +309,55 @@ function watchFullscreenLayout(active: boolean) {
   });
 }
 
+function isDocked(open: boolean) {
+  return open && getState().status === "in-party";
+}
+
 export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) {
   const fullscreen = Boolean(document.fullscreenElement);
+  const docked = isDocked(open);
+  const lounge = open && !docked;
   placeHost();
   watchHostParent();
 
   const root = document.documentElement;
-  root.classList.toggle("chillax-overlay-open", open);
+  root.classList.toggle("chillax-overlay-open", docked);
   root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
-  root.style.marginRight = open && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
+  root.style.marginRight = docked && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
 
   const host = document.getElementById(HOST_ID);
   host?.classList.toggle("is-fullscreen", fullscreen);
-  host?.classList.toggle("is-open", open);
+  host?.classList.toggle("is-open", docked);
+  host?.classList.toggle("is-lounge", lounge);
   if (host) {
     host.style.position = fullscreen ? "absolute" : "fixed";
-    host.style.width = open ? `${OVERLAY_RESERVE}px` : "0px";
+    if (lounge) {
+      host.style.left = "0px";
+      host.style.right = "0px";
+      host.style.top = "0px";
+      host.style.bottom = "0px";
+      host.style.width = "100%";
+    } else {
+      host.style.left = "auto";
+      host.style.right = "0px";
+      host.style.top = "0px";
+      host.style.bottom = "0px";
+      host.style.width = docked ? `${OVERLAY_RESERVE}px` : "0px";
+    }
   }
 
   const existing = document.getElementById(STYLE_ID);
-  if (!open) {
+  fsReserve = docked && fullscreen ? OVERLAY_RESERVE : 0;
+  if (!docked) {
     existing?.remove();
     watchFullscreenLayout(false);
-    sizePlayerToReserve(0);
+    sizePlayerToReserve(0, !fullscreen);
     return;
   }
   if (!fullscreen) {
     watchFullscreenLayout(false);
-    exitYouTubeTheater();
+    scheduleExitTheater();
   }
   const style = existing ?? document.createElement("style");
   style.id = STYLE_ID;
@@ -308,5 +371,6 @@ export function watchFullscreen(platform: "youtube" | "netflix", isOpen: () => b
   const sync = () => pushPageOffset(platform, isOpen());
   document.addEventListener("fullscreenchange", sync, true);
   document.addEventListener("webkitfullscreenchange", sync, true);
+  document.addEventListener("yt-fullscreen-change", sync, true);
   document.addEventListener("yt-navigate-finish", sync);
 }

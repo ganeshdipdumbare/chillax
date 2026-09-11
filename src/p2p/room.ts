@@ -85,7 +85,29 @@ export class PeerRoom {
     this.localAvatarId = avatarId;
     await this.openPeer();
     if (!this.peer) throw new Error("Could not start peer");
-    this.attachData(this.peer.connect(hostId, { reliable: true }));
+    await this.connectToHost(hostId);
+    this.handlers.onReady(this.peer.id);
+  }
+
+  private connectToHost(hostId: string) {
+    return new Promise<void>((resolve, reject) => {
+      const conn = this.peer!.connect(hostId, { reliable: true });
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        conn.close();
+        done(new Error("Could not find that party. Check the code and that the host is still in."));
+      }, 15000);
+      const done = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        if (error) reject(error);
+        else resolve();
+      };
+      conn.once("open", () => done());
+      conn.once("error", (err) => done(new Error(mapPeerError(err))));
+      this.attachData(conn);
+    });
   }
 
   send(message: ProtocolMessage, exceptPeerId?: string) {
@@ -200,7 +222,13 @@ export class PeerRoom {
     if (message.type === "bye") {
       this.dropPeer(message.peerId);
     }
-    if (this.isHost && message.type !== "peers" && message.type !== "room-full") {
+    if (
+      this.isHost &&
+      message.type !== "peers" &&
+      message.type !== "room-full" &&
+      message.type !== "sync" &&
+      message.type !== "control-policy"
+    ) {
       this.send(message, fromPeerId);
     }
     this.handlers.onProtocol(message, fromPeerId);
@@ -228,7 +256,7 @@ export class PeerRoom {
           window.clearTimeout(timer);
           this.nicknames.set(peerId, this.localNickname);
           this.avatars.set(peerId, this.localAvatarId);
-          this.handlers.onReady(peerId);
+          if (this.isHost) this.handlers.onReady(peerId);
           resolve();
         });
         peer.once("error", (err) => {

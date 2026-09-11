@@ -27,6 +27,7 @@ let state: OverlayState = {
   wrongTitle: null,
   needsGesture: false,
   overlayOpen: false,
+  guestPlayback: false,
   messages: [],
   participants: [],
   bursts: [],

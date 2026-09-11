@@ -7,6 +7,7 @@ export type SessionController = {
   setNickname: (name: string) => Promise<void>;
   setAvatar: (avatarId: string) => Promise<void>;
   toggleOverlay: (open?: boolean) => void;
+  setGuestPlayback: (on: boolean) => void;
   enablePlayback: () => void;
   registerMediaWindow: (win: Window | null) => void;
 };
