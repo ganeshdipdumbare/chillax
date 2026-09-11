@@ -27,11 +27,11 @@ Load unpacked from `dist` (CRXJS writes the extension there).
 
 Friends cannot double-click a `.crx`. They load the unzipped folder once.
 
-Live installer: [chillax-ruby.vercel.app](https://chillax-ruby.vercel.app). Send friends that link.
+Live installer: [chillax-ruby.vercel.app](https://chillax-ruby.vercel.app). Send friends that link. Every push to `main` rebuilds that site and replaces [chillax-for-friends.zip](https://chillax-ruby.vercel.app/chillax-for-friends.zip) at the same URL.
 
-The zip also lives on [GitHub Releases](https://github.com/ganeshdipdumbare/chillax/releases/latest) — latest file: [chillax-for-friends.zip](https://github.com/ganeshdipdumbare/chillax/releases/latest/download/chillax-for-friends.zip). That is the right place to store the binary; it is not committed into git. New `v*` tags build and attach a zip automatically.
+The zip also lives on [GitHub Releases](https://github.com/ganeshdipdumbare/chillax/releases/latest) — latest file: [chillax-for-friends.zip](https://github.com/ganeshdipdumbare/chillax/releases/latest/download/chillax-for-friends.zip). New `v*` tags build and attach a zip automatically.
 
-To publish an update:
+To publish an update without waiting for GitHub Actions:
 
 ```bash
 npm run pack-site

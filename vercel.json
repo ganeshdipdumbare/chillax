@@ -14,6 +14,10 @@
         {
           "key": "Content-Disposition",
           "value": "attachment; filename=\"chillax-for-friends.zip\""
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
