@@ -1,0 +1,115 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  color: #f7f0e6;
+  background: transparent;
+  font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px 0;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 80% at 20% 0%, rgb(243 199 126 / 0.18), transparent 50%),
+    #141018;
+  aspect-ratio: 16 / 10;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.tile video,
+.tile .letter {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile .letter {
+  display: grid;
+  place-items: center;
+}
+
+.face {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.tile .name {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgb(9 6 15 / 0.72);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 10px 4px;
+}
+
+.controls button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.07);
+  color: #f7f0e6;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.controls button[aria-pressed="true"] {
+  background: linear-gradient(180deg, #ffe1a3, #f3c77e);
+  color: #2a1608;
+}
+
+.controls button:focus-visible {
+  outline: 2px solid #f3c77e;
+  outline-offset: 2px;
+}
+
+.status {
+  margin: 0;
+  padding: 0 10px 8px;
+  color: #cbbba6;
+  font-size: 11px;
+  text-align: center;
+}

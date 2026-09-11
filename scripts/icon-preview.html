@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chillax icon render</title>
+    <style>
+      body {
+        margin: 24px;
+        background: #333;
+        color: #fff;
+        font-family: "Avenir Next", system-ui, sans-serif;
+      }
+      .row {
+        display: flex;
+        gap: 24px;
+        align-items: end;
+        flex-wrap: wrap;
+      }
+      figure {
+        margin: 0;
+        text-align: center;
+      }
+      figcaption {
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .css {
+        display: grid;
+        place-items: center;
+        background: conic-gradient(from 210deg, #f3c77e, #7dffd0, #c084fc, #f3c77e);
+        color: #140c18;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <p>CSS vs canvas</p>
+    <div class="row" id="row"></div>
+    <script>
+      const sizes = [16, 32, 48, 128];
+      const icons = {};
+
+      function render(size) {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        const radius = (size * 14) / 44;
+        ctx.beginPath();
+        ctx.roundRect(0, 0, size, size, radius);
+        ctx.clip();
+        const start = ((210 - 90) * Math.PI) / 180;
+        const gradient = ctx.createConicGradient(start, size / 2, size / 2);
+        gradient.addColorStop(0, "#f3c77e");
+        gradient.addColorStop(1 / 3, "#7dffd0");
+        gradient.addColorStop(2 / 3, "#c084fc");
+        gradient.addColorStop(1, "#f3c77e");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = "#140c18";
+        const mark = size <= 16 ? "C" : "Cx";
+        const fontSize = size <= 16 ? size * 0.56 : (size * 16) / 44;
+        ctx.font = `900 ${fontSize}px "Avenir Next", "Segoe UI Variable", system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(mark, size / 2, size / 2 + size * 0.03);
+        return canvas;
+      }
+
+      const row = document.getElementById("row");
+      for (const size of sizes) {
+        const css = document.createElement("div");
+        css.className = "css";
+        css.style.width = `${size}px`;
+        css.style.height = `${size}px`;
+        css.style.borderRadius = `${(size * 14) / 44}px`;
+        css.style.fontSize = `${(size * 16) / 44}px`;
+        css.textContent = "Cx";
+        const canvas = render(size);
+        icons[size] = canvas.toDataURL("image/png");
+        for (const node of [css, canvas]) {
+          const figure = document.createElement("figure");
+          figure.append(node);
+          const cap = document.createElement("figcaption");
+          cap.textContent = `${size} ${node.tagName === "CANVAS" ? "canvas" : "css"}`;
+          figure.append(cap);
+          row.append(figure);
+        }
+      }
+      window.CHILLAX_ICONS = icons;
+    </script>
+  </body>
+</html>

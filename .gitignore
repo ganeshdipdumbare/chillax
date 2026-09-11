@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+*.log
+.vite
+storybook-static
+site-dist
+chillax-for-friends.zip
+.vercel

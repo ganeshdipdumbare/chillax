@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install Chillax</title>
+    <link rel="icon" type="image/png" href="icons/icon32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="icons/icon128.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: #f7f0e6;
+        font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+        background:
+          radial-gradient(90% 60% at 100% 0%, rgb(122 48 140 / 0.4), transparent 55%),
+          radial-gradient(70% 50% at 0% 100%, rgb(24 90 78 / 0.28), transparent 50%),
+          #09060f;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: conic-gradient(from 210deg, #f3c77e, #7dffd0, #c084fc, #f3c77e);
+        color: #140c18;
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+      .lede {
+        margin: 0 0 28px;
+        color: #cbbba6;
+        font-size: 17px;
+        line-height: 1.45;
+      }
+      .warn {
+        margin: 0 0 28px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgb(243 199 126 / 0.1);
+        border: 1px solid rgb(243 199 126 / 0.28);
+        color: #f3c77e;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 14px;
+      }
+      li {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 14px;
+        height: 168px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgb(255 255 255 / 0.05);
+        border: 1px solid rgb(255 255 255 / 0.08);
+      }
+      .n {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffe1a3, #f3c77e);
+        color: #2a1608;
+        font-weight: 900;
+      }
+      .body {
+        display: grid;
+        grid-template-rows: 42px 42px 42px;
+        gap: 8px;
+        min-width: 0;
+      }
+      h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.25;
+        display: flex;
+        align-items: center;
+      }
+      p {
+        margin: 0;
+        color: #cbbba6;
+        font-size: 14px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+      }
+      code,
+      kbd {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.92em;
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: rgb(8 6 14 / 0.7);
+        color: #7dffd0;
+      }
+      kbd {
+        color: #f7f0e6;
+        border: 1px solid rgb(255 255 255 / 0.12);
+      }
+      .visual {
+        height: 42px;
+        padding: 0 12px;
+        border-radius: 12px;
+        background: #1b1b1f;
+        color: #e8eaed;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .visual > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .toggle {
+        width: 36px;
+        height: 18px;
+        border-radius: 99px;
+        background: #7dffd0;
+        position: relative;
+      }
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #08221c;
+      }
+      .btn {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        border-radius: 10px;
+        background: #3c4043;
+        color: #e8eaed;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .copy-row {
+        justify-content: flex-start;
+        gap: 8px;
+      }
+      .copy-row code {
+        font-size: 13px;
+        padding: 4px 8px;
+      }
+      button.copy {
+        border: 0;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: #7dffd0;
+        color: #08221c;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+      }
+      button.copy:hover {
+        filter: brightness(1.08);
+      }
+      button.copy:focus-visible {
+        outline: 2px solid #f3c77e;
+        outline-offset: 3px;
+      }
+      @media (max-width: 560px) {
+        li {
+          height: auto;
+          min-height: 0;
+        }
+        .body {
+          grid-template-rows: auto auto 42px;
+        }
+        h2 {
+          display: block;
+        }
+        p {
+          display: block;
+          overflow: visible;
+        }
+      }
+      a {
+        color: #7dffd0;
+      }
+      .download-hero {
+        display: none;
+        margin: 0 0 28px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: #7dffd0;
+        color: #08221c;
+        font-size: 16px;
+        font-weight: 800;
+        text-decoration: none;
+        text-align: center;
+      }
+      .download-hero:hover {
+        filter: brightness(1.08);
+      }
+      .download-hero:focus-visible {
+        outline: 2px solid #f3c77e;
+        outline-offset: 3px;
+      }
+      body.is-web .download-hero {
+        display: block;
+      }
+      body.is-file .web-only {
+        display: none;
+      }
+      body.is-web .file-only {
+        display: none;
+      }
+      footer {
+        margin-top: 32px;
+        color: #8f8374;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <span class="logo">Cx</span>
+        <div>
+          <h1>Install Chillax</h1>
+        </div>
+      </div>
+      <p class="lede file-only">
+        Chrome will not install this from a download the way the Web Store does. You load the unzipped folder once. Takes about a minute.
+      </p>
+      <p class="lede web-only" hidden>
+        Download the zip, then load the unzipped folder in Chrome. Takes about a minute — Chrome will not install this the way the Web Store does.
+      </p>
+      <a class="download-hero" href="chillax-for-friends.zip" download="chillax-for-friends.zip">Download Chillax (.zip)</a>
+      <p class="warn">
+        Keep this unzipped folder on your computer. If you move or trash it, Chillax turns off. After Chrome restarts, a popup may say “Disable developer mode extensions” — click <strong>Cancel</strong> to keep Chillax.
+      </p>
+      <ol>
+        <li>
+          <span class="n">1</span>
+          <div class="body">
+            <h2 id="step1-title">Unzip the file you were sent</h2>
+            <p id="step1-copy">
+              Double-click <code>chillax-for-friends.zip</code>. Keep the folder that contains <code>manifest.json</code> and this page (Downloads is fine).
+            </p>
+            <div class="visual" aria-hidden="true">
+              <span>manifest.json · install.html</span>
+              <span class="btn">Folder</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n">2</span>
+          <div class="body">
+            <h2>Open Chrome’s extensions page</h2>
+            <p>Copy this address, paste it in Chrome’s address bar, and press Enter. Chrome blocks the link from this page.</p>
+            <div class="visual copy-row">
+              <code id="ext-url">chrome://extensions</code>
+              <button type="button" class="copy" id="copy-ext" aria-live="polite">Copy</button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n">3</span>
+          <div class="body">
+            <h2>Turn on Developer mode</h2>
+            <p>On the extensions page, find the switch at the top-right and flip it on.</p>
+            <div class="visual" aria-hidden="true">
+              <span>Developer mode</span>
+              <span class="toggle"></span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n">4</span>
+          <div class="body">
+            <h2>Load unpacked</h2>
+            <p>Click <strong>Load unpacked</strong>, then choose the unzipped folder with <code>manifest.json</code> — not the zip.</p>
+            <div class="visual" aria-hidden="true">
+              <span>Load unpacked</span>
+              <span class="btn">Load unpacked</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n">5</span>
+          <div class="body">
+            <h2>Pin Chillax</h2>
+            <p>Puzzle-piece icon in Chrome’s toolbar → pin Chillax. You should see the gold-green <strong>Cx</strong> icon.</p>
+            <div class="visual" aria-hidden="true">
+              <span>Chillax</span>
+              <span class="btn">Pin</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n">6</span>
+          <div class="body">
+            <h2>Open the invite link</h2>
+            <p>Open the YouTube or Netflix link with <code>chillax=</code> in it. Allow the mic; camera stays off until you turn it on.</p>
+            <div class="visual" aria-hidden="true">
+              <span>…?chillax=ROOM</span>
+              <span class="btn">Join</span>
+            </div>
+          </div>
+        </li>
+      </ol>
+      <footer>
+        <p>
+          Need an update later? <span class="file-only">Ask for a new zip, replace the folder contents,</span><span class="web-only">Download the zip again, replace the folder contents,</span> then on <code>chrome://extensions</code> click <strong>Reload</strong> under Chillax.
+        </p>
+        <p>
+          This is not from the Chrome Web Store. Only install it if you trust <span class="file-only">the person who sent the zip</span><span class="web-only">the person who sent you this page</span>.
+        </p>
+      </footer>
+    </main>
+    <script>
+      const copyBtn = document.getElementById("copy-ext");
+      const extUrl = "chrome://extensions";
+      const onWeb = location.protocol === "http:" || location.protocol === "https:";
+      document.body.classList.add(onWeb ? "is-web" : "is-file");
+      if (onWeb) {
+        document.querySelectorAll(".web-only").forEach((el) => {
+          el.hidden = false;
+        });
+        document.getElementById("step1-title").textContent = "Download, then unzip";
+        document.getElementById("step1-copy").innerHTML =
+          "Use the green button above. Double-click the zip. Keep the folder that contains <code>manifest.json</code> (Downloads is fine).";
+      }
+
+      function copyWithFallback(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        ta.remove();
+        return ok;
+      }
+
+      copyBtn.addEventListener("click", async () => {
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(extUrl);
+          copied = true;
+        } catch {
+          copied = copyWithFallback(extUrl);
+        }
+        copyBtn.textContent = copied ? "Copied" : "Select and copy";
+        if (!copied) {
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById("ext-url"));
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        window.setTimeout(() => {
+          copyBtn.textContent = "Copy";
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>

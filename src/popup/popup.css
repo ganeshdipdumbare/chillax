@@ -1,0 +1,140 @@
+body {
+  margin: 0;
+  width: 340px;
+  color: #f7f0e6;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(122 48 140 / 0.4), transparent 55%),
+    #09060f;
+  font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+main {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: conic-gradient(from 210deg, #f3c77e, #7dffd0, #c084fc, #f3c77e);
+  color: #140c18;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+h1 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0;
+  color: #cbbba6;
+  font-size: 13px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: #cbbba6;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+input {
+  border: 1px solid rgb(243 199 126 / 0.2);
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: rgb(8 6 14 / 0.6);
+  color: #f7f0e6;
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #f3c77e;
+  outline-offset: 2px;
+}
+
+.primary {
+  background: linear-gradient(180deg, #ffe1a3, #f3c77e);
+  color: #2a1608;
+  font-weight: 800;
+}
+
+.ghost {
+  background: rgb(255 255 255 / 0.07);
+  color: #f7f0e6;
+}
+
+.primary:disabled,
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #ffd0d8;
+  background: rgb(255 90 120 / 0.12);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.pick {
+  padding: 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pick.is-on {
+  background: rgb(243 199 126 / 0.2);
+  box-shadow: 0 0 0 1px #f3c77e;
+}
+
+.face {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
