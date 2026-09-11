@@ -4,17 +4,23 @@ import { CloseIcon, CopyIcon, IconButton } from "./icons";
 import { AvatarFace } from "./AvatarFace";
 import { AvatarPicker } from "./AvatarPicker";
 import { ReactionSky } from "./ReactionSky";
-import { mediaPageUrl } from "../shared/ids";
+import { mediaPageUrl, parseRoomToken } from "../shared/ids";
 import { getState, subscribe } from "../shared/store";
 import type { SessionController } from "../content/session";
 
 export function OverlayApp({ session }: { session: SessionController }) {
   const [state, setLocal] = useState(getState());
   const [copied, setCopied] = useState(false);
-  const [joinCode, setJoinCode] = useState("");
+  const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => subscribe(() => setLocal(getState())), []);
+  useEffect(() => subscribe(() => {
+    setLocal(getState());
+    const token = parseRoomToken();
+    if (token && getState().status === "idle") {
+      setJoinCode((current) => current || token);
+    }
+  }), []);
 
   const canWatch = state.isWatchPage && Boolean(state.contentId);
   const inParty = state.status === "in-party" || state.status === "connecting";

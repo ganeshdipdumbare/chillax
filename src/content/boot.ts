@@ -3,7 +3,6 @@ import {
   buildInviteUrl,
   clearTokenFromLocation,
   extensionOrigin,
-  parseRoomToken,
   randomRoomId,
   writeTokenToLocation,
 } from "../shared/ids";
@@ -19,7 +18,6 @@ import { pushPageOffset, watchFullscreen } from "./pageOffset";
 const applying = { current: false };
 let mediaWindow: Window | null = null;
 let heartbeat: number | null = null;
-let lastToken: string | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 
@@ -138,7 +136,7 @@ export async function boot(adapter: PlayerAdapter) {
     avatarId,
     isWatchPage: adapter.isWatchPage(),
     contentId: adapter.getContentId(),
-    overlayOpen: Boolean(parseRoomToken()),
+    overlayOpen: false,
   });
 
   const session: SessionController = {
@@ -190,7 +188,6 @@ export async function boot(adapter: PlayerAdapter) {
       stopHeartbeat();
       pendingRole = null;
       pendingRoomId = null;
-      lastToken = null;
       clearTokenFromLocation(adapter.platform);
       setState({
         party: null,
@@ -312,7 +309,6 @@ export async function boot(adapter: PlayerAdapter) {
         roomId,
       );
       writeTokenToLocation(adapter.platform, roomId);
-      lastToken = roomId;
       pendingRole = null;
       setState({
         status: "in-party",
@@ -386,12 +382,6 @@ export async function boot(adapter: PlayerAdapter) {
     }
     pushPageOffset(adapter.platform, getState().overlayOpen);
   });
-
-  const token = parseRoomToken();
-  if (token && token !== lastToken && adapter.isWatchPage()) {
-    lastToken = token;
-    session.joinParty(token);
-  }
 
   window.addEventListener("pagehide", (event) => {
     if (event.persisted) return;
