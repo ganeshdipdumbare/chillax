@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { AvatarPicker } from "./AvatarPicker";
 import { Chat } from "./Chat";
+import { LoungeArt } from "./SpotArt";
 import { ReactionSky } from "./ReactionSky";
 import type { ChatMessage, ReactionBurst } from "../shared/types";
 import type { ReactionEmoji } from "../shared/avatars";
@@ -50,6 +51,9 @@ function Lounge() {
       </header>
       <div className="idle" style={{ paddingBottom: 0 }}>
         <div className="hero">
+          <div className="storyboard">
+            <LoungeArt />
+          </div>
           <strong>Make the couch bigger.</strong>
         </div>
         <label>

@@ -3,6 +3,7 @@ import { MSG_SOURCE_CONTENT, MSG_SOURCE_MEDIA } from "../shared/constants";
 import { captureLocalMedia } from "../p2p/mesh";
 import { PeerRoom } from "../p2p/room";
 import type { Participant, Platform, ProtocolMessage } from "../shared/types";
+import { CameraIcon, MicIcon } from "../overlay/icons";
 import { Tile } from "./Tile";
 
 type InitPayload = {
@@ -218,8 +219,9 @@ export function MediaApp() {
       <div className="controls">
         <button
           type="button"
-          aria-pressed={muted}
-          aria-label={muted ? "Unmute microphone" : "Mute microphone"}
+          className={muted ? "is-off" : "is-on"}
+          aria-pressed={!muted}
+          aria-label={muted ? "Turn microphone on" : "Turn microphone off"}
           onClick={() => {
             const next = !mutedRef.current;
             mutedRef.current = next;
@@ -228,10 +230,12 @@ export function MediaApp() {
             postToParent({ type: "local-media", muted: next, cameraOn: cameraOnRef.current });
           }}
         >
-          {muted ? "Unmute" : "Mute"}
+          <MicIcon off={muted} />
+          {muted ? "Mic off" : "Mic on"}
         </button>
         <button
           type="button"
+          className={cameraOn ? "is-on" : "is-off"}
           aria-pressed={cameraOn}
           aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
           onClick={() => {
@@ -246,7 +250,8 @@ export function MediaApp() {
             });
           }}
         >
-          {cameraOn ? "Camera off" : "Camera on"}
+          <CameraIcon off={!cameraOn} />
+          {cameraOn ? "Camera on" : "Camera off"}
         </button>
       </div>
       <p className="status">{status}</p>

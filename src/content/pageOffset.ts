@@ -3,16 +3,14 @@ import { OVERLAY_RESERVE } from "../shared/constants";
 const STYLE_ID = "chillax-page-offset";
 const HOST_ID = "chillax-root";
 const PINNED_PROPS = [
+  "position",
   "left",
   "right",
   "top",
   "bottom",
   "width",
   "height",
-  "max-width",
-  "max-height",
   "object-fit",
-  "transform",
 ] as const;
 
 let resizeTimer = 0;
@@ -101,33 +99,13 @@ html.chillax-overlay-open:not(.chillax-fs) .nfp.AkiraPlayer {
   width: 100% !important;
   max-width: 100% !important;
 }
-html.chillax-overlay-open.chillax-fs :fullscreen .html5-video-container {
-  left: 0 !important;
-  right: ${space} !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  width: auto !important;
-  height: auto !important;
-}
-html.chillax-overlay-open.chillax-fs :fullscreen video,
-html.chillax-overlay-open.chillax-fs :fullscreen video.html5-main-video,
-html.chillax-overlay-open.chillax-fs :fullscreen video.video-stream {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  left: 0 !important;
-  top: 0 !important;
-  object-fit: contain !important;
-  transform: none !important;
-}
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-bottom,
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-top,
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-gradient-bottom,
 html.chillax-overlay-open.chillax-fs :fullscreen .ytp-gradient-top {
   left: 0 !important;
-  right: ${space} !important;
-  width: auto !important;
+  width: calc(100% - ${space}) !important;
+  right: auto !important;
 }
 `;
 }
@@ -150,9 +128,14 @@ function sizePlayerToReserve(reserve: number) {
   const gen = ++layoutGen;
   const apply = () => {
     if (gen !== layoutGen) return;
-    const player = youtubePlayer();
     if (document.fullscreenElement) {
-      player?.setSize?.(Math.max(160, window.innerWidth - reserve), window.innerHeight);
+      if (reserve > 0) {
+        clearPinnedStyles();
+        applyFullscreenPlayerLayout(reserve);
+      } else {
+        const { width, height } = leftoverSize(0);
+        youtubePlayer()?.setSize?.(width, height);
+      }
     }
     window.dispatchEvent(new Event("resize"));
   };
@@ -191,32 +174,17 @@ function watchHostParent() {
   hostGuard.observe(fs, { childList: true });
 }
 
-function pinBox(el: HTMLElement, reserve: number) {
-  el.style.setProperty("left", "0px", "important");
-  el.style.setProperty("right", `${reserve}px`, "important");
-  el.style.setProperty("top", "0px", "important");
-  el.style.setProperty("bottom", "0px", "important");
-  el.style.setProperty("width", "auto", "important");
-  el.style.setProperty("height", "auto", "important");
-  pinnedEls.push(el);
+function leftoverSize(reserve: number) {
+  return {
+    width: Math.max(160, window.innerWidth - reserve),
+    height: window.innerHeight,
+  };
 }
 
-function fillVideo(el: HTMLElement) {
-  el.style.setProperty("width", "100%", "important");
-  el.style.setProperty("height", "100%", "important");
-  el.style.setProperty("max-width", "100%", "important");
-  el.style.setProperty("max-height", "100%", "important");
-  el.style.setProperty("left", "0px", "important");
-  el.style.setProperty("top", "0px", "important");
-  el.style.setProperty("object-fit", "contain", "important");
-  el.style.setProperty("transform", "none", "important");
-  pinnedEls.push(el);
-}
-
-function pinChrome(el: HTMLElement, reserve: number) {
-  el.style.setProperty("left", "0px", "important");
-  el.style.setProperty("right", `${reserve}px`, "important");
-  el.style.setProperty("width", "auto", "important");
+function pinPx(el: HTMLElement, props: Record<string, string>) {
+  for (const [prop, value] of Object.entries(props)) {
+    el.style.setProperty(prop, value, "important");
+  }
   pinnedEls.push(el);
 }
 
@@ -230,21 +198,46 @@ function clearPinnedStyles() {
 function applyFullscreenPlayerLayout(reserve: number) {
   const fs = document.fullscreenElement;
   if (!(fs instanceof HTMLElement)) return;
-  const root = fs;
+  const { width, height } = leftoverSize(reserve);
+  youtubePlayer()?.setSize?.(width, height);
+
   const container =
-    root.querySelector<HTMLElement>(".html5-video-container") ||
-    root.querySelector<HTMLElement>("[data-uia='video-canvas']");
-  const video = root.querySelector<HTMLVideoElement>("video");
-  if (container) pinBox(container, reserve);
-  if (video) fillVideo(video);
-  if (root instanceof HTMLVideoElement) fillVideo(root);
+    fs.querySelector<HTMLElement>(".html5-video-container") ||
+    fs.querySelector<HTMLElement>("[data-uia='video-canvas']");
+  if (container) {
+    pinPx(container, {
+      position: "absolute",
+      left: "0px",
+      top: "0px",
+      width: `${width}px`,
+      height: `${height}px`,
+    });
+  }
+
+  const video = fs.querySelector<HTMLVideoElement>("video");
+  if (video && video !== fs) {
+    pinPx(video, {
+      left: "0px",
+      top: "0px",
+      width: `${width}px`,
+      height: `${height}px`,
+      "object-fit": "contain",
+    });
+  }
+
   for (const sel of [
     ".ytp-chrome-bottom",
     ".ytp-chrome-top",
     ".ytp-gradient-bottom",
     ".ytp-gradient-top",
   ]) {
-    root.querySelectorAll<HTMLElement>(sel).forEach((el) => pinChrome(el, reserve));
+    fs.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+      pinPx(el, {
+        left: "0px",
+        width: `${width}px`,
+        right: "auto",
+      });
+    });
   }
 }
 
@@ -255,10 +248,17 @@ function watchFullscreenLayout(active: boolean) {
   const fs = document.fullscreenElement;
   if (!active || !(fs instanceof HTMLElement)) return;
   applyFullscreenPlayerLayout(OVERLAY_RESERVE);
+  const width = `${leftoverSize(OVERLAY_RESERVE).width}px`;
   fsLayoutGuard = new MutationObserver(() => {
     if (!document.fullscreenElement) return;
-    const video = document.fullscreenElement.querySelector("video");
-    if (video && video.style.width === "100%" && video.style.getPropertyPriority("width") === "important") {
+    const container = document.fullscreenElement.querySelector<HTMLElement>(
+      ".html5-video-container, [data-uia='video-canvas']",
+    );
+    if (
+      container &&
+      container.style.width === width &&
+      container.style.getPropertyPriority("width") === "important"
+    ) {
       return;
     }
     clearPinnedStyles();

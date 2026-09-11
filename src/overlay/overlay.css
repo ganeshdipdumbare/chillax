@@ -33,25 +33,35 @@ textarea {
 .tab {
   pointer-events: auto;
   position: fixed;
-  top: 26%;
+  top: 28%;
   right: 0;
   z-index: 2147483646;
   display: flex;
   align-items: center;
-  gap: 6px;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  border: 0;
-  border-radius: 18px 0 0 18px;
-  padding: 16px 9px;
-  background: linear-gradient(180deg, #2a1238, #0d0a14 55%, #10241f);
-  color: #f3c77e;
-  letter-spacing: 0.18em;
+  border: 1px solid rgb(243 199 126 / 0.18);
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+  padding: 12px 6px;
+  background: rgb(9 6 15 / 0.38);
+  color: rgb(247 240 230 / 0.72);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: -8px 0 32px rgb(80 20 90 / 0.45);
+  box-shadow: none;
+  opacity: 0.42;
+  backdrop-filter: blur(8px);
+}
+
+.tab:hover,
+.tab:focus-visible {
+  opacity: 1;
+  color: #f3c77e;
+  background: rgb(9 6 15 / 0.86);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 0.35);
 }
 
 .tab:focus-visible,
@@ -247,13 +257,55 @@ textarea {
 
 .hero {
   display: grid;
-  gap: 6px;
-  padding: 4px 2px 8px;
+  gap: 10px;
+  padding: 2px 0 6px;
+}
+
+.storyboard {
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f4efe8;
+  box-shadow: inset 0 0 0 1px rgb(28 21 36 / 0.06);
+}
+
+.spot-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.spot-art-sm {
+  max-height: 140px;
+  margin: 0 auto;
 }
 
 .hero strong {
   font-size: 22px;
   letter-spacing: -0.04em;
+}
+
+.lede {
+  color: #cbbba6;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.empty-chat {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.empty-chat .storyboard {
+  width: 100%;
+}
+
+.empty-chat p {
+  margin: 0;
+  color: #cbbba6;
+  font-size: 13px;
 }
 
 label {

@@ -198,7 +198,9 @@ export async function boot(adapter: PlayerAdapter) {
         participants: [],
         bursts: [],
         callDetail: null,
+        overlayOpen: false,
       });
+      pushPageOffset(adapter.platform, false);
     },
     sendChat: (text: string) => {
       const state = getState();

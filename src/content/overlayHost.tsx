@@ -4,6 +4,24 @@ import overlayCss from "../overlay/overlay.css?inline";
 import { OVERLAY_RESERVE } from "../shared/constants";
 import type { SessionController } from "./session";
 
+function shieldPageShortcuts(host: HTMLElement) {
+  const owned = (event: Event) => {
+    if (event.composedPath().includes(host)) return true;
+    const active = document.activeElement;
+    return active === host || (active instanceof Node && host.contains(active));
+  };
+  for (const type of ["keydown", "keyup", "keypress"] as const) {
+    window.addEventListener(
+      type,
+      (event) => {
+        if (!owned(event)) return;
+        event.stopImmediatePropagation();
+      },
+      true,
+    );
+  }
+}
+
 export function mountOverlay(session: SessionController) {
   const host = document.createElement("div");
   host.id = "chillax-root";
@@ -17,5 +35,6 @@ export function mountOverlay(session: SessionController) {
   const mount = document.createElement("div");
   shadow.appendChild(style);
   shadow.appendChild(mount);
+  shieldPageShortcuts(host);
   createRoot(mount).render(<OverlayApp session={session} />);
 }

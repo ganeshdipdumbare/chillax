@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../shared/types";
 import { AvatarFace } from "./AvatarFace";
 import { ReactionBar } from "./ReactionBar";
+import { PopcornArt } from "./SpotArt";
 import type { ReactionEmoji } from "../shared/avatars";
 
 export function Chat({
@@ -27,7 +28,12 @@ export function Chat({
     <section className="chat" aria-label="Party chat">
       <div className="messages" ref={listRef}>
         {messages.length === 0 ? (
-          <p className="status">First one to drop a 🍿 sets the vibe.</p>
+          <div className="empty-chat">
+            <div className="storyboard">
+              <PopcornArt />
+            </div>
+            <p>First one to drop a 🍿 sets the vibe.</p>
+          </div>
         ) : (
           messages.map((msg) => (
             <article className="msg" key={msg.id}>
@@ -61,6 +67,8 @@ export function Chat({
           maxLength={500}
           placeholder="Say something cozy"
           disabled={disabled}
+          onKeyDown={(event) => event.stopPropagation()}
+          onKeyUp={(event) => event.stopPropagation()}
         />
         <button className="send" type="submit" disabled={disabled}>
           Send

@@ -45,3 +45,43 @@ export function CopyIcon() {
     </svg>
   );
 }
+
+export function MicIcon({ off }: { off?: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M8 1.6A2.2 2.2 0 0 0 5.8 3.8v3.4a2.2 2.2 0 1 0 4.4 0V3.8A2.2 2.2 0 0 0 8 1.6zM3.9 7.2a.7.7 0 0 1 .7.7 3.4 3.4 0 0 0 6.8 0 .7.7 0 1 1 1.4 0 4.8 4.8 0 0 1-4.1 4.75V14h2.1a.7.7 0 1 1 0 1.4H5.2a.7.7 0 1 1 0-1.4h2.1v-1.35A4.8 4.8 0 0 1 3.2 7.9a.7.7 0 0 1 .7-.7z"
+      />
+      {off ? (
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          d="M3.2 3.2 12.8 12.8"
+        />
+      ) : null}
+    </svg>
+  );
+}
+
+export function CameraIcon({ off }: { off?: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M2.4 4.2A1.7 1.7 0 0 1 4.1 2.5h5.2A1.7 1.7 0 0 1 11 4.2v7.6a1.7 1.7 0 0 1-1.7 1.7H4.1A1.7 1.7 0 0 1 2.4 11.8V4.2zm9.3 1.55 2.05-1.2A.8.8 0 0 1 15 5.25v5.5a.8.8 0 0 1-1.25.7l-2.05-1.2V5.75z"
+      />
+      {off ? (
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          d="M3.2 3.2 12.8 12.8"
+        />
+      ) : null}
+    </svg>
+  );
+}

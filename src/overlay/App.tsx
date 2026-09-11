@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Chat } from "./Chat";
 import { CloseIcon, CopyIcon, IconButton } from "./icons";
 import { AvatarFace } from "./AvatarFace";
+import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
 import { ReactionSky } from "./ReactionSky";
 import { mediaPageUrl, parseRoomToken } from "../shared/ids";
@@ -61,11 +62,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
 
   return (
     <>
-      {!state.overlayOpen ? (
+      {!inParty || state.overlayOpen ? null : (
         <button className="tab" type="button" onClick={() => session.toggleOverlay(true)}>
           Chat
         </button>
-      ) : null}
+      )}
       <div className={state.overlayOpen ? "panel" : "panel is-collapsed"}>
       <ReactionSky bursts={state.bursts} />
       <header className="header">
@@ -119,8 +120,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
         {!inParty ? (
           <div className="idle">
             <div className="hero">
+              <div className="storyboard">
+                <LoungeArt />
+              </div>
               <strong>Make the couch bigger.</strong>
-              <span className="status" style={{ padding: 0 }}>
+              <span className="lede">
                 Pick a face, start a party, react in real time.
               </span>
             </div>
