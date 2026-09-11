@@ -6,6 +6,7 @@ import manifest from "./manifest.config";
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
   build: {
+    modulePreload: false,
     rollupOptions: {
       input: {
         media: "src/media/index.html",

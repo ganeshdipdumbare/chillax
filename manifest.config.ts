@@ -25,7 +25,7 @@ export default defineManifest({
     service_worker: "src/background.ts",
     type: "module",
   },
-  permissions: ["storage", "camera", "microphone"],
+  permissions: ["storage"],
   host_permissions: [
     "*://*.youtube.com/*",
     "*://youtube.com/*",

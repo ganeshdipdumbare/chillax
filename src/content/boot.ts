@@ -1,6 +1,7 @@
 import { HEARTBEAT_MS, MSG_SOURCE_CONTENT, MSG_SOURCE_MEDIA } from "../shared/constants";
 import {
   buildInviteUrl,
+  clearTokenFromLocation,
   extensionOrigin,
   parseRoomToken,
   randomRoomId,
@@ -14,7 +15,6 @@ import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
-import { requestMediaPermissions } from "../shared/mediaPermissions";
 
 const applying = { current: false };
 let mediaWindow: Window | null = null;
@@ -23,11 +23,24 @@ let lastToken: string | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 
+function sendPartyInit(adapter: PlayerAdapter) {
+  if (!mediaWindow || !pendingRole || !pendingRoomId) return;
+  const state = getState();
+  sendToMedia({
+    type: "init",
+    role: pendingRole,
+    roomId: pendingRoomId,
+    nickname: state.nickname,
+    avatarId: state.avatarId,
+    platform: adapter.platform,
+    contentId: adapter.getContentId(),
+    watchUrl: currentWatchUrl(adapter, pendingRoomId),
+  });
+}
+
 function sendToMedia(payload: Record<string, unknown>) {
-  mediaWindow?.postMessage(
-    { source: MSG_SOURCE_CONTENT, ...payload },
-    extensionOrigin(),
-  );
+  if (!mediaWindow || mediaWindow === window) return;
+  mediaWindow.postMessage({ source: MSG_SOURCE_CONTENT, ...payload }, "*");
 }
 
 function currentWatchUrl(adapter: PlayerAdapter, roomId?: string) {
@@ -127,29 +140,30 @@ export async function boot(adapter: PlayerAdapter) {
     contentId: adapter.getContentId(),
     overlayOpen: Boolean(parseRoomToken()),
   });
-  pushPageOffset(adapter.platform, getState().overlayOpen);
 
   const session: SessionController = {
     startParty: () => {
+      const status = getState().status;
+      if (status === "connecting" || status === "in-party") return;
       if (!adapter.isWatchPage() || !adapter.getContentId()) {
         setState({ error: "Open a video or title first.", overlayOpen: true });
         return;
       }
-      void requestMediaPermissions().finally(() => {
-          pendingRole = "host";
-          pendingRoomId = randomRoomId();
-          setState({
-            status: "connecting",
-            error: null,
-            overlayOpen: true,
-            messages: [],
-            participants: [],
-            bursts: [],
-          });
-          pushPageOffset(adapter.platform, true);
-        });
+      pendingRole = "host";
+      pendingRoomId = randomRoomId();
+      setState({
+        status: "connecting",
+        error: null,
+        overlayOpen: true,
+        messages: [],
+        participants: [],
+        bursts: [],
+      });
+      pushPageOffset(adapter.platform, true);
     },
     joinParty: (roomId: string) => {
+      const status = getState().status;
+      if (status === "connecting" || status === "in-party") return;
       const code = roomId.replace(/^#/, "").trim();
       if (!code) return;
       if (!adapter.isWatchPage()) {
@@ -159,25 +173,25 @@ export async function boot(adapter: PlayerAdapter) {
         });
         return;
       }
-      void requestMediaPermissions().finally(() => {
-          pendingRole = "guest";
-          pendingRoomId = code;
-          setState({
-            status: "connecting",
-            error: null,
-            overlayOpen: true,
-            messages: [],
-            participants: [],
-            bursts: [],
-          });
-          pushPageOffset(adapter.platform, true);
-        });
+      pendingRole = "guest";
+      pendingRoomId = code;
+      setState({
+        status: "connecting",
+        error: null,
+        overlayOpen: true,
+        messages: [],
+        participants: [],
+        bursts: [],
+      });
+      pushPageOffset(adapter.platform, true);
     },
     leaveParty: () => {
       sendToMedia({ type: "leave" });
       stopHeartbeat();
       pendingRole = null;
       pendingRoomId = null;
+      lastToken = null;
+      clearTokenFromLocation(adapter.platform);
       setState({
         party: null,
         status: "idle",
@@ -246,23 +260,13 @@ export async function boot(adapter: PlayerAdapter) {
       setState({ needsGesture: false });
     },
     registerMediaWindow: (win) => {
-      mediaWindow = win;
-      const state = getState();
-      if (!win || !pendingRole) return;
-      sendToMedia({
-        type: "init",
-        role: pendingRole,
-        roomId: pendingRoomId,
-        nickname: state.nickname,
-        avatarId: state.avatarId,
-        platform: adapter.platform,
-        contentId: adapter.getContentId(),
-        watchUrl: currentWatchUrl(adapter, pendingRoomId || undefined),
-      });
+      mediaWindow = win && win !== window ? win : null;
+      sendPartyInit(adapter);
     },
   };
 
   mountOverlay(session);
+  pushPageOffset(adapter.platform, getState().overlayOpen);
   watchFullscreen(adapter.platform, () => getState().overlayOpen);
 
   chrome.runtime.onMessage.addListener((message: PopupRequest, _sender, sendResponse) => {
@@ -302,33 +306,26 @@ export async function boot(adapter: PlayerAdapter) {
     if (event.origin !== extensionOrigin()) return;
     const data = event.data as MediaToContent;
     if (data?.source !== MSG_SOURCE_MEDIA) return;
-    if (data.type === "iframe-ready" && pendingRole) {
-      const state = getState();
-      sendToMedia({
-        type: "init",
-        role: pendingRole,
-        roomId: pendingRoomId,
-        nickname: state.nickname,
-        avatarId: state.avatarId,
-        platform: adapter.platform,
-        contentId: adapter.getContentId(),
-        watchUrl: currentWatchUrl(adapter, pendingRoomId || undefined),
-      });
+    if (data.type === "iframe-ready") {
+      sendPartyInit(adapter);
     }
     if (data.type === "ready" && data.peerId && pendingRole) {
-      const roomId = pendingRole === "host" ? data.peerId : pendingRoomId!;
+      const role = pendingRole;
+      const roomId = role === "host" ? data.peerId : pendingRoomId!;
       const inviteUrl = buildInviteUrl(
         adapter.platform,
         adapter.getContentId() || "",
         roomId,
       );
       writeTokenToLocation(adapter.platform, roomId);
+      lastToken = roomId;
+      pendingRole = null;
       setState({
         status: "in-party",
-        party: { role: pendingRole, roomId, inviteUrl },
+        party: { role, roomId, inviteUrl },
         error: null,
       });
-      if (pendingRole === "host") {
+      if (role === "host") {
         startHeartbeat(adapter);
         broadcastSync(adapter);
       }

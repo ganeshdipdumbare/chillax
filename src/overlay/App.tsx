@@ -16,23 +16,30 @@ export function OverlayApp({ session }: { session: SessionController }) {
 
   useEffect(() => subscribe(() => setLocal(getState())), []);
 
+  const canWatch = state.isWatchPage && Boolean(state.contentId);
+  const inParty = state.status === "in-party" || state.status === "connecting";
+
   useEffect(() => {
+    if (!inParty) {
+      session.registerMediaWindow(null);
+      return;
+    }
     const iframe = iframeRef.current;
     if (!iframe) {
       session.registerMediaWindow(null);
       return;
     }
-    const onLoad = () => session.registerMediaWindow(iframe.contentWindow);
+    const onLoad = () => {
+      const win = iframe.contentWindow;
+      if (win && win !== window) session.registerMediaWindow(win);
+    };
     iframe.addEventListener("load", onLoad);
-    if (iframe.contentWindow) session.registerMediaWindow(iframe.contentWindow);
+    onLoad();
     return () => {
       iframe.removeEventListener("load", onLoad);
       session.registerMediaWindow(null);
     };
-  }, [session, state.party?.roomId, state.status]);
-
-  const canWatch = state.isWatchPage && Boolean(state.contentId);
-  const inParty = state.status === "in-party" || state.status === "connecting";
+  }, [session, inParty]);
 
   const people = useMemo(
     () =>

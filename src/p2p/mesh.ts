@@ -1,8 +1,6 @@
 import { PARTY_CAP, VIDEO_CONSTRAINTS } from "../shared/constants";
-import { requestMediaPermissions } from "../shared/mediaPermissions";
 
 export async function captureLocalMedia(): Promise<MediaStream> {
-  await requestMediaPermissions();
   try {
     const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
     stream.getVideoTracks().forEach((track) => {

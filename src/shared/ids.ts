@@ -51,6 +51,17 @@ export function writeTokenToLocation(platform: Platform, roomId: string) {
   history.replaceState(history.state, "", next);
 }
 
+export function clearTokenFromLocation(platform: Platform) {
+  const url = new URL(location.href);
+  url.searchParams.delete(TOKEN_KEY);
+  if (platform === "netflix") {
+    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
+    params.delete(TOKEN_KEY);
+    url.hash = params.toString();
+  }
+  history.replaceState(history.state, "", url.toString());
+}
+
 export function hueFromId(id: string): number {
   let hash = 0;
   for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) % 360;

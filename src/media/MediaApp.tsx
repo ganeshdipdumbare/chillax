@@ -25,6 +25,8 @@ export function MediaApp() {
   const roomRef = useRef<PeerRoom | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const initRef = useRef<InitPayload | null>(null);
+  const startingRef = useRef(false);
+  const generationRef = useRef(0);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
@@ -32,6 +34,8 @@ export function MediaApp() {
   const [tick, setTick] = useState(0);
 
   function hangup() {
+    generationRef.current += 1;
+    startingRef.current = false;
     roomRef.current?.destroy();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     roomRef.current = null;
@@ -78,17 +82,25 @@ export function MediaApp() {
   }, []);
 
   async function startRoom(init: InitPayload) {
-    if (roomRef.current) return;
+    if (roomRef.current || startingRef.current) return;
+    startingRef.current = true;
+    const generation = generationRef.current;
     setStatus("Allow microphone to talk while you watch");
     let stream: MediaStream;
     try {
       stream = await captureLocalMedia();
     } catch {
+      if (generation !== generationRef.current) return;
+      startingRef.current = false;
       postToParent({
         type: "error",
         message: "Microphone permission is needed for party voice. You can still use chat if you retry and allow access.",
       });
       setStatus("Microphone blocked");
+      return;
+    }
+    if (generation !== generationRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
       return;
     }
     streamRef.current = stream;
@@ -141,7 +153,17 @@ export function MediaApp() {
       } else {
         await room.join(init.roomId, stream, init.nickname, init.avatarId || "fox");
       }
+      if (generation !== generationRef.current) {
+        room.destroy();
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      startingRef.current = false;
     } catch (error) {
+      if (generation !== generationRef.current) return;
+      startingRef.current = false;
+      room.destroy();
+      if (roomRef.current === room) roomRef.current = null;
       const message =
         error instanceof Error ? error.message : "Could not start the party connection.";
       setStatus(message);

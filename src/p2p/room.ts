@@ -1,5 +1,6 @@
 import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import { PEER_CONFIG } from "../shared/constants";
+import { randomRoomId } from "../shared/ids";
 import { decodeMessage, encodeMessage } from "./protocol";
 import { partyFull } from "./mesh";
 import type { Participant, ProtocolMessage } from "../shared/types";
@@ -16,6 +17,29 @@ type RoomHandlers = {
 
 function shouldInitiateCall(myId: string, otherId: string): boolean {
   return myId < otherId;
+}
+
+function peerErrorType(err: unknown): string | undefined {
+  if (err && typeof err === "object" && "type" in err) {
+    const type = (err as { type?: string }).type;
+    return type || undefined;
+  }
+  return undefined;
+}
+
+function mapPeerError(err: unknown): string {
+  const type = peerErrorType(err);
+  if (type === "unavailable-id") {
+    return "That party code is already in use. Try starting a new party.";
+  }
+  if (type === "peer-unavailable") {
+    return "Could not find that party. Check the code and try again.";
+  }
+  if (type === "network" || type === "server-error" || type === "socket-error") {
+    return "Signaling broker failed. Chat and calls need a connection — retry in a moment.";
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Peer connection failed.";
 }
 
 export class PeerRoom {
@@ -144,43 +168,51 @@ export class PeerRoom {
     this.handlers.onProtocol(message, fromPeerId);
   }
 
-  private async openPeer(id?: string) {
-    this.peer = id ? new Peer(id, PEER_CONFIG) : new Peer(PEER_CONFIG);
-    this.peer.on("error", (err) => {
-      const type = (err as { type?: string }).type;
-      if (type === "unavailable-id") {
-        this.handlers.onError("That party code is already in use. Try starting a new party.");
-        return;
-      }
-      if (type === "peer-unavailable") {
-        this.handlers.onError("Could not find that party. Check the code and try again.");
-        return;
-      }
-      if (type === "network" || type === "server-error" || type === "socket-error") {
-        this.handlers.onError("Signaling broker failed. Chat and calls need a connection — retry in a moment.");
-        return;
-      }
-      this.handlers.onError(err.message || "Peer connection failed.");
-    });
-    this.peer.on("disconnected", () => {
+  private async openPeer(id?: string, attempt = 0): Promise<void> {
+    if (this.tearingDown) return;
+    this.peer?.destroy();
+    const peer = id ? new Peer(id, PEER_CONFIG) : new Peer(PEER_CONFIG);
+    this.peer = peer;
+    peer.on("disconnected", () => {
+      if (this.tearingDown || this.peer !== peer) return;
       this.handlers.onCallStatus(false, "Disconnected from signaling. Reconnecting…");
-      this.peer?.reconnect();
+      peer.reconnect();
     });
-    this.peer.on("connection", (conn) => this.attachData(conn));
-    this.peer.on("call", (call) => this.answerCall(call));
-    await new Promise<void>((resolve, reject) => {
-      const timer = window.setTimeout(() => reject(new Error("Could not reach the signaling broker.")), 12000);
-      this.peer!.on("open", (peerId) => {
-        window.clearTimeout(timer);
-        this.nicknames.set(peerId, this.localNickname);
-        this.avatars.set(peerId, this.localAvatarId);
-        this.handlers.onReady(peerId);
-        resolve();
+    peer.on("connection", (conn) => this.attachData(conn));
+    peer.on("call", (call) => this.answerCall(call));
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timer = window.setTimeout(
+          () => reject(new Error("Could not reach the signaling broker.")),
+          12000,
+        );
+        peer.once("open", (peerId) => {
+          window.clearTimeout(timer);
+          this.nicknames.set(peerId, this.localNickname);
+          this.avatars.set(peerId, this.localAvatarId);
+          this.handlers.onReady(peerId);
+          resolve();
+        });
+        peer.once("error", (err) => {
+          window.clearTimeout(timer);
+          reject(err);
+        });
       });
-      this.peer!.on("error", (err) => {
-        window.clearTimeout(timer);
-        reject(err);
-      });
+    } catch (err) {
+      if (this.peer === peer) this.peer = null;
+      peer.destroy();
+      if (id && peerErrorType(err) === "unavailable-id" && attempt < 4 && !this.tearingDown) {
+        return this.openPeer(randomRoomId(), attempt + 1);
+      }
+      throw new Error(mapPeerError(err));
+    }
+    if (this.tearingDown || this.peer !== peer) {
+      peer.destroy();
+      return;
+    }
+    peer.on("error", (err) => {
+      if (this.tearingDown || this.peer !== peer) return;
+      this.handlers.onError(mapPeerError(err));
     });
   }
 
