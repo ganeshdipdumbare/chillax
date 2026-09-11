@@ -17,11 +17,8 @@
   z-index: 2147483646;
 }
 
-:host(.is-open) {
-  width: var(--chillax-reserve, 360px) !important;
-}
-
-:host(.is-lounge) {
+:host(.is-lounge),
+:host(.is-party) {
   inset: 0 !important;
   width: auto !important;
   left: 0 !important;
@@ -86,7 +83,7 @@ textarea {
   right: 0;
   bottom: 0;
   left: auto;
-  z-index: 2147483646;
+  z-index: 20;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -140,29 +137,57 @@ textarea {
   font-size: 18px;
 }
 
+.panel.is-fs-card {
+  top: 20px;
+  right: 20px;
+  bottom: auto;
+  left: auto;
+  width: min(360px, calc(100% - 40px));
+  height: auto;
+  max-height: min(520px, 58vh);
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgb(243 199 126 / 0.22);
+  box-shadow: 0 22px 70px rgb(0 0 0 / 0.55);
+}
+
+.panel.is-fs-card .media-frame {
+  min-height: 96px;
+  height: 112px;
+}
+
+:host(.is-fullscreen) .panel.is-fs-card {
+  max-height: min(520px, calc(100% - 360px));
+}
+
 :host(.is-fullscreen) {
   position: absolute !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  flex: none !important;
+  display: block !important;
+  pointer-events: none !important;
   z-index: 2147483647;
+}
+
+:host(.is-fullscreen) .tab {
+  position: absolute;
 }
 
 .sky {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  z-index: 9;
+  z-index: 50;
   overflow: hidden;
   background: transparent;
 }
 
-:host .sky {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
+:host(.is-party) .sky,
 :host(.is-fullscreen) .sky {
-  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
@@ -664,7 +689,7 @@ input[type="text"] {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 4;
+  z-index: 50;
 }
 
 .story-stage .tab {

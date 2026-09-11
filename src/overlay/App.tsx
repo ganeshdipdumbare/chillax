@@ -13,6 +13,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
   const [state, setLocal] = useState(getState());
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
+  const [fullscreen, setFullscreen] = useState(() => Boolean(document.fullscreenElement));
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => subscribe(() => {
@@ -23,11 +24,24 @@ export function OverlayApp({ session }: { session: SessionController }) {
     }
   }), []);
 
+  useEffect(() => {
+    const sync = () => setFullscreen(Boolean(document.fullscreenElement));
+    for (const type of ["fullscreenchange", "webkitfullscreenchange", "yt-fullscreen-change"]) {
+      document.addEventListener(type, sync);
+    }
+    return () => {
+      for (const type of ["fullscreenchange", "webkitfullscreenchange", "yt-fullscreen-change"]) {
+        document.removeEventListener(type, sync);
+      }
+    };
+  }, []);
+
   const canWatch = state.isWatchPage && Boolean(state.contentId);
   const docked = state.status === "in-party" || state.status === "connecting";
   const connecting = state.status === "connecting";
   const needMedia = docked;
   const lounge = !docked;
+  const panelOpen = state.overlayOpen;
 
   useEffect(() => {
     if (!needMedia) {
@@ -94,15 +108,16 @@ export function OverlayApp({ session }: { session: SessionController }) {
 
   const panelClass = [
     "panel",
-    state.overlayOpen ? null : "is-collapsed",
-    state.overlayOpen && lounge ? "is-lounge" : null,
+    panelOpen ? null : "is-collapsed",
+    panelOpen && lounge ? "is-lounge" : null,
+    panelOpen && docked && fullscreen ? "is-fs-card" : null,
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
     <>
-      {!docked || state.overlayOpen ? null : (
+      {!docked || panelOpen ? null : (
         <button
           className="tab"
           type="button"

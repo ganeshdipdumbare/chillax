@@ -55,6 +55,8 @@ export function mountOverlay(session: SessionController) {
   const style = document.createElement("style");
   style.textContent = overlayCss;
   const mount = document.createElement("div");
+  mount.style.cssText =
+    "position:absolute;inset:0;overflow:visible;pointer-events:none;background:transparent;";
   shadow.appendChild(style);
   shadow.appendChild(mount);
   shieldPageShortcuts(host, shadow);

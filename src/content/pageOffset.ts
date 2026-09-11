@@ -4,28 +4,14 @@ import { getState } from "../shared/store";
 const STYLE_ID = "chillax-page-offset";
 const LOUNGE_STYLE_ID = "chillax-lounge-hide";
 const HOST_ID = "chillax-root";
-const PINNED_PROPS = [
-  "position",
-  "left",
-  "right",
-  "top",
-  "bottom",
-  "width",
-  "height",
-  "object-fit",
-] as const;
 
 let resizeTimer = 0;
 let restoreTimer = 0;
 let theaterTimer = 0;
 let windowSyncTimer = 0;
 let layoutGen = 0;
-let pinning = false;
 let ignoreWindowResize = false;
-let fsReserve = 0;
 let hostGuard: MutationObserver | null = null;
-let fsLayoutGuard: MutationObserver | null = null;
-let pinnedEls: HTMLElement[] = [];
 
 function offsetCss(): string {
   const space = `${OVERLAY_RESERVE}px`;
@@ -86,16 +72,25 @@ html.chillax-overlay-open:not(.chillax-fs) .watch-video--player-view,
 html.chillax-overlay-open:not(.chillax-fs) [data-uia="player"],
 html.chillax-overlay-open:not(.chillax-fs) .nfp,
 html.chillax-overlay-open:not(.chillax-fs) .nfp.AkiraPlayer {
+  position: relative !important;
   width: calc(100vw - ${space}) !important;
   max-width: calc(100vw - ${space}) !important;
-}
-html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-bottom,
-html.chillax-overlay-open.chillax-fs :fullscreen .ytp-chrome-top,
-html.chillax-overlay-open.chillax-fs :fullscreen .ytp-gradient-bottom,
-html.chillax-overlay-open.chillax-fs :fullscreen .ytp-gradient-top {
+  height: 100% !important;
   left: 0 !important;
-  width: calc(100% - ${space}) !important;
   right: auto !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+}
+html.chillax-overlay-open:not(.chillax-fs) .watch-video video,
+html.chillax-overlay-open:not(.chillax-fs) .watch-video--player-view video,
+html.chillax-overlay-open:not(.chillax-fs) [data-uia="player"] video,
+html.chillax-overlay-open:not(.chillax-fs) .nfp video {
+  left: 0 !important;
+  top: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
 }
 `;
 }
@@ -164,6 +159,45 @@ function youtubePlayer() {
     | null;
 }
 
+function layoutHost(
+  host: HTMLElement,
+  mode: "hidden" | "lounge" | "party" | "fullscreen",
+) {
+  host.style.pointerEvents = "none";
+  host.style.background = "transparent";
+  host.style.margin = "0";
+  host.style.flex = "none";
+  host.style.maxWidth = "none";
+  host.style.maxHeight = "none";
+  if (mode === "hidden") {
+    host.style.position = "fixed";
+    host.style.top = "0px";
+    host.style.right = "0px";
+    host.style.bottom = "0px";
+    host.style.left = "auto";
+    host.style.width = "0px";
+    host.style.height = "auto";
+    return;
+  }
+  host.style.top = "0px";
+  host.style.right = "0px";
+  host.style.bottom = "0px";
+  host.style.left = "0px";
+  host.style.width = "auto";
+  host.style.height = "auto";
+  host.style.position = mode === "fullscreen" ? "absolute" : "fixed";
+}
+
+function fillFullscreenPlayer() {
+  if (!document.fullscreenElement) return;
+  const width = Math.max(160, window.innerWidth);
+  const height = Math.max(160, window.innerHeight);
+  youtubePlayer()?.setSize?.(width, height);
+  ignoreWindowResize = true;
+  window.dispatchEvent(new Event("resize"));
+  ignoreWindowResize = false;
+}
+
 function leftoverWidth() {
   return Math.max(160, window.innerWidth - OVERLAY_RESERVE);
 }
@@ -185,36 +219,24 @@ function windowedPlayerSize() {
   return { width, height };
 }
 
-function sizePlayerToReserve(reserve: number, restore = false) {
+function sizePlayerToReserve(restore = false) {
   const gen = ++layoutGen;
-  const apply = (emitResize: boolean) => {
+  const apply = () => {
     if (gen !== layoutGen) return;
     placeHost();
-    if (document.fullscreenElement) {
-      const { width, height } = leftoverSize(reserve);
-      youtubePlayer()?.setSize?.(width, height);
-      clearPinnedStyles();
-      applyFullscreenPlayerLayout(reserve);
-      return;
-    }
-    // Windowed watch: let YouTube layout itself. Calling setSize on dock,
-    // unmaximize, or minimize paints a black player over the real video.
-    if (!restore || !windowIsUsable()) return;
+    if (document.fullscreenElement || !windowIsUsable()) return;
+    ignoreWindowResize = true;
+    window.dispatchEvent(new Event("resize"));
+    ignoreWindowResize = false;
+    if (!restore) return;
     const { width, height } = windowedPlayerSize();
     youtubePlayer()?.setSize?.(width, height);
-    if (emitResize) {
-      ignoreWindowResize = true;
-      window.dispatchEvent(new Event("resize"));
-      ignoreWindowResize = false;
-    }
   };
-  apply(true);
+  apply();
   window.clearTimeout(resizeTimer);
   window.clearTimeout(restoreTimer);
-  if (document.fullscreenElement || restore) {
-    resizeTimer = window.setTimeout(() => apply(false), 80);
-    restoreTimer = window.setTimeout(() => apply(false), 280);
-  }
+  resizeTimer = window.setTimeout(apply, 80);
+  restoreTimer = window.setTimeout(apply, 280);
 }
 
 function fullscreenTarget(): Element {
@@ -245,109 +267,20 @@ function watchHostParent() {
   hostGuard.observe(fs, { childList: true });
 }
 
-function leftoverSize(reserve: number) {
-  return {
-    width: Math.max(160, window.innerWidth - reserve),
-    height: window.innerHeight,
-  };
-}
-
-function pinPx(el: HTMLElement, props: Record<string, string>) {
-  for (const [prop, value] of Object.entries(props)) {
-    el.style.setProperty(prop, value, "important");
-  }
-  pinnedEls.push(el);
-}
-
-function clearPinnedStyles() {
-  for (const el of pinnedEls) {
-    for (const prop of PINNED_PROPS) el.style.removeProperty(prop);
-  }
-  pinnedEls = [];
-}
-
-function applyFullscreenPlayerLayout(reserve: number) {
-  const fs = document.fullscreenElement;
-  if (!(fs instanceof HTMLElement)) return;
-  pinning = true;
-  const { width, height } = leftoverSize(reserve);
-
-  const container =
-    fs.querySelector<HTMLElement>(".html5-video-container") ||
-    fs.querySelector<HTMLElement>("[data-uia='video-canvas']");
-  if (container) {
-    pinPx(container, {
-      position: "absolute",
-      left: "0px",
-      top: "0px",
-      width: `${width}px`,
-      height: `${height}px`,
-    });
-  }
-
-  const video = fs.querySelector<HTMLVideoElement>("video");
-  if (video && video !== fs) {
-    pinPx(video, {
-      left: "0px",
-      top: "0px",
-      width: `${width}px`,
-      height: `${height}px`,
-      "object-fit": "contain",
-    });
-  }
-
-  for (const sel of [
-    ".ytp-chrome-bottom",
-    ".ytp-chrome-top",
-    ".ytp-gradient-bottom",
-    ".ytp-gradient-top",
-  ]) {
-    fs.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-      pinPx(el, {
-        left: "0px",
-        width: `${width}px`,
-        right: "auto",
-      });
-    });
-  }
-  window.requestAnimationFrame(() => {
-    pinning = false;
-  });
-}
-
-function watchFullscreenLayout(active: boolean) {
-  fsLayoutGuard?.disconnect();
-  fsLayoutGuard = null;
-  clearPinnedStyles();
-  const fs = document.fullscreenElement;
-  if (!active || !(fs instanceof HTMLElement)) return;
-  applyFullscreenPlayerLayout(fsReserve);
-  let debounce = 0;
-  fsLayoutGuard = new MutationObserver(() => {
-    if (pinning || !document.fullscreenElement) return;
-    window.clearTimeout(debounce);
-    debounce = window.setTimeout(() => {
-      if (pinning || !document.fullscreenElement) return;
-      clearPinnedStyles();
-      applyFullscreenPlayerLayout(fsReserve);
-    }, 50);
-  });
-  fsLayoutGuard.observe(fs, {
-    attributes: true,
-    attributeFilter: ["style"],
-    subtree: true,
-  });
-}
-
-function isDocked(open: boolean) {
+function inSession() {
   const status = getState().status;
-  return open && (status === "in-party" || status === "connecting");
+  return status === "in-party" || status === "connecting";
+}
+
+function isWindowDock(open: boolean) {
+  return open && inSession() && !document.fullscreenElement;
 }
 
 export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) {
   const fullscreen = Boolean(document.fullscreenElement);
-  const docked = isDocked(open);
-  const lounge = open && !docked;
+  const party = inSession();
+  const docked = isWindowDock(open);
+  const lounge = open && !party;
   placeHost();
   watchHostParent();
 
@@ -356,36 +289,23 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   root.classList.toggle("chillax-lounge", lounge);
   root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
-  root.style.marginRight = docked && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
+  root.style.marginRight = docked ? `${OVERLAY_RESERVE}px` : "";
 
   const host = document.getElementById(HOST_ID);
   host?.classList.toggle("is-fullscreen", fullscreen);
   host?.classList.toggle("is-open", docked);
   host?.classList.toggle("is-lounge", lounge);
-  host?.classList.toggle("is-party", getState().status === "in-party" || getState().status === "connecting");
+  host?.classList.toggle("is-party", party);
   if (host) {
-    host.style.position = fullscreen ? "absolute" : "fixed";
-    host.style.background = "transparent";
-    if (lounge) {
-      host.style.left = "0px";
-      host.style.right = "0px";
-      host.style.top = "0px";
-      host.style.bottom = "0px";
-      host.style.width = "100%";
-    } else {
-      host.style.left = "auto";
-      host.style.right = "0px";
-      host.style.top = "0px";
-      host.style.bottom = "0px";
-      host.style.width = docked ? `${OVERLAY_RESERVE}px` : "0px";
-    }
+    layoutHost(
+      host,
+      lounge ? "lounge" : fullscreen && party ? "fullscreen" : party ? "party" : "hidden",
+    );
   }
 
   const existing = document.getElementById(STYLE_ID);
-  fsReserve = docked && fullscreen ? OVERLAY_RESERVE : 0;
   if (lounge) {
     existing?.remove();
-    watchFullscreenLayout(false);
     setInjectedStyle(LOUNGE_STYLE_ID, loungeCss());
     collapseYouTubeGuide();
     placeHost();
@@ -394,20 +314,21 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   setInjectedStyle(LOUNGE_STYLE_ID, null);
   if (!docked) {
     existing?.remove();
-    watchFullscreenLayout(false);
-    sizePlayerToReserve(0, !fullscreen);
+    if (fullscreen) {
+      fillFullscreenPlayer();
+      window.setTimeout(fillFullscreenPlayer, 80);
+      window.setTimeout(fillFullscreenPlayer, 280);
+    } else {
+      sizePlayerToReserve(true);
+    }
     return;
   }
-  if (!fullscreen) {
-    watchFullscreenLayout(false);
-    scheduleExitTheater();
-  }
+  scheduleExitTheater();
   const style = existing ?? document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = offsetCss();
   if (!existing) (document.head || root).appendChild(style);
-  if (fullscreen) watchFullscreenLayout(true);
-  sizePlayerToReserve(fullscreen ? OVERLAY_RESERVE : 0);
+  sizePlayerToReserve(false);
 }
 
 export function watchFullscreen(platform: "youtube" | "netflix", isOpen: () => boolean) {
