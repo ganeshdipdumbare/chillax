@@ -763,6 +763,26 @@ button.chip:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.msg.is-playback {
+  align-items: center;
+  opacity: 0.92;
+}
+
+.msg.is-playback p {
+  margin: 0;
+  color: #cbbba6;
+  font-size: 12px;
+  line-height: 1.35;
+  font-style: italic;
+}
+
+.msg.is-playback .who {
+  color: #f3c77e;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+}
+
 .react-bar {
   display: flex;
   gap: 4px;

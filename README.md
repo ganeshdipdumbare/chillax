@@ -21,7 +21,7 @@ The overlay is a cream dotted storyboard on night purple — blob buddies, mint 
    npm run build
    ```
 3. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and select the `dist` folder.
-4. Pin Chillax. Open a YouTube video or a Netflix title (`/watch/...`), then start a party.
+4. Pin Chillax. Click the **Cx** icon on YouTube or Netflix to open the lounge (name, avatar, start or join). Off those sites, Chillax asks you to open YouTube or Netflix first.
 
 Development with reload:
 
@@ -85,12 +85,12 @@ Open [http://localhost:6006](http://localhost:6006). Static export: `npm run bui
 </p>
 
 1. Host opens the same video everyone will watch.
-2. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code).
+2. Click the **Cx** icon. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code). If you are not on a video yet, start stays off until you open one — join still works.
 3. Chat **docks on the right**. The movie stays on the left. **Hide chat** tucks the panel without leaving; **Leave party** is the pink control.
 4. Copy the invite link (YouTube query `?chillax=`, Netflix hash `#chillax=`).
 5. Guests install Chillax and open the invite link — they join automatically. Mic and camera stay **off** until someone turns them on.
 6. Mute and camera are one click. Use the reaction bar under chat. Parties cap at **8** people.
-7. Hosts keep playback by default. **Tap a person** in the party to let them play, pause, and seek.
+7. The host always has playback. **Tap people** in the party to share play/pause/seek with as many friends as you want; tap again to take it back.
 
 If Netflix strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. Chillax opens the host’s title for them.
 
@@ -198,7 +198,7 @@ If rejected, Google emails a reason. Fix, bump the version, upload a new zip.
 
 Use two Chrome profiles with the unpacked extension.
 
-- YouTube: same video; play/pause/seek follow the host; tap a person to grant them control; chat and reactions appear in the right dock; SPA navigation still finds the player.
+- YouTube: same video; host always has play/pause/seek; tap people to share control; chat and reactions appear in the right dock; SPA navigation still finds the player.
 - Voice/video: mic and camera start off; tiles only in the Chillax panel; movie audio still plays.
 - Netflix: logged-in profiles that can play the same title; hash invite or join-with-code; wrong-title prompt if IDs differ.
 

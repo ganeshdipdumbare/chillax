@@ -19,10 +19,21 @@ const seed: ChatMessage[] = [
     text: "headphones on, we start in 10",
     sentAt: 1,
   },
+  {
+    id: "2",
+    from: "jules",
+    nickname: "Jules",
+    avatarId: "ghost",
+    kind: "playback",
+    text: "hit play",
+    sentAt: 2,
+  },
 ];
 
-function SetupCard() {
+function SetupCard({ onVideo = true }: { onVideo?: boolean }) {
   const [avatarId, setAvatarId] = useState("disco");
+  const [nickname, setNickname] = useState("Maya");
+  const [joinCode, setJoinCode] = useState("");
   return (
     <div className="panel is-lounge story">
       <header className="header">
@@ -43,15 +54,40 @@ function SetupCard() {
           <span className="lede">Pick a face, start a party, then chat on the right.</span>
         </div>
         <label>
+          Nickname
+          <input
+            type="text"
+            value={nickname}
+            maxLength={24}
+            onChange={(event) => setNickname(event.target.value)}
+          />
+        </label>
+        <label>
           Avatar
           <AvatarPicker value={avatarId} onChange={setAvatarId} />
         </label>
-        <button className="primary" type="button">
-          Start the night
+        <button className="primary" type="button" disabled={!onVideo}>
+          {onVideo ? "Start the night" : "Open a video to start"}
         </button>
-        <button className="ghost" type="button">
-          Slide into this party
-        </button>
+        <form
+          className="join-form"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <label>
+            Join with code
+            <input
+              type="text"
+              value={joinCode}
+              placeholder="cxab12cd"
+              autoComplete="off"
+              spellCheck={false}
+              onChange={(event) => setJoinCode(event.target.value)}
+            />
+          </label>
+          <button className="ghost" type="submit" disabled={!joinCode.trim()}>
+            Slide into this party
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -61,7 +97,7 @@ function Lounge() {
   const [avatarId, setAvatarId] = useState("disco");
   const [messages, setMessages] = useState(seed);
   const [bursts, setBursts] = useState<ReactionBurst[]>([]);
-  const [drivers, setDrivers] = useState<string[]>(["jules"]);
+  const [drivers, setDrivers] = useState<string[]>(["maya", "jules"]);
 
   function toggleDrive(id: string) {
     setDrivers((current) =>
@@ -133,7 +169,7 @@ function Lounge() {
         </button>
       </div>
       <p className="control-hint" style={{ padding: "0 14px 8px" }}>
-        Tap a friend to let them play, pause, and seek.
+        Tap friends to share control. You always keep it.
       </p>
       <Chat
         messages={messages}
@@ -169,6 +205,10 @@ export const Playground: Story = {};
 
 export const Setup: Story = {
   render: () => <SetupCard />,
+};
+
+export const Homepage: Story = {
+  render: () => <SetupCard onVideo={false} />,
 };
 
 export const ChatToggle: Story = {

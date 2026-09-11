@@ -13,6 +13,7 @@ export type ChatMessage = {
   avatarId: string;
   text: string;
   sentAt: number;
+  kind?: "playback";
 };
 
 export type Participant = {

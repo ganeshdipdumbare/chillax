@@ -85,6 +85,16 @@ export function clearTokenFromLocation(platform: Platform) {
   history.replaceState(history.state, "", url.toString());
 }
 
+export function isSupportedHost(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return host === "youtube.com" || host.endsWith(".youtube.com") || host === "netflix.com" || host.endsWith(".netflix.com");
+  } catch {
+    return false;
+  }
+}
+
 export function hueFromId(id: string): number {
   let hash = 0;
   for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) % 360;

@@ -25,6 +25,7 @@ let syncOutTimer = 0;
 let hostFollowupTimer = 0;
 let ignoreIncomingUntil = 0;
 let lastSync: { paused: boolean; time: number; sentAt?: number } | null = null;
+let lastPlayer: { paused: boolean; time: number } | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 let booted = false;
@@ -168,7 +169,58 @@ function sendControlPolicy() {
   });
 }
 
-function broadcastSync(adapter: PlayerAdapter) {
+function notePlayer(player: { paused: boolean; time: number }) {
+  lastPlayer = { paused: player.paused, time: player.time };
+}
+
+function formatWatchTime(seconds: number) {
+  const total = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
+
+function classifyPlayback(player: { paused: boolean; time: number }): "play" | "pause" | "seek" | null {
+  if (!lastPlayer) {
+    notePlayer(player);
+    return null;
+  }
+  const jumped = Math.abs(player.time - lastPlayer.time) > 2.5;
+  const pausedChanged = player.paused !== lastPlayer.paused;
+  notePlayer(player);
+  if (jumped) return "seek";
+  if (pausedChanged) return player.paused ? "pause" : "play";
+  return null;
+}
+
+function playbackText(action: "play" | "pause" | "seek", time: number) {
+  if (action === "pause") return "paused the video";
+  if (action === "play") return "hit play";
+  return `jumped to ${formatWatchTime(time)}`;
+}
+
+function postPlaybackNotice(action: "play" | "pause" | "seek", time: number) {
+  const state = getState();
+  if (!state.party) return;
+  const message: ProtocolMessage = {
+    type: "chat",
+    kind: "playback",
+    id: crypto.randomUUID(),
+    from: myPeerId() || state.party.roomId,
+    nickname: state.nickname,
+    avatarId: state.avatarId,
+    text: playbackText(action, time),
+    sentAt: Date.now(),
+  };
+  setState({ messages: [...getState().messages, message].slice(-200) });
+  sendToMedia({ type: "send-protocol", message });
+}
+
+function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" | "control" = "heartbeat") {
   const state = getState();
   if (!canControlPlayback()) return;
   const party = state.party;
@@ -177,6 +229,12 @@ function broadcastSync(adapter: PlayerAdapter) {
   const player = adapter.getState();
   if (!player) return;
   if (party.role !== "host") ignoreIncomingUntil = Date.now() + 700;
+  if (reason === "control") {
+    const action = classifyPlayback(player);
+    if (action) postPlaybackNotice(action, player.time);
+  } else {
+    notePlayer(player);
+  }
   sendToMedia({
     type: "send-protocol",
     message: {
@@ -211,6 +269,7 @@ function addBurst(emoji: string) {
 async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) {
   const state = getState();
   if (message.type === "chat") {
+    if (state.messages.some((item) => item.id === message.id)) return;
     setState({ messages: [...state.messages, message].slice(-200) });
     return;
   }
@@ -253,7 +312,7 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     }
     setState({ wrongTitle: null });
   }
-  if (message.type === "sync" && message.controllers && state.party?.role !== "host") {
+  if (message.type === "sync" && message.controllers && message.from === hostPeerId()) {
     applyControllers(message.controllers);
   }
   if (message.type === "sync") {
@@ -263,7 +322,7 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     if (result === "gesture") setState({ needsGesture: true });
     if (getState().party?.role === "host") {
       window.clearTimeout(hostFollowupTimer);
-      hostFollowupTimer = window.setTimeout(() => broadcastSync(adapter), 500);
+      hostFollowupTimer = window.setTimeout(() => broadcastSync(adapter, "followup"), 500);
     }
   }
 }
@@ -354,6 +413,7 @@ export async function boot(adapter: PlayerAdapter) {
         overlayOpen: keepLounge,
       });
       lastSync = null;
+      lastPlayer = null;
       ignoreIncomingUntil = 0;
       pushPageOffset(adapter.platform, keepLounge);
     },
@@ -499,7 +559,7 @@ export async function boot(adapter: PlayerAdapter) {
       const allowed = new Set(people.map((person) => person.peerId));
       if (hostId) allowed.add(hostId);
       const prev = getState().controllers;
-      const controllers = prev.filter((id) => id === "*" || allowed.has(id));
+      const controllers = withHostController(prev.filter((id) => id === "*" || allowed.has(id)));
       setState({ participants: people, controllers });
       if (getState().party?.role === "host" && controllers.join() !== prev.join()) sendControlPolicy();
     }
@@ -529,12 +589,13 @@ export async function boot(adapter: PlayerAdapter) {
   });
 
   adapter.onChange(() => {
+    if (applying.current) return;
     if (!canControlPlayback()) {
-      if (lastSync && !applying.current) void applyHostSync(adapter, lastSync, applying);
+      if (lastSync) void applyHostSync(adapter, lastSync, applying);
       return;
     }
     window.clearTimeout(syncOutTimer);
-    syncOutTimer = window.setTimeout(() => broadcastSync(adapter), 70);
+    syncOutTimer = window.setTimeout(() => broadcastSync(adapter, "control"), 70);
   });
   let leaveWatchTimer: number | null = null;
   adapter.onNavigate(() => {

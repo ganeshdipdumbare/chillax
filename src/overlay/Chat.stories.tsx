@@ -21,8 +21,26 @@ const meta = {
         from: "b",
         nickname: "Jules",
         avatarId: "ghost",
-        text: "wait for the needle drop",
+        kind: "playback",
+        text: "paused the video",
         sentAt: 2,
+      },
+      {
+        id: "3",
+        from: "you",
+        nickname: "You",
+        avatarId: "disco",
+        kind: "playback",
+        text: "jumped to 1:12:04",
+        sentAt: 3,
+      },
+      {
+        id: "4",
+        from: "b",
+        nickname: "Jules",
+        avatarId: "ghost",
+        text: "wait for the needle drop",
+        sentAt: 4,
       },
     ],
   },
@@ -32,6 +50,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const WithMessages: Story = {
+  args: { localPeerId: "you" },
   render: (args) => (
     <div className="panel story" style={{ display: "flex", flexDirection: "column" }}>
       <Chat {...args} />

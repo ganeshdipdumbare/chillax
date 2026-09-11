@@ -10,11 +10,13 @@ export function Chat({
   onSend,
   onReact,
   disabled,
+  localPeerId,
 }: {
   messages: ChatMessage[];
   onSend: (text: string) => void;
   onReact: (emoji: ReactionEmoji) => void;
   disabled?: boolean;
+  localPeerId?: string | null;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,15 +37,29 @@ export function Chat({
             <p>First one to drop a 🍿 sets the vibe.</p>
           </div>
         ) : (
-          messages.map((msg) => (
-            <article className="msg" key={msg.id}>
-              <AvatarFace avatarId={msg.avatarId} size={28} title={msg.nickname} />
-              <div>
-                <div className="who">{msg.nickname}</div>
-                <div className="text">{msg.text}</div>
-              </div>
-            </article>
-          ))
+          messages.map((msg) => {
+            const you = Boolean(localPeerId && msg.from === localPeerId);
+            const name = you ? "You" : msg.nickname;
+            if (msg.kind === "playback") {
+              return (
+                <article className="msg is-playback" key={msg.id}>
+                  <AvatarFace avatarId={msg.avatarId} size={22} title={name} />
+                  <p>
+                    <span className="who">{name}</span> {msg.text}
+                  </p>
+                </article>
+              );
+            }
+            return (
+              <article className="msg" key={msg.id}>
+                <AvatarFace avatarId={msg.avatarId} size={28} title={name} />
+                <div>
+                  <div className="who">{name}</div>
+                  <div className="text">{msg.text}</div>
+                </div>
+              </article>
+            );
+          })
         )}
       </div>
       <ReactionBar disabled={disabled} onReact={onReact} />

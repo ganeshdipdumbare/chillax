@@ -78,7 +78,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
           );
         }
         return (
-          <span className={`chip${canDrive ? " is-driver" : ""}`} key={person.peerId}>
+          <span
+            className={`chip${canDrive ? " is-driver" : ""}`}
+            key={person.peerId}
+            title={isHostPerson ? "Host always has playback control" : undefined}
+          >
             <AvatarFace avatarId={person.avatarId} size={22} />
             {isYou ? "You" : person.nickname}
             {isHostPerson ? " · host" : canDrive ? " · drive" : ""}
@@ -254,12 +258,12 @@ export function OverlayApp({ session }: { session: SessionController }) {
               <div className="party-code">
                 <strong className="code-pill">{copied ? "Invite copied" : state.party.roomId}</strong>
                 {state.party.role === "host" ? (
-                  <p className="control-hint">Tap a friend to let them play, pause, and seek.</p>
+                  <p className="control-hint">You always have control. Tap friends to share it — as many as you want.</p>
                 ) : (
                   <p className="control-hint">
                     {everyoneDrives || (me && state.controllers.includes(me))
-                      ? "You can play, pause, and seek for everyone."
-                      : "Playback follows the host. They can give you control."}
+                      ? "You can play, pause, and seek. The host always can too."
+                      : "Playback follows the host. They can share control with you and others."}
                   </p>
                 )}
                 <button className="ghost is-leave" type="button" onClick={() => session.leaveParty()}>
@@ -270,6 +274,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             <div className="people">{people}</div>
             <Chat
               messages={state.messages}
+              localPeerId={state.localPeerId}
               disabled={state.status !== "in-party"}
               onSend={(text) => session.sendChat(text)}
               onReact={(emoji) => session.sendReaction(emoji)}

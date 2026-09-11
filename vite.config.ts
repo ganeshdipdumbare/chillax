@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         media: "src/media/index.html",
+        popup: "src/popup/index.html",
       },
       preserveEntrySignatures: "exports-only",
     },

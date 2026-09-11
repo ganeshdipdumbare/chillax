@@ -14,7 +14,6 @@ export default defineManifest({
     128: "icons/icon128.png",
   },
   action: {
-    default_popup: "src/popup/index.html",
     default_title: "Chillax",
     default_icon: {
       16: "icons/icon16.png",

@@ -284,6 +284,7 @@ export class PeerRoom {
   }
 
   private shouldRelay(message: ProtocolMessage, fromPeerId: string) {
+    if (message.type === "control-policy") return false;
     if (message.type !== "sync") return true;
     const from = message.from || fromPeerId;
     if (from === this.peer?.id) return true;
