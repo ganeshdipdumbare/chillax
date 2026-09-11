@@ -13,6 +13,7 @@ import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
 import { mountOverlay } from "./overlayHost";
+import { pushPageOffset, watchFullscreen } from "./pageOffset";
 import { requestMediaPermissions } from "../shared/mediaPermissions";
 
 const applying = { current: false };
@@ -83,11 +84,6 @@ function addBurst(emoji: string) {
   window.setTimeout(() => {
     setState({ bursts: getState().bursts.filter((item) => item.id !== burst.id) });
   }, 2800);
-}
-
-function pushPageOffset(platform: "youtube" | "netflix", open: boolean) {
-  document.documentElement.style.marginRight =
-    platform === "youtube" && open ? "380px" : "";
 }
 
 async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) {
@@ -236,6 +232,12 @@ export async function boot(adapter: PlayerAdapter) {
     },
     toggleOverlay: (open?: boolean) => {
       const next = open ?? !getState().overlayOpen;
+      if (!next) {
+        const status = getState().status;
+        if (status === "in-party" || status === "connecting") {
+          session.leaveParty();
+        }
+      }
       setState({ overlayOpen: next });
       pushPageOffset(adapter.platform, next);
     },
@@ -261,6 +263,7 @@ export async function boot(adapter: PlayerAdapter) {
   };
 
   mountOverlay(session);
+  watchFullscreen(adapter.platform, () => getState().overlayOpen);
 
   chrome.runtime.onMessage.addListener((message: PopupRequest, _sender, sendResponse) => {
     switch (message.type) {
@@ -351,16 +354,25 @@ export async function boot(adapter: PlayerAdapter) {
         callDetail: data.detail ?? null,
       });
     }
+    if (data.type === "host-left") {
+      session.leaveParty();
+      setState({ error: "The host left the party." });
+    }
   });
 
   adapter.onChange(() => broadcastSync(adapter));
   adapter.onNavigate(() => {
+    const onWatch = adapter.isWatchPage();
+    const contentId = adapter.getContentId();
     setState({
-      isWatchPage: adapter.isWatchPage(),
-      contentId: adapter.getContentId(),
+      isWatchPage: onWatch,
+      contentId,
     });
     const party = getState().party;
-    const contentId = adapter.getContentId();
+    if (party && !onWatch) {
+      session.leaveParty();
+      return;
+    }
     if (party && contentId) {
       setState({
         party: {
@@ -369,6 +381,7 @@ export async function boot(adapter: PlayerAdapter) {
         },
       });
     }
+    pushPageOffset(adapter.platform, getState().overlayOpen);
   });
 
   const token = parseRoomToken();
@@ -376,4 +389,10 @@ export async function boot(adapter: PlayerAdapter) {
     lastToken = token;
     session.joinParty(token);
   }
+
+  const leaveOnPageExit = () => session.leaveParty();
+  window.addEventListener("pagehide", leaveOnPageExit);
+  window.addEventListener("beforeunload", leaveOnPageExit);
+  window.addEventListener("unload", leaveOnPageExit);
+  document.addEventListener("freeze", leaveOnPageExit);
 }

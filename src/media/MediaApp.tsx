@@ -31,6 +31,13 @@ export function MediaApp() {
   const [status, setStatus] = useState("Connecting…");
   const [tick, setTick] = useState(0);
 
+  function hangup() {
+    roomRef.current?.destroy();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    roomRef.current = null;
+    streamRef.current = null;
+  }
+
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as
@@ -46,9 +53,7 @@ export function MediaApp() {
         roomRef.current?.send(data.message);
       }
       if (data.type === "leave") {
-        roomRef.current?.destroy();
-        streamRef.current?.getTracks().forEach((track) => track.stop());
-        roomRef.current = null;
+        hangup();
       }
       if (data.type === "nickname" && data.nickname) {
         if (roomRef.current) {
@@ -57,9 +62,19 @@ export function MediaApp() {
         }
       }
     };
+    const onPageExit = () => hangup();
     window.addEventListener("message", onMessage);
+    window.addEventListener("pagehide", onPageExit);
+    window.addEventListener("beforeunload", onPageExit);
+    document.addEventListener("freeze", onPageExit);
     parent.postMessage({ source: MSG_SOURCE_MEDIA, type: "iframe-ready" }, "*");
-    return () => window.removeEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.removeEventListener("pagehide", onPageExit);
+      window.removeEventListener("beforeunload", onPageExit);
+      document.removeEventListener("freeze", onPageExit);
+      hangup();
+    };
   }, []);
 
   async function startRoom(init: InitPayload) {
@@ -113,6 +128,10 @@ export function MediaApp() {
       onCallStatus: (connected, detail) => {
         if (detail) setStatus(detail);
         postToParent({ type: "call-status", connected, detail });
+      },
+      onHostLeft: () => {
+        hangup();
+        postToParent({ type: "host-left" });
       },
     });
     roomRef.current = room;

@@ -11,6 +11,7 @@ type RoomHandlers = {
   onReady: (peerId: string) => void;
   onCallStatus: (connected: boolean, detail?: string) => void;
   onDataOpen: () => void;
+  onHostLeft: () => void;
 };
 
 function shouldInitiateCall(myId: string, otherId: string): boolean {
@@ -30,6 +31,7 @@ export class PeerRoom {
   private handlers: RoomHandlers;
   private muted = false;
   private cameraOn = false;
+  private tearingDown = false;
   localNickname = "Guest";
   localAvatarId = "fox";
 
@@ -95,6 +97,16 @@ export class PeerRoom {
   }
 
   destroy() {
+    if (this.tearingDown) return;
+    this.tearingDown = true;
+    const peerId = this.peer?.id;
+    if (peerId) {
+      try {
+        this.send({ type: "bye", peerId });
+      } catch {
+        // Unload can close sockets before this flush; still destroy below.
+      }
+    }
     for (const call of this.calls.values()) call.close();
     for (const conn of this.connections.values()) conn.close();
     this.peer?.destroy();
@@ -195,11 +207,14 @@ export class PeerRoom {
       this.handleProtocol(message, conn.peer);
     });
     conn.on("close", () => {
+      if (this.tearingDown) return;
       this.dropPeer(conn.peer);
       if (this.isHost) {
         this.send({ type: "bye", peerId: conn.peer });
         this.broadcastPeerList();
+        return;
       }
+      this.handlers.onHostLeft();
     });
     conn.on("error", () => {
       this.handlers.onCallStatus(false, "A chat connection failed. Try another network if this keeps happening.");

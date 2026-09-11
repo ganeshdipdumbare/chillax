@@ -1,6 +1,7 @@
 :host,
 .chillax-scope {
   all: initial;
+  pointer-events: none;
   font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
 }
 
@@ -15,6 +16,7 @@ textarea {
 }
 
 .tab {
+  pointer-events: auto;
   position: fixed;
   top: 26%;
   right: 0;
@@ -45,22 +47,30 @@ textarea {
 }
 
 .panel {
+  pointer-events: auto;
   position: fixed;
-  top: 0;
-  right: 0;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
   z-index: 2147483646;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: min(380px, 100vw);
-  height: 100vh;
+  width: min(360px, calc(100vw - 24px));
+  height: auto;
   color: #f7f0e6;
   background:
     radial-gradient(120% 70% at 100% 0%, rgb(122 48 140 / 0.35), transparent 55%),
     radial-gradient(90% 50% at 0% 100%, rgb(24 90 78 / 0.28), transparent 50%),
     #09060f;
-  border-left: 1px solid rgb(243 199 126 / 0.18);
+  border: 1px solid rgb(243 199 126 / 0.18);
+  border-radius: 22px;
   box-shadow: -18px 0 50px rgb(0 0 0 / 0.55);
+}
+
+:host(.is-fullscreen) .panel,
+:host(.is-fullscreen) .tab {
+  display: none;
 }
 
 .sky {
@@ -274,8 +284,12 @@ input[type="text"] {
 
 .panel.story {
   position: relative;
-  width: 380px;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  width: 360px;
   height: 640px;
+  pointer-events: auto;
   box-shadow: 0 24px 80px rgb(0 0 0 / 0.45);
 }
 

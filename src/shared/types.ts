@@ -119,4 +119,5 @@ export type MediaToContent =
   | { source: "chillax-media"; type: "local-media"; muted: boolean; cameraOn: boolean }
   | { source: "chillax-media"; type: "error"; message: string }
   | { source: "chillax-media"; type: "call-status"; connected: boolean; detail?: string }
-  | { source: "chillax-media"; type: "iframe-ready" };
+  | { source: "chillax-media"; type: "iframe-ready" }
+  | { source: "chillax-media"; type: "host-left" };

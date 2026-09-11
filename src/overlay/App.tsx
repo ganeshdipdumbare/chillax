@@ -80,7 +80,10 @@ export function OverlayApp({ session }: { session: SessionController }) {
             <CopyIcon />
           </IconButton>
         ) : null}
-        <IconButton label="Close Chillax panel" onClick={() => session.toggleOverlay(false)}>
+        <IconButton
+          label={inParty ? "Close Chillax and leave party" : "Close Chillax panel"}
+          onClick={() => session.toggleOverlay(false)}
+        >
           <CloseIcon />
         </IconButton>
       </header>
