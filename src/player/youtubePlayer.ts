@@ -2,7 +2,15 @@ import { YT_DRIFT_SECONDS } from "../shared/constants";
 import type { PlayerState } from "../shared/types";
 import type { PlayerAdapter } from "./types";
 
-function moviePlayer(): HTMLElement | null {
+type YTMoviePlayer = HTMLElement & {
+  playVideo?: () => void;
+  pauseVideo?: () => void;
+  seekTo?: (time: number, allowSeekAhead?: boolean) => void;
+  getCurrentTime?: () => number;
+  getPlayerState?: () => number;
+};
+
+function moviePlayer(): YTMoviePlayer | null {
   return document.querySelector("#movie_player");
 }
 
@@ -30,25 +38,41 @@ export class YoutubePlayer implements PlayerAdapter {
   }
 
   getState(): PlayerState | null {
+    const player = moviePlayer();
     const video = videoEl();
-    if (!video || Number.isNaN(video.currentTime)) return null;
-    return { paused: video.paused, time: video.currentTime };
+    const time = player?.getCurrentTime?.() ?? video?.currentTime;
+    if (typeof time !== "number" || Number.isNaN(time)) return null;
+    const state = player?.getPlayerState?.();
+    const paused =
+      state === 1 || state === 3
+        ? false
+        : state === 2 || state === 0 || state === 5
+          ? true
+          : video?.paused ?? true;
+    return { paused, time };
   }
 
   async play(): Promise<void> {
+    const player = moviePlayer();
+    if (player?.playVideo) {
+      player.playVideo();
+      return;
+    }
     const video = videoEl();
-    if (!video) return;
-    await video.play();
+    if (video) await video.play();
   }
 
   async pause(): Promise<void> {
+    const player = moviePlayer();
+    if (player?.pauseVideo) {
+      player.pauseVideo();
+      return;
+    }
     videoEl()?.pause();
   }
 
   async seek(timeSeconds: number): Promise<void> {
-    const player = moviePlayer() as
-      | (HTMLElement & { seekTo?: (time: number, allowSeekAhead?: boolean) => void })
-      | null;
+    const player = moviePlayer();
     if (player?.seekTo) {
       player.seekTo(timeSeconds, true);
       return;
@@ -68,7 +92,7 @@ export class YoutubePlayer implements PlayerAdapter {
 
   onChange(handler: () => void): () => void {
     let video: HTMLVideoElement | null = null;
-    const events = ["play", "pause", "seeked", "ratechange"] as const;
+    const events = ["play", "playing", "pause", "seeked", "ratechange"] as const;
     const bind = () => {
       const next = videoEl();
       if (next === video) return;

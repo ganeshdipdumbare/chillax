@@ -35,25 +35,30 @@ export async function applyHostSync(
     const delay = Math.min(8, Math.max(0, (Date.now() - host.sentAt) / 1000));
     target += delay;
   }
+  const needsSeek = shouldSeek(local.time, target, adapter.driftThreshold);
+  if (!needsSeek && host.paused === local.paused) return "ok";
   applying.current = true;
   try {
-    if (shouldSeek(local.time, target, adapter.driftThreshold)) {
-      await adapter.seek(target);
-    }
     if (host.paused) {
       if (!local.paused) await adapter.pause();
-    } else if (local.paused) {
-      try {
-        await adapter.play();
-      } catch {
-        applying.current = false;
-        return "gesture";
+      if (needsSeek) await adapter.seek(target);
+      await adapter.pause();
+    } else {
+      if (needsSeek) await adapter.seek(target);
+      const after = adapter.getState();
+      if (after?.paused ?? local.paused) {
+        try {
+          await adapter.play();
+        } catch {
+          applying.current = false;
+          return "gesture";
+        }
       }
     }
   } finally {
     window.setTimeout(() => {
       applying.current = false;
-    }, 400);
+    }, 500);
   }
   return "ok";
 }

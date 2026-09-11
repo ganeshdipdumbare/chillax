@@ -24,6 +24,8 @@ let heartbeat: number | null = null;
 let syncOutTimer = 0;
 let hostFollowupTimer = 0;
 let ignoreIncomingUntil = 0;
+let suppressOutUntil = 0;
+let lastControlSentAt = 0;
 let lastSync: { paused: boolean; time: number; sentAt?: number } | null = null;
 let lastPlayer: { paused: boolean; time: number } | null = null;
 let pendingRole: "host" | "guest" | null = null;
@@ -140,9 +142,10 @@ function canControlPlayback() {
   return Boolean(me && state.controllers.includes(me));
 }
 
-function canAcceptSyncFrom(from?: string) {
+function canAcceptSyncFrom(from?: string, sentAt?: number) {
   if (from && from === myPeerId()) return false;
   if (Date.now() < ignoreIncomingUntil) return false;
+  if (sentAt && lastControlSentAt && sentAt < lastControlSentAt) return false;
   const state = getState();
   if (state.controllers.includes("*")) return true;
   const hostId = hostPeerId();
@@ -192,8 +195,8 @@ function classifyPlayback(player: { paused: boolean; time: number }): "play" | "
   const jumped = Math.abs(player.time - lastPlayer.time) > 2.5;
   const pausedChanged = player.paused !== lastPlayer.paused;
   notePlayer(player);
-  if (jumped) return "seek";
   if (pausedChanged) return player.paused ? "pause" : "play";
+  if (jumped) return "seek";
   return null;
 }
 
@@ -225,11 +228,12 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
   if (!canControlPlayback()) return;
   const party = state.party;
   if (!party) return;
-  if (applying.current || adapter.isAdPlaying()) return;
+  if (applying.current || Date.now() < suppressOutUntil || adapter.isAdPlaying()) return;
   const player = adapter.getState();
   if (!player) return;
-  if (party.role !== "host") ignoreIncomingUntil = Date.now() + 700;
   if (reason === "control") {
+    ignoreIncomingUntil = Date.now() + 1200;
+    lastControlSentAt = Date.now();
     const action = classifyPlayback(player);
     if (action) postPlaybackNotice(action, player.time);
   } else {
@@ -316,13 +320,17 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     applyControllers(message.controllers);
   }
   if (message.type === "sync") {
-    if (!canAcceptSyncFrom(message.from)) return;
+    if (!canAcceptSyncFrom(message.from, message.sentAt)) return;
     lastSync = { paused: message.paused, time: message.time, sentAt: message.sentAt };
+    suppressOutUntil = Date.now() + 800;
     const result = await applyHostSync(adapter, message, applying);
     if (result === "gesture") setState({ needsGesture: true });
     if (getState().party?.role === "host") {
       window.clearTimeout(hostFollowupTimer);
-      hostFollowupTimer = window.setTimeout(() => broadcastSync(adapter, "followup"), 500);
+      hostFollowupTimer = window.setTimeout(() => {
+        if (Date.now() < ignoreIncomingUntil) return;
+        broadcastSync(adapter, "followup");
+      }, 500);
     }
   }
 }
@@ -415,6 +423,8 @@ export async function boot(adapter: PlayerAdapter) {
       lastSync = null;
       lastPlayer = null;
       ignoreIncomingUntil = 0;
+      suppressOutUntil = 0;
+      lastControlSentAt = 0;
       pushPageOffset(adapter.platform, keepLounge);
     },
     sendChat: (text: string) => {
@@ -589,13 +599,13 @@ export async function boot(adapter: PlayerAdapter) {
   });
 
   adapter.onChange(() => {
-    if (applying.current) return;
+    if (applying.current || Date.now() < suppressOutUntil) return;
     if (!canControlPlayback()) {
       if (lastSync) void applyHostSync(adapter, lastSync, applying);
       return;
     }
     window.clearTimeout(syncOutTimer);
-    syncOutTimer = window.setTimeout(() => broadcastSync(adapter, "control"), 70);
+    syncOutTimer = window.setTimeout(() => broadcastSync(adapter, "control"), 120);
   });
   let leaveWatchTimer: number | null = null;
   adapter.onNavigate(() => {

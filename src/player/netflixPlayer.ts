@@ -63,7 +63,7 @@ export class NetflixPlayer implements PlayerAdapter {
       if (data.type === "change") handler();
     };
     window.addEventListener("message", onMessage);
-    const videoEvents = ["play", "pause", "seeked"] as const;
+    const videoEvents = ["play", "playing", "pause", "seeked"] as const;
     const attach = (video: HTMLVideoElement | null) => {
       if (!video) return () => undefined;
       for (const ev of videoEvents) video.addEventListener(ev, handler);
