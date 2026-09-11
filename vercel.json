@@ -5,6 +5,23 @@
   "installCommand": "npm install",
   "headers": [
     {
+      "source": "/chillax-:version.zip",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/zip"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/chillax-for-friends.zip",
       "headers": [
         {

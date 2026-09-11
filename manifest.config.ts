@@ -1,9 +1,10 @@
 import { defineManifest } from "@crxjs/vite-plugin";
+import { version } from "./package.json";
 
 export default defineManifest({
   manifest_version: 3,
   name: "Chillax",
-  version: "1.0.0",
+  version,
   description:
     "Watch YouTube and Netflix together with synced playback, group chat, and free voice/video.",
   icons: {

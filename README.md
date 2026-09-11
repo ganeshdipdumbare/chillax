@@ -27,22 +27,32 @@ Load unpacked from `dist` (CRXJS writes the extension there).
 
 Friends cannot double-click a `.crx`. They load the unzipped folder once.
 
-Live installer: [chillax-ruby.vercel.app](https://chillax-ruby.vercel.app). Send friends that link. Every push to `main` rebuilds that site and replaces [chillax-for-friends.zip](https://chillax-ruby.vercel.app/chillax-for-friends.zip) at the same URL.
+Live installer: [chillax-ruby.vercel.app](https://chillax-ruby.vercel.app). Send friends that link. Every push to `main` rebuilds that site. The download is named with the current version, for example `chillax-1.0.0.zip`.
 
-The zip also lives on [GitHub Releases](https://github.com/ganeshdipdumbare/chillax/releases/latest) — latest file: [chillax-for-friends.zip](https://github.com/ganeshdipdumbare/chillax/releases/latest/download/chillax-for-friends.zip). New `v*` tags build and attach a zip automatically.
+Versioned zips also live on [GitHub Releases](https://github.com/ganeshdipdumbare/chillax/releases). Each `v*` tag keeps its own zip forever (`v1.0.1` → `chillax-1.0.1.zip`).
 
-To publish an update without waiting for GitHub Actions:
+`package.json` is the only version. The Chrome manifest, zip filename, and installer button all read it.
+
+```bash
+npm run release          # 1.0.0 → 1.0.1, tag v1.0.1, push
+npm run release -- minor # 1.0.1 → 1.1.0
+npm run release -- major # 1.1.0 → 2.0.0
+```
+
+That updates the live installer and attaches `chillax-<version>.zip` to a GitHub Release. You can also run **Cut release** from the Actions tab.
+
+To publish the current version without bumping:
 
 ```bash
 npm run pack-site
 npx vercel deploy --prod
 ```
 
-The site is `install.html` plus `chillax-for-friends.zip`. They download, unzip, and follow the steps. Chrome still will not install from a webpage the way the Web Store does.
+The site is `install.html` plus `chillax-<version>.zip`. They download, unzip, and follow the steps. Chrome still will not install from a webpage the way the Web Store does.
 
 Without Vercel, pack locally:
 
-1. `npm run pack` writes `chillax-for-friends.zip` in this folder.
+1. `npm run pack` writes `chillax-<version>.zip` in this folder (for example `chillax-1.0.0.zip`).
 2. Send that zip (AirDrop, iMessage, Drive).
 3. Tell them: unzip it, open `install.html`, follow the six steps.
 
@@ -117,7 +127,7 @@ zip -r ../chillax-extension.zip .
 
 Zip the **contents of `dist`**, not the parent repo. Do not include `node_modules` or source.
 
-Bump `version` in [package.json](package.json) and [manifest.config.ts](manifest.config.ts) before each upload (for example `1.0.1`). Chrome does not accept a reused version number.
+Bump `version` in [package.json](package.json) before each upload (for example `npm run release`). The Chrome manifest reads that number. Chrome does not accept a reused version number.
 
 ### 4. Screenshots and listing copy
 

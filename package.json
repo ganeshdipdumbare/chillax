@@ -10,7 +10,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "pack": "node scripts/pack.mjs",
-    "pack-site": "node scripts/pack-site.mjs"
+    "pack-site": "node scripts/pack-site.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "peerjs": "^1.5.5",

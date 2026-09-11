@@ -6,4 +6,5 @@ dist
 storybook-static
 site-dist
 chillax-for-friends.zip
+chillax-*.zip
 .vercel
