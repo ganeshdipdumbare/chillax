@@ -53,16 +53,14 @@ export function OverlayApp({ session }: { session: SessionController }) {
     [state.participants],
   );
 
-  if (!state.overlayOpen) {
-    return (
-      <button className="tab" type="button" onClick={() => session.toggleOverlay(true)}>
-        Chillax
-      </button>
-    );
-  }
-
   return (
-    <div className="panel">
+    <>
+      {!state.overlayOpen ? (
+        <button className="tab" type="button" onClick={() => session.toggleOverlay(true)}>
+          Chillax
+        </button>
+      ) : null}
+      <div className={state.overlayOpen ? "panel" : "panel is-collapsed"}>
       <ReactionSky bursts={state.bursts} />
       <header className="header">
         <div className="brand">
@@ -87,10 +85,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             <CopyIcon />
           </IconButton>
         ) : null}
-        <IconButton
-          label={inParty ? "Close Chillax and leave party" : "Close Chillax panel"}
-          onClick={() => session.toggleOverlay(false)}
-        >
+        <IconButton label="Hide Chillax panel" onClick={() => session.toggleOverlay(false)}>
           <CloseIcon />
         </IconButton>
       </header>
@@ -206,5 +201,6 @@ export function OverlayApp({ session }: { session: SessionController }) {
         )}
       </div>
     </div>
+    </>
   );
 }

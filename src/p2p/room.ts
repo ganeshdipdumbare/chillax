@@ -212,7 +212,7 @@ export class PeerRoom {
     }
     peer.on("error", (err) => {
       if (this.tearingDown || this.peer !== peer) return;
-      this.handlers.onError(mapPeerError(err));
+      this.handlers.onCallStatus(false, mapPeerError(err));
     });
   }
 
@@ -246,7 +246,10 @@ export class PeerRoom {
         this.broadcastPeerList();
         return;
       }
-      this.handlers.onHostLeft();
+      window.setTimeout(() => {
+        if (this.tearingDown || this.connections.size > 0) return;
+        this.handlers.onHostLeft();
+      }, 4000);
     });
     conn.on("error", () => {
       this.handlers.onCallStatus(false, "A chat connection failed. Try another network if this keeps happening.");

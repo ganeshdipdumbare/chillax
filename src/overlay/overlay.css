@@ -17,7 +17,7 @@
 }
 
 :host(.is-open) {
-  width: var(--chillax-reserve, 384px) !important;
+  width: var(--chillax-reserve, 360px) !important;
 }
 
 * {
@@ -64,10 +64,7 @@ textarea {
 .panel {
   pointer-events: auto;
   position: absolute;
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
-  left: 12px;
+  inset: 0;
   z-index: 2147483646;
   overflow: hidden;
   display: flex;
@@ -79,9 +76,21 @@ textarea {
     radial-gradient(120% 70% at 100% 0%, rgb(122 48 140 / 0.35), transparent 55%),
     radial-gradient(90% 50% at 0% 100%, rgb(24 90 78 / 0.28), transparent 50%),
     #09060f;
-  border: 1px solid rgb(243 199 126 / 0.18);
-  border-radius: 22px;
+  border: 0;
+  border-left: 1px solid rgb(243 199 126 / 0.18);
+  border-radius: 0;
   box-shadow: -18px 0 50px rgb(0 0 0 / 0.55);
+}
+
+.panel.is-collapsed {
+  display: flex !important;
+  position: fixed;
+  left: -12000px;
+  top: 0;
+  width: 360px;
+  height: 100vh;
+  opacity: 0;
+  pointer-events: none;
 }
 
 :host(.is-fullscreen) .panel,
@@ -300,12 +309,11 @@ input[type="text"] {
 
 .panel.story {
   position: relative;
-  top: auto;
-  right: auto;
-  bottom: auto;
-  left: auto;
+  inset: auto;
   width: 360px;
   height: 640px;
+  border-radius: 22px;
+  border: 1px solid rgb(243 199 126 / 0.18);
   pointer-events: auto;
   box-shadow: 0 24px 80px rgb(0 0 0 / 0.45);
 }

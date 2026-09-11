@@ -246,12 +246,6 @@ export async function boot(adapter: PlayerAdapter) {
     },
     toggleOverlay: (open?: boolean) => {
       const next = open ?? !getState().overlayOpen;
-      if (!next) {
-        const status = getState().status;
-        if (status === "in-party" || status === "connecting") {
-          session.leaveParty();
-        }
-      }
       setState({ overlayOpen: next });
       pushPageOffset(adapter.platform, next);
     },
@@ -340,6 +334,10 @@ export async function boot(adapter: PlayerAdapter) {
       setState({ muted: data.muted, cameraOn: data.cameraOn });
     }
     if (data.type === "error") {
+      if (getState().status === "in-party") {
+        setState({ error: data.message, callDetail: data.message });
+        return;
+      }
       pendingRole = null;
       pendingRoomId = null;
       stopHeartbeat();
@@ -358,6 +356,7 @@ export async function boot(adapter: PlayerAdapter) {
   });
 
   adapter.onChange(() => broadcastSync(adapter));
+  let leaveWatchTimer: number | null = null;
   adapter.onNavigate(() => {
     const onWatch = adapter.isWatchPage();
     const contentId = adapter.getContentId();
@@ -366,8 +365,15 @@ export async function boot(adapter: PlayerAdapter) {
       contentId,
     });
     const party = getState().party;
+    if (leaveWatchTimer) {
+      window.clearTimeout(leaveWatchTimer);
+      leaveWatchTimer = null;
+    }
     if (party && !onWatch) {
-      session.leaveParty();
+      leaveWatchTimer = window.setTimeout(() => {
+        leaveWatchTimer = null;
+        if (getState().party && !adapter.isWatchPage()) session.leaveParty();
+      }, 1200);
       return;
     }
     if (party && contentId) {
@@ -387,9 +393,8 @@ export async function boot(adapter: PlayerAdapter) {
     session.joinParty(token);
   }
 
-  const leaveOnPageExit = () => session.leaveParty();
-  window.addEventListener("pagehide", leaveOnPageExit);
-  window.addEventListener("beforeunload", leaveOnPageExit);
-  window.addEventListener("unload", leaveOnPageExit);
-  document.addEventListener("freeze", leaveOnPageExit);
+  window.addEventListener("pagehide", (event) => {
+    if (event.persisted) return;
+    session.leaveParty();
+  });
 }

@@ -66,17 +66,16 @@ export function MediaApp() {
         }
       }
     };
-    const onPageExit = () => hangup();
+    const onPageExit = (event: PageTransitionEvent) => {
+      if (event.persisted) return;
+      hangup();
+    };
     window.addEventListener("message", onMessage);
     window.addEventListener("pagehide", onPageExit);
-    window.addEventListener("beforeunload", onPageExit);
-    document.addEventListener("freeze", onPageExit);
     parent.postMessage({ source: MSG_SOURCE_MEDIA, type: "iframe-ready" }, "*");
     return () => {
       window.removeEventListener("message", onMessage);
       window.removeEventListener("pagehide", onPageExit);
-      window.removeEventListener("beforeunload", onPageExit);
-      document.removeEventListener("freeze", onPageExit);
       hangup();
     };
   }, []);
