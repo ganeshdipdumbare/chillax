@@ -67,30 +67,20 @@ html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #player-wide
   left: 0 !important;
   right: auto !important;
 }
-html.chillax-overlay-open:not(.chillax-fs) .watch-video,
-html.chillax-overlay-open:not(.chillax-fs) .watch-video--player-view,
-html.chillax-overlay-open:not(.chillax-fs) [data-uia="player"],
-html.chillax-overlay-open:not(.chillax-fs) .nfp,
-html.chillax-overlay-open:not(.chillax-fs) .nfp.AkiraPlayer {
-  position: relative !important;
+html.chillax-overlay-open .watch-video,
+html.chillax-overlay-open .watch-video--player-view,
+html.chillax-overlay-open [data-uia="player"],
+html.chillax-overlay-open .nfp,
+html.chillax-overlay-open .nfp.AkiraPlayer,
+html.chillax-overlay-open.chillax-fs #movie_player,
+html.chillax-overlay-open.chillax-fs #ytd-player,
+html.chillax-overlay-open.chillax-fs #player-container,
+html.chillax-overlay-open.chillax-fs #player-full-bleed-container,
+html.chillax-overlay-open.chillax-fs #full-bleed-container {
   width: calc(100vw - ${space}) !important;
   max-width: calc(100vw - ${space}) !important;
-  height: 100% !important;
   left: 0 !important;
   right: auto !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  transform: none !important;
-}
-html.chillax-overlay-open:not(.chillax-fs) .watch-video video,
-html.chillax-overlay-open:not(.chillax-fs) .watch-video--player-view video,
-html.chillax-overlay-open:not(.chillax-fs) [data-uia="player"] video,
-html.chillax-overlay-open:not(.chillax-fs) .nfp video {
-  left: 0 !important;
-  top: 0 !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
 }
 `;
 }
@@ -188,9 +178,9 @@ function layoutHost(
   host.style.position = mode === "fullscreen" ? "absolute" : "fixed";
 }
 
-function fillFullscreenPlayer() {
+function fillFullscreenPlayer(reserveChat = false) {
   if (!document.fullscreenElement) return;
-  const width = Math.max(160, window.innerWidth);
+  const width = reserveChat ? leftoverWidth() : Math.max(160, window.innerWidth);
   const height = Math.max(160, window.innerHeight);
   youtubePlayer()?.setSize?.(width, height);
   ignoreWindowResize = true;
@@ -240,10 +230,7 @@ function sizePlayerToReserve(restore = false) {
 }
 
 function fullscreenTarget(): Element {
-  const fs = document.fullscreenElement;
-  if (!fs) return document.documentElement;
-  if (fs instanceof HTMLVideoElement) return fs.parentElement || fs;
-  return fs;
+  return document.fullscreenElement || document.documentElement;
 }
 
 function placeHost() {
@@ -273,7 +260,7 @@ function inSession() {
 }
 
 function isWindowDock(open: boolean) {
-  return open && inSession() && !document.fullscreenElement;
+  return open && inSession();
 }
 
 export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) {
@@ -289,7 +276,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   root.classList.toggle("chillax-lounge", lounge);
   root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
-  root.style.marginRight = docked ? `${OVERLAY_RESERVE}px` : "";
+  root.style.marginRight = docked && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
 
   const host = document.getElementById(HOST_ID);
   host?.classList.toggle("is-fullscreen", fullscreen);
@@ -315,9 +302,9 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   if (!docked) {
     existing?.remove();
     if (fullscreen) {
-      fillFullscreenPlayer();
-      window.setTimeout(fillFullscreenPlayer, 80);
-      window.setTimeout(fillFullscreenPlayer, 280);
+      fillFullscreenPlayer(false);
+      window.setTimeout(() => fillFullscreenPlayer(false), 80);
+      window.setTimeout(() => fillFullscreenPlayer(false), 280);
     } else {
       sizePlayerToReserve(true);
     }
@@ -328,7 +315,13 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   style.id = STYLE_ID;
   style.textContent = offsetCss();
   if (!existing) (document.head || root).appendChild(style);
-  sizePlayerToReserve(false);
+  if (fullscreen) {
+    fillFullscreenPlayer(true);
+    window.setTimeout(() => fillFullscreenPlayer(true), 80);
+    window.setTimeout(() => fillFullscreenPlayer(true), 280);
+  } else {
+    sizePlayerToReserve(false);
+  }
 }
 
 export function watchFullscreen(platform: "youtube" | "netflix", isOpen: () => boolean) {

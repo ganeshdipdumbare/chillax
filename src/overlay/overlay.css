@@ -137,29 +137,6 @@ textarea {
   font-size: 18px;
 }
 
-.panel.is-fs-card {
-  top: 20px;
-  right: 20px;
-  bottom: auto;
-  left: auto;
-  width: min(360px, calc(100% - 40px));
-  height: auto;
-  max-height: min(520px, 58vh);
-  overflow: auto;
-  border-radius: 18px;
-  border: 1px solid rgb(243 199 126 / 0.22);
-  box-shadow: 0 22px 70px rgb(0 0 0 / 0.55);
-}
-
-.panel.is-fs-card .media-frame {
-  min-height: 96px;
-  height: 112px;
-}
-
-:host(.is-fullscreen) .panel.is-fs-card {
-  max-height: min(520px, calc(100% - 360px));
-}
-
 :host(.is-fullscreen) {
   position: absolute !important;
   inset: 0 !important;

@@ -13,7 +13,6 @@ export function OverlayApp({ session }: { session: SessionController }) {
   const [state, setLocal] = useState(getState());
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
-  const [fullscreen, setFullscreen] = useState(() => Boolean(document.fullscreenElement));
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => subscribe(() => {
@@ -23,18 +22,6 @@ export function OverlayApp({ session }: { session: SessionController }) {
       setJoinCode((current) => current || token);
     }
   }), []);
-
-  useEffect(() => {
-    const sync = () => setFullscreen(Boolean(document.fullscreenElement));
-    for (const type of ["fullscreenchange", "webkitfullscreenchange", "yt-fullscreen-change"]) {
-      document.addEventListener(type, sync);
-    }
-    return () => {
-      for (const type of ["fullscreenchange", "webkitfullscreenchange", "yt-fullscreen-change"]) {
-        document.removeEventListener(type, sync);
-      }
-    };
-  }, []);
 
   const canWatch = state.isWatchPage && Boolean(state.contentId);
   const docked = state.status === "in-party" || state.status === "connecting";
@@ -110,7 +97,6 @@ export function OverlayApp({ session }: { session: SessionController }) {
     "panel",
     panelOpen ? null : "is-collapsed",
     panelOpen && lounge ? "is-lounge" : null,
-    panelOpen && docked && fullscreen ? "is-fs-card" : null,
   ]
     .filter(Boolean)
     .join(" ");

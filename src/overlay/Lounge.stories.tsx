@@ -221,30 +221,3 @@ export const ChatToggle: Story = {
   ),
 };
 
-export const FullscreenCard: Story = {
-  render: () => (
-    <div className="story-stage">
-      <ReactionSky bursts={[]} />
-      <div className="panel story is-fs-card" style={{ position: "absolute" }}>
-        <header className="header">
-          <div className="brand">
-            <span className="logo">Cx</span>
-            <div>
-              <h1>Chillax</h1>
-              <p>YouTube night · host</p>
-            </div>
-          </div>
-          <button className="text-btn" type="button">
-            Hide chat
-            <HideIcon />
-          </button>
-        </header>
-        <Chat
-          messages={seed}
-          onReact={() => undefined}
-          onSend={() => undefined}
-        />
-      </div>
-    </div>
-  ),
-};
