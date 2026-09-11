@@ -9,7 +9,8 @@ import {
 } from "../shared/ids";
 import { loadAvatarId, loadNickname, saveAvatarId, saveNickname } from "../shared/storage";
 import { getState, setState } from "../shared/store";
-import type { MediaToContent, PopupRequest, ProtocolMessage, ReactionBurst } from "../shared/types";
+import { burstTtlMs, sprayBursts } from "../shared/reactions";
+import type { MediaToContent, PopupRequest, ProtocolMessage } from "../shared/types";
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
@@ -98,24 +99,14 @@ function startHeartbeat(adapter: PlayerAdapter) {
   heartbeat = window.setInterval(() => broadcastSync(adapter), HEARTBEAT_MS);
 }
 
-function makeBurst(emoji: string): ReactionBurst {
-  return {
-    id: crypto.randomUUID(),
-    emoji,
-    x: 6 + Math.random() * 70,
-    spin: Math.round(-36 + Math.random() * 72),
-    wobble: Math.round(Math.random() * 180),
-    size: 38 + Math.round(Math.random() * 28),
-    drift: Math.round(-90 + Math.random() * 180),
-  };
-}
-
 function addBurst(emoji: string) {
-  const burst = makeBurst(emoji);
-  setState({ bursts: [...getState().bursts, burst].slice(-24) });
-  window.setTimeout(() => {
-    setState({ bursts: getState().bursts.filter((item) => item.id !== burst.id) });
-  }, 4200);
+  const extra = sprayBursts(emoji);
+  setState({ bursts: [...getState().bursts, ...extra].slice(-64) });
+  for (const burst of extra) {
+    window.setTimeout(() => {
+      setState({ bursts: getState().bursts.filter((item) => item.id !== burst.id) });
+    }, burstTtlMs(burst));
+  }
 }
 
 async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) {
@@ -237,6 +228,7 @@ export async function boot(adapter: PlayerAdapter) {
       pushPageOffset(adapter.platform, true);
     },
     leaveParty: () => {
+      const keepLounge = getState().status === "connecting";
       sendToMedia({ type: "leave" });
       stopHeartbeat();
       pendingRole = null;
@@ -252,9 +244,9 @@ export async function boot(adapter: PlayerAdapter) {
         bursts: [],
         callDetail: null,
         guestPlayback: false,
-        overlayOpen: false,
+        overlayOpen: keepLounge,
       });
-      pushPageOffset(adapter.platform, false);
+      pushPageOffset(adapter.platform, keepLounge);
     },
     sendChat: (text: string) => {
       const state = getState();

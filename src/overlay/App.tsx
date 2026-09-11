@@ -24,9 +24,9 @@ export function OverlayApp({ session }: { session: SessionController }) {
   }), []);
 
   const canWatch = state.isWatchPage && Boolean(state.contentId);
-  const docked = state.status === "in-party";
+  const docked = state.status === "in-party" || state.status === "connecting";
   const connecting = state.status === "connecting";
-  const needMedia = docked || connecting;
+  const needMedia = docked;
   const lounge = !docked;
 
   useEffect(() => {
@@ -77,10 +77,10 @@ export function OverlayApp({ session }: { session: SessionController }) {
         <button
           className="tab"
           type="button"
-          title="Show chat — you are still in the party"
+          title="Open Chillax chat — you are still in the party"
           onClick={() => session.toggleOverlay(true)}
         >
-          Show chat
+          Chillax chat
         </button>
       )}
       <ReactionSky bursts={state.bursts} />
@@ -147,7 +147,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
         {needMedia ? (
           <iframe
             ref={iframeRef}
-            className={docked && state.overlayOpen ? "media-frame" : "media-frame is-hid"}
+            className={
+              docked && state.overlayOpen && state.status === "in-party"
+                ? "media-frame"
+                : "media-frame is-hid"
+            }
             title="Chillax voice and video"
             allow="camera; microphone; autoplay"
             src={mediaPageUrl()}
@@ -181,51 +185,47 @@ export function OverlayApp({ session }: { session: SessionController }) {
                 onChange={(id) => void session.setAvatar(id)}
               />
             </label>
+            <button
+              className="primary"
+              type="button"
+              disabled={!canWatch}
+              onClick={() => session.startParty()}
+            >
+              {canWatch ? "Start the night" : "Open a video to start"}
+            </button>
+            <form
+              className="join-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                session.joinParty(joinCode);
+              }}
+            >
+              <label>
+                Join with code
+                <input
+                  type="text"
+                  value={joinCode}
+                  placeholder="cxab12cd"
+                  autoComplete="off"
+                  spellCheck={false}
+                  onChange={(event) => setJoinCode(event.target.value)}
+                />
+              </label>
+              <button className="ghost" type="submit" disabled={!joinCode.trim()}>
+                Slide into this party
+              </button>
+            </form>
+          </div>
+        ) : (
+          <>
             {connecting ? (
-              <div className="join-form">
-                <p className="lede">{state.callDetail || "Connecting…"}</p>
+              <div className="party-code">
+                <p className="lede">{state.callDetail || "Opening your party…"}</p>
                 <button className="ghost" type="button" onClick={() => session.leaveParty()}>
                   Cancel
                 </button>
               </div>
-            ) : (
-              <>
-                <button
-                  className="primary"
-                  type="button"
-                  disabled={!canWatch}
-                  onClick={() => session.startParty()}
-                >
-                  {canWatch ? "Start the night" : "Open a video to start"}
-                </button>
-                <form
-                  className="join-form"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    session.joinParty(joinCode);
-                  }}
-                >
-                  <label>
-                    Join with code
-                    <input
-                      type="text"
-                      value={joinCode}
-                      placeholder="cxab12cd"
-                      autoComplete="off"
-                      spellCheck={false}
-                      onChange={(event) => setJoinCode(event.target.value)}
-                    />
-                  </label>
-                  <button className="ghost" type="submit" disabled={!joinCode.trim()}>
-                    Slide into this party
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            {state.party ? (
+            ) : state.party ? (
               <div className="party-code">
                 <strong className="code-pill">{copied ? "Invite copied" : state.party.roomId}</strong>
                 {state.party.role === "host" ? (

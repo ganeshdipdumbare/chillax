@@ -47,7 +47,7 @@ export function mountOverlay(session: SessionController) {
   const host = document.createElement("div");
   host.id = "chillax-root";
   host.style.cssText =
-    "position:fixed;top:0;right:0;bottom:0;width:0;overflow:visible;pointer-events:none;z-index:2147483646;";
+    "position:fixed;top:0;right:0;bottom:0;width:0;overflow:visible;pointer-events:none;background:transparent;z-index:2147483646;";
   host.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
   document.documentElement.appendChild(host);
   const shadow = host.attachShadow({ mode: "closed" });

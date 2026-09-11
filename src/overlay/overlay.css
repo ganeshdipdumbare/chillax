@@ -13,6 +13,7 @@
   width: 0;
   overflow: visible;
   pointer-events: none;
+  background: transparent !important;
   z-index: 2147483646;
 }
 
@@ -20,8 +21,7 @@
   width: var(--chillax-reserve, 360px) !important;
 }
 
-:host(.is-lounge),
-:host(.is-party) {
+:host(.is-lounge) {
   inset: 0 !important;
   width: auto !important;
   left: 0 !important;
@@ -42,34 +42,34 @@ textarea {
   pointer-events: auto;
   position: fixed;
   top: 28%;
-  right: 0;
+  right: 10px;
   z-index: 2147483646;
   display: flex;
   align-items: center;
+  justify-content: center;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  border: 1px solid rgb(243 199 126 / 0.22);
-  border-right: 0;
-  border-radius: 12px 0 0 12px;
-  padding: 14px 7px;
-  background: rgb(9 6 15 / 0.72);
+  border: 1px solid rgb(243 199 126 / 0.28);
+  border-radius: 999px;
+  padding: 18px 10px;
+  background: rgb(9 6 15 / 0.82);
   color: #f3c77e;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 10px;
+  letter-spacing: 0.04em;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1.2;
   cursor: pointer;
-  box-shadow: -8px 0 24px rgb(0 0 0 / 0.28);
-  opacity: 0.88;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.35);
+  opacity: 0.94;
+  backdrop-filter: blur(10px);
 }
 
 .tab:hover,
 .tab:focus-visible {
   opacity: 1;
-  color: #f3c77e;
-  background: rgb(9 6 15 / 0.86);
-  box-shadow: -8px 0 24px rgb(0 0 0 / 0.35);
+  color: #ffe1a3;
+  background: rgb(9 6 15 / 0.92);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 0.42);
 }
 
 .tab:focus-visible,
@@ -151,72 +151,72 @@ textarea {
   inset: 0;
   z-index: 9;
   overflow: hidden;
+  background: transparent;
+}
+
+:host .sky {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+:host(.is-fullscreen) .sky {
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 
 .floatie {
   position: absolute;
-  bottom: 4%;
+  bottom: 10%;
   left: 0;
   display: grid;
   place-items: center;
-  width: var(--float-size, 48px);
-  height: var(--float-size, 48px);
+  width: var(--float-size, 44px);
+  height: var(--float-size, 44px);
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
-  font-size: var(--float-size, 48px);
+  font-size: var(--float-size, 44px);
   line-height: 1;
   font-style: normal;
   font-variant-emoji: emoji;
-  filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.4));
-  animation: float-live 3.8s ease-out forwards;
+  filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.28));
+  animation: float-live 3.2s linear both;
   will-change: transform, opacity;
 }
 
 .floatie-face {
   display: block;
   transform-origin: center;
-  animation: emoji-live 0.9s ease-in-out infinite;
+  animation: emoji-live 2.2s ease-in-out infinite alternate;
 }
 
 @keyframes float-live {
   0% {
     opacity: 0;
-    transform: translate3d(0, 28px, 0) scale(0.28) rotate(var(--spin, 0deg));
+    transform: translate3d(0, 4vh, 0) scale(0.62) rotate(var(--spin, 0deg));
   }
-  10% {
+  12% {
     opacity: 1;
-    transform: translate3d(calc(var(--drift, 0px) * 0.12), -2vh, 0) scale(1.22)
-      rotate(calc(var(--spin, 0deg) - 10deg));
+    transform: translate3d(calc(var(--drift, 0px) * 0.12), 0, 0) scale(1)
+      rotate(var(--spin, 0deg));
   }
-  22% {
-    transform: translate3d(calc(var(--drift, 0px) * 0.28), -14vh, 0) scale(0.9)
-      rotate(calc(var(--spin, 0deg) + 8deg));
-  }
-  40% {
-    transform: translate3d(calc(var(--drift, 0px) * 0.55), -38vh, 0) scale(1.12)
-      rotate(calc(var(--spin, 0deg) - 6deg));
-  }
-  70% {
+  78% {
     opacity: 1;
-    transform: translate3d(calc(var(--drift, 0px) * 0.82), -72vh, 0) scale(1.04)
-      rotate(calc(var(--spin, 0deg) + 14deg));
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--drift, 0px), -108vh, 0) scale(1.28)
-      rotate(calc(var(--spin, 0deg) + 32deg));
+    transform: translate3d(var(--drift, 0px), -82vh, 0) scale(1.06)
+      rotate(calc(var(--spin, 0deg) + 8deg));
   }
 }
 
 @keyframes emoji-live {
-  0%,
-  100% {
-    transform: translateX(0) rotate(-8deg) scale(1, 1);
+  from {
+    transform: rotate(-6deg);
   }
-  35% {
-    transform: translateX(6%) rotate(9deg) scale(1.08, 0.92);
-  }
-  70% {
-    transform: translateX(-5%) rotate(-6deg) scale(0.94, 1.08);
+  to {
+    transform: rotate(7deg);
   }
 }
 
@@ -642,7 +642,17 @@ input[type="text"] {
 }
 
 .story-stage .sky {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 4;
+}
+
+.story-stage .tab {
+  position: absolute;
+  top: 28%;
+  right: 12px;
 }
 
 .panel.story.is-lounge {

@@ -5,6 +5,7 @@ import { Chat } from "./Chat";
 import { HideIcon } from "./icons";
 import { LoungeArt } from "./SpotArt";
 import { ReactionSky } from "./ReactionSky";
+import { burstTtlMs, sprayBursts } from "../shared/reactions";
 import type { ChatMessage, ReactionBurst } from "../shared/types";
 import type { ReactionEmoji } from "../shared/avatars";
 
@@ -61,19 +62,13 @@ function Lounge() {
   const [bursts, setBursts] = useState<ReactionBurst[]>([]);
 
   function react(emoji: ReactionEmoji) {
-    const burst: ReactionBurst = {
-      id: crypto.randomUUID(),
-      emoji,
-      x: 8 + Math.random() * 52,
-      spin: Math.round(-20 + Math.random() * 40),
-      wobble: 0,
-      size: 40 + Math.round(Math.random() * 24),
-      drift: Math.round(-70 + Math.random() * 140),
-    };
-    setBursts((current) => [...current, burst].slice(-12));
-    window.setTimeout(() => {
-      setBursts((current) => current.filter((item) => item.id !== burst.id));
-    }, 4000);
+    const extra = sprayBursts(emoji);
+    setBursts((current) => [...current, ...extra].slice(-64));
+    for (const burst of extra) {
+      window.setTimeout(() => {
+        setBursts((current) => current.filter((item) => item.id !== burst.id));
+      }, burstTtlMs(burst));
+    }
   }
 
   return (
@@ -139,4 +134,14 @@ export const Playground: Story = {};
 
 export const Setup: Story = {
   render: () => <SetupCard />,
+};
+
+export const ChatToggle: Story = {
+  render: () => (
+    <div className="story-stage">
+      <button className="tab" type="button" title="Open Chillax chat — you are still in the party">
+        Chillax chat
+      </button>
+    </div>
+  ),
 };
