@@ -57,7 +57,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
     <>
       {!state.overlayOpen ? (
         <button className="tab" type="button" onClick={() => session.toggleOverlay(true)}>
-          Chillax
+          Chat
         </button>
       ) : null}
       <div className={state.overlayOpen ? "panel" : "panel is-collapsed"}>
@@ -85,7 +85,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             <CopyIcon />
           </IconButton>
         ) : null}
-        <IconButton label="Hide Chillax panel" onClick={() => session.toggleOverlay(false)}>
+        <IconButton label="Hide chat" onClick={() => session.toggleOverlay(false)}>
           <CloseIcon />
         </IconButton>
       </header>

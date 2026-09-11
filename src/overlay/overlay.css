@@ -93,9 +93,8 @@ textarea {
   pointer-events: none;
 }
 
-:host(.is-fullscreen) .panel,
-:host(.is-fullscreen) .tab {
-  display: none;
+:host(.is-fullscreen) {
+  z-index: 2147483647;
 }
 
 .sky {
@@ -300,9 +299,12 @@ input[type="text"] {
 }
 
 .media-frame {
+  pointer-events: auto;
+  position: relative;
+  z-index: 9;
   width: 100%;
-  min-height: 176px;
-  height: 196px;
+  min-height: 210px;
+  height: 228px;
   border: 0;
   background: transparent;
 }

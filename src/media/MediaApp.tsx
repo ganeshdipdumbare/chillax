@@ -27,6 +27,8 @@ export function MediaApp() {
   const initRef = useRef<InitPayload | null>(null);
   const startingRef = useRef(false);
   const generationRef = useRef(0);
+  const mutedRef = useRef(false);
+  const cameraOnRef = useRef(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
@@ -121,8 +123,8 @@ export function MediaApp() {
           contentId: cfg.contentId || "",
           watchUrl: cfg.watchUrl,
         });
-        room.setMuted(muted);
-        room.setCameraOn(cameraOn);
+        room.setMuted(mutedRef.current);
+        void room.setCameraOn(cameraOnRef.current);
       },
       onProtocol: (message) => {
         postToParent({ type: "protocol", message });
@@ -219,10 +221,11 @@ export function MediaApp() {
           aria-pressed={muted}
           aria-label={muted ? "Unmute microphone" : "Mute microphone"}
           onClick={() => {
-            const next = !muted;
+            const next = !mutedRef.current;
+            mutedRef.current = next;
             setMuted(next);
             roomRef.current?.setMuted(next);
-            postToParent({ type: "local-media", muted: next, cameraOn });
+            postToParent({ type: "local-media", muted: next, cameraOn: cameraOnRef.current });
           }}
         >
           {muted ? "Unmute" : "Mute"}
@@ -232,13 +235,18 @@ export function MediaApp() {
           aria-pressed={cameraOn}
           aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
           onClick={() => {
-            const next = !cameraOn;
+            const next = !cameraOnRef.current;
+            cameraOnRef.current = next;
             setCameraOn(next);
-            roomRef.current?.setCameraOn(next);
-            postToParent({ type: "local-media", muted, cameraOn: next });
+            postToParent({ type: "local-media", muted: mutedRef.current, cameraOn: next });
+            void roomRef.current?.setCameraOn(next).catch(() => {
+              cameraOnRef.current = false;
+              setCameraOn(false);
+              postToParent({ type: "local-media", muted: mutedRef.current, cameraOn: false });
+            });
           }}
         >
-          {cameraOn ? "Camera on" : "Camera off"}
+          {cameraOn ? "Camera off" : "Camera on"}
         </button>
       </div>
       <p className="status">{status}</p>

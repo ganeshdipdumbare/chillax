@@ -1,25 +1,36 @@
 import { PARTY_CAP, VIDEO_CONSTRAINTS } from "../shared/constants";
 
-export async function captureLocalMedia(): Promise<MediaStream> {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
-    stream.getVideoTracks().forEach((track) => {
-      track.enabled = false;
-    });
-    return stream;
-  } catch (videoError) {
-    try {
-      const audioOnly = await navigator.mediaDevices.getUserMedia({
-        audio: VIDEO_CONSTRAINTS.audio,
-        video: false,
-      });
-      return audioOnly;
-    } catch {
-      throw videoError instanceof Error
-        ? videoError
-        : new Error("Camera or microphone permission was denied.");
-    }
+export function placeholderVideoTrack(): MediaStreamTrack {
+  const canvas = document.createElement("canvas");
+  canvas.width = 16;
+  canvas.height = 16;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#09060f";
+    ctx.fillRect(0, 0, 16, 16);
   }
+  const track = canvas.captureStream(1).getVideoTracks()[0];
+  track.enabled = false;
+  return track;
+}
+
+export async function captureCameraTrack(): Promise<MediaStreamTrack> {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: VIDEO_CONSTRAINTS.video,
+  });
+  const track = stream.getVideoTracks()[0];
+  if (!track) throw new Error("Camera was not available.");
+  return track;
+}
+
+export async function captureLocalMedia(): Promise<MediaStream> {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: VIDEO_CONSTRAINTS.audio,
+    video: false,
+  });
+  stream.addTrack(placeholderVideoTrack());
+  return stream;
 }
 
 export function partyFull(memberCount: number): boolean {

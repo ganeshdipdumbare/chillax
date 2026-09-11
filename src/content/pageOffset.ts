@@ -4,18 +4,19 @@ const STYLE_ID = "chillax-page-offset";
 const HOST_ID = "chillax-root";
 
 let resizeTimer = 0;
+let hostGuard: MutationObserver | null = null;
 
 function offsetCss(): string {
   const space = `${OVERLAY_RESERVE}px`;
   return `
-html.chillax-overlay-open {
+html.chillax-overlay-open:not(.chillax-fs) {
   box-sizing: border-box !important;
   width: auto !important;
   max-width: none !important;
   margin-right: ${space} !important;
   overflow-x: hidden !important;
 }
-html.chillax-overlay-open body {
+html.chillax-overlay-open:not(.chillax-fs) body {
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -90,10 +91,23 @@ html.chillax-overlay-open .nfp.AkiraPlayer {
   width: 100% !important;
   max-width: 100% !important;
 }
+html.chillax-overlay-open :fullscreen .html5-video-container,
+html.chillax-overlay-open :fullscreen video.html5-main-video,
+html.chillax-overlay-open :fullscreen video.video-stream,
+html.chillax-overlay-open :fullscreen video {
+  width: calc(100% - ${space}) !important;
+  max-width: calc(100% - ${space}) !important;
+  left: 0 !important;
+}
+html.chillax-overlay-open :fullscreen .html5-video-player,
+html.chillax-overlay-open :fullscreen #movie_player {
+  width: 100% !important;
+}
 `;
 }
 
 function exitYouTubeTheater() {
+  if (document.fullscreenElement) return;
   const flexy = document.querySelector("ytd-watch-flexy");
   if (!flexy) return;
   if (!flexy.hasAttribute("theater") && !flexy.hasAttribute("full-bleed-player")) return;
@@ -107,26 +121,57 @@ function nudgePlayerLayout() {
   }, 80);
 }
 
+function fullscreenTarget(): Element {
+  const fs = document.fullscreenElement;
+  if (!fs) return document.documentElement;
+  if (fs instanceof HTMLVideoElement) return fs.parentElement || fs;
+  return fs;
+}
+
+function placeHost() {
+  const host = document.getElementById(HOST_ID);
+  if (!host) return;
+  const target = fullscreenTarget();
+  if (host.parentElement !== target) target.appendChild(host);
+}
+
+function watchHostParent() {
+  hostGuard?.disconnect();
+  hostGuard = null;
+  const fs = document.fullscreenElement;
+  if (!fs) return;
+  hostGuard = new MutationObserver(() => {
+    const host = document.getElementById(HOST_ID);
+    if (host && document.fullscreenElement && host.parentElement !== fullscreenTarget()) {
+      placeHost();
+    }
+  });
+  hostGuard.observe(fs, { childList: true });
+}
+
 export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) {
   const fullscreen = Boolean(document.fullscreenElement);
-  const shouldOpen = open && !fullscreen;
+  placeHost();
+  watchHostParent();
+
   const root = document.documentElement;
-  root.classList.toggle("chillax-overlay-open", shouldOpen);
+  root.classList.toggle("chillax-overlay-open", open);
+  root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
-  root.style.marginRight = shouldOpen ? `${OVERLAY_RESERVE}px` : "";
+  root.style.marginRight = open && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
 
   const host = document.getElementById(HOST_ID);
   host?.classList.toggle("is-fullscreen", fullscreen);
-  host?.classList.toggle("is-open", shouldOpen);
-  if (host) host.style.width = shouldOpen ? `${OVERLAY_RESERVE}px` : "0px";
+  host?.classList.toggle("is-open", open);
+  if (host) host.style.width = open ? `${OVERLAY_RESERVE}px` : "0px";
 
   const existing = document.getElementById(STYLE_ID);
-  if (!shouldOpen) {
+  if (!open) {
     existing?.remove();
     nudgePlayerLayout();
     return;
   }
-  if (shouldOpen) exitYouTubeTheater();
+  if (!fullscreen) exitYouTubeTheater();
   const style = existing ?? document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = offsetCss();
@@ -136,6 +181,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
 
 export function watchFullscreen(platform: "youtube" | "netflix", isOpen: () => boolean) {
   const sync = () => pushPageOffset(platform, isOpen());
-  document.addEventListener("fullscreenchange", sync);
+  document.addEventListener("fullscreenchange", sync, true);
+  document.addEventListener("webkitfullscreenchange", sync, true);
   document.addEventListener("yt-navigate-finish", sync);
 }

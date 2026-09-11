@@ -2,7 +2,7 @@ import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import { PEER_CONFIG } from "../shared/constants";
 import { randomRoomId } from "../shared/ids";
 import { decodeMessage, encodeMessage } from "./protocol";
-import { partyFull } from "./mesh";
+import { partyFull, captureCameraTrack, placeholderVideoTrack } from "./mesh";
 import type { Participant, ProtocolMessage } from "../shared/types";
 
 type RoomHandlers = {
@@ -55,6 +55,7 @@ export class PeerRoom {
   private handlers: RoomHandlers;
   private muted = false;
   private cameraOn = false;
+  private cameraTrack: MediaStreamTrack | null = null;
   private tearingDown = false;
   localNickname = "Guest";
   localAvatarId = "fox";
@@ -108,12 +109,47 @@ export class PeerRoom {
     this.broadcastMediaState();
   }
 
-  setCameraOn(cameraOn: boolean) {
-    this.cameraOn = cameraOn;
-    this.localStream?.getVideoTracks().forEach((track) => {
-      track.enabled = cameraOn;
-    });
+  async setCameraOn(cameraOn: boolean) {
+    if (this.tearingDown) return;
+    if (cameraOn === this.cameraOn && (!cameraOn || this.cameraTrack)) {
+      this.broadcastMediaState();
+      return;
+    }
+    if (cameraOn) {
+      const track = await captureCameraTrack();
+      if (this.tearingDown) {
+        track.stop();
+        return;
+      }
+      await this.replaceVideoTrack(track);
+      this.cameraTrack = track;
+      this.cameraOn = true;
+    } else {
+      this.cameraTrack?.stop();
+      this.cameraTrack = null;
+      const dummy = placeholderVideoTrack();
+      await this.replaceVideoTrack(dummy);
+      this.cameraOn = false;
+    }
     this.broadcastMediaState();
+  }
+
+  private async replaceVideoTrack(next: MediaStreamTrack) {
+    if (this.localStream) {
+      for (const old of this.localStream.getVideoTracks()) {
+        this.localStream.removeTrack(old);
+        if (old !== next) old.stop();
+      }
+      this.localStream.addTrack(next);
+    }
+    await Promise.all(
+      [...this.calls.values()].map(async (call) => {
+        const sender = call.peerConnection
+          ?.getSenders()
+          .find((item) => item.track?.kind === "video");
+        if (sender) await sender.replaceTrack(next);
+      }),
+    );
   }
 
   getRemoteStream(peerId: string): MediaStream | undefined {
@@ -133,6 +169,8 @@ export class PeerRoom {
     }
     for (const call of this.calls.values()) call.close();
     for (const conn of this.connections.values()) conn.close();
+    this.cameraTrack?.stop();
+    this.cameraTrack = null;
     this.peer?.destroy();
     this.peer = null;
     this.connections.clear();
