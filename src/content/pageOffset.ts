@@ -14,8 +14,8 @@ const PINNED_PROPS = [
 ] as const;
 
 let resizeTimer = 0;
-let resizeTimer2 = 0;
 let layoutGen = 0;
+let pinning = false;
 let hostGuard: MutationObserver | null = null;
 let fsLayoutGuard: MutationObserver | null = null;
 let pinnedEls: HTMLElement[] = [];
@@ -128,22 +128,20 @@ function sizePlayerToReserve(reserve: number) {
   const gen = ++layoutGen;
   const apply = () => {
     if (gen !== layoutGen) return;
+    const { width, height } = leftoverSize(reserve);
     if (document.fullscreenElement) {
+      youtubePlayer()?.setSize?.(width, height);
       if (reserve > 0) {
         clearPinnedStyles();
         applyFullscreenPlayerLayout(reserve);
-      } else {
-        const { width, height } = leftoverSize(0);
-        youtubePlayer()?.setSize?.(width, height);
       }
+    } else {
+      window.dispatchEvent(new Event("resize"));
     }
-    window.dispatchEvent(new Event("resize"));
   };
   apply();
   window.clearTimeout(resizeTimer);
-  window.clearTimeout(resizeTimer2);
-  resizeTimer = window.setTimeout(apply, 50);
-  resizeTimer2 = window.setTimeout(apply, 220);
+  resizeTimer = window.setTimeout(apply, 80);
 }
 
 function fullscreenTarget(): Element {
@@ -198,8 +196,8 @@ function clearPinnedStyles() {
 function applyFullscreenPlayerLayout(reserve: number) {
   const fs = document.fullscreenElement;
   if (!(fs instanceof HTMLElement)) return;
+  pinning = true;
   const { width, height } = leftoverSize(reserve);
-  youtubePlayer()?.setSize?.(width, height);
 
   const container =
     fs.querySelector<HTMLElement>(".html5-video-container") ||
@@ -239,6 +237,9 @@ function applyFullscreenPlayerLayout(reserve: number) {
       });
     });
   }
+  window.requestAnimationFrame(() => {
+    pinning = false;
+  });
 }
 
 function watchFullscreenLayout(active: boolean) {
@@ -248,27 +249,20 @@ function watchFullscreenLayout(active: boolean) {
   const fs = document.fullscreenElement;
   if (!active || !(fs instanceof HTMLElement)) return;
   applyFullscreenPlayerLayout(OVERLAY_RESERVE);
-  const width = `${leftoverSize(OVERLAY_RESERVE).width}px`;
+  let debounce = 0;
   fsLayoutGuard = new MutationObserver(() => {
-    if (!document.fullscreenElement) return;
-    const container = document.fullscreenElement.querySelector<HTMLElement>(
-      ".html5-video-container, [data-uia='video-canvas']",
-    );
-    if (
-      container &&
-      container.style.width === width &&
-      container.style.getPropertyPriority("width") === "important"
-    ) {
-      return;
-    }
-    clearPinnedStyles();
-    applyFullscreenPlayerLayout(OVERLAY_RESERVE);
+    if (pinning || !document.fullscreenElement) return;
+    window.clearTimeout(debounce);
+    debounce = window.setTimeout(() => {
+      if (pinning || !document.fullscreenElement) return;
+      clearPinnedStyles();
+      applyFullscreenPlayerLayout(OVERLAY_RESERVE);
+    }, 50);
   });
   fsLayoutGuard.observe(fs, {
     attributes: true,
     attributeFilter: ["style"],
     subtree: true,
-    childList: true,
   });
 }
 
