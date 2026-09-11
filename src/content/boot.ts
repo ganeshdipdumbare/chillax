@@ -11,7 +11,7 @@ import {
 import { loadAvatarId, loadNickname, saveAvatarId, saveNickname } from "../shared/storage";
 import { getState, setState } from "../shared/store";
 import { burstTtlMs, sprayBursts } from "../shared/reactions";
-import type { MediaToContent, PopupRequest, ProtocolMessage } from "../shared/types";
+import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage } from "../shared/types";
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
@@ -27,7 +27,7 @@ let ignoreIncomingUntil = 0;
 let suppressOutUntil = 0;
 let lastControlSentAt = 0;
 let lastSync: { paused: boolean; time: number; sentAt?: number } | null = null;
-let lastPlayer: { paused: boolean; time: number } | null = null;
+let lastControlPlayer: { paused: boolean; time: number } | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 let booted = false;
@@ -188,8 +188,8 @@ function sendControlPolicy() {
   });
 }
 
-function notePlayer(player: { paused: boolean; time: number }) {
-  lastPlayer = { paused: player.paused, time: player.time };
+function noteControlPlayer(player: { paused: boolean; time: number }) {
+  lastControlPlayer = { paused: player.paused, time: player.time };
 }
 
 function formatWatchTime(seconds: number) {
@@ -203,40 +203,80 @@ function formatWatchTime(seconds: number) {
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
 
-function classifyPlayback(player: { paused: boolean; time: number }): "play" | "pause" | "seek" | null {
-  if (!lastPlayer) {
-    notePlayer(player);
-    return null;
-  }
-  const jumped = Math.abs(player.time - lastPlayer.time) > 2.5;
-  const pausedChanged = player.paused !== lastPlayer.paused;
-  notePlayer(player);
-  if (pausedChanged) return player.paused ? "pause" : "play";
-  if (jumped) return "seek";
+function inferControlAction(player: { paused: boolean; time: number }): PlaybackAction | null {
+  const prev = lastControlPlayer;
+  noteControlPlayer(player);
+  if (!prev) return player.paused ? "pause" : "play";
+  if (player.paused !== prev.paused) return player.paused ? "pause" : "play";
+  if (Math.abs(player.time - prev.time) > 2.5) return "seek";
   return null;
 }
 
-function playbackText(action: "play" | "pause" | "seek", time: number) {
+function playbackText(action: PlaybackAction, time: number) {
   if (action === "pause") return "paused the video";
   if (action === "play") return "hit play";
   return `jumped to ${formatWatchTime(time)}`;
 }
 
-function postPlaybackNotice(action: "play" | "pause" | "seek", time: number) {
-  const state = getState();
-  if (!state.party) return;
+function isDuplicatePlayback(from: string, text: string, sentAt: number) {
+  return getState().messages.some(
+    (msg) =>
+      msg.kind === "playback" &&
+      msg.from === from &&
+      msg.text === text &&
+      Math.abs(sentAt - msg.sentAt) < 2000,
+  );
+}
+
+function appendPlaybackNotice(notice: {
+  from: string;
+  nickname: string;
+  avatarId: string;
+  action: PlaybackAction;
+  time: number;
+  sentAt: number;
+  relay?: boolean;
+}) {
+  if (!getState().party || !notice.from) return;
+  const text = playbackText(notice.action, notice.time);
+  const id = `playback:${notice.from}:${notice.sentAt}:${notice.action}`;
+  if (getState().messages.some((msg) => msg.id === id)) return;
+  if (isDuplicatePlayback(notice.from, text, notice.sentAt)) return;
   const message: ProtocolMessage = {
     type: "chat",
     kind: "playback",
-    id: crypto.randomUUID(),
-    from: myPeerId() || state.party.roomId,
-    nickname: state.nickname,
-    avatarId: state.avatarId,
-    text: playbackText(action, time),
-    sentAt: Date.now(),
+    id,
+    from: notice.from,
+    nickname: notice.nickname,
+    avatarId: notice.avatarId,
+    text,
+    sentAt: notice.sentAt,
   };
   setState({ messages: [...getState().messages, message].slice(-200) });
-  sendToMedia({ type: "send-protocol", message });
+  if (notice.relay) sendToMedia({ type: "send-protocol", message });
+}
+
+function actorFromSync(message: Extract<ProtocolMessage, { type: "sync" }>) {
+  const from = message.from || "";
+  const person = getState().participants.find((item) => item.peerId === from);
+  return {
+    from,
+    nickname: message.nickname || person?.nickname || "Someone",
+    avatarId: message.avatarId || person?.avatarId || "fox",
+  };
+}
+
+function logControlPlayback(message: Extract<ProtocolMessage, { type: "sync" }>) {
+  if (!message.action) return;
+  const actor = actorFromSync(message);
+  appendPlaybackNotice({
+    from: actor.from,
+    nickname: actor.nickname,
+    avatarId: actor.avatarId,
+    action: message.action,
+    time: message.time,
+    sentAt: message.sentAt,
+  });
 }
 
 function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" | "control" = "heartbeat") {
@@ -244,17 +284,35 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
   if (!canControlPlayback()) return;
   const party = state.party;
   if (!party) return;
-  if (applying.current || Date.now() < suppressOutUntil || adapter.isAdPlaying()) return;
+  if (applying.current || adapter.isAdPlaying()) return;
   const player = adapter.getState();
   if (!player) return;
+  if (Date.now() < suppressOutUntil) {
+    if (reason !== "control") return;
+    if (
+      lastSync &&
+      player.paused === lastSync.paused &&
+      Math.abs(player.time - lastSync.time) < 2.5
+    ) {
+      return;
+    }
+  }
   const sentAt = Date.now();
+  const action = reason === "control" ? inferControlAction(player) : null;
   if (reason === "control") {
     ignoreIncomingUntil = Date.now() + 1200;
     lastControlSentAt = sentAt;
-    const action = classifyPlayback(player);
-    if (action) postPlaybackNotice(action, player.time);
-  } else {
-    notePlayer(player);
+    if (action) {
+      appendPlaybackNotice({
+        from: myPeerId() || party.roomId,
+        nickname: state.nickname,
+        avatarId: state.avatarId,
+        action,
+        time: player.time,
+        sentAt,
+        relay: true,
+      });
+    }
   }
   sendToMedia({
     type: "send-protocol",
@@ -269,6 +327,9 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
       from: myPeerId() || undefined,
       controllers: party.role === "host" ? withHostController(state.controllers) : undefined,
       mode: reason,
+      ...(reason === "control" && action
+        ? { action, nickname: state.nickname, avatarId: state.avatarId }
+        : {}),
     } satisfies ProtocolMessage,
   });
 }
@@ -292,6 +353,7 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
   const state = getState();
   if (message.type === "chat") {
     if (state.messages.some((item) => item.id === message.id)) return;
+    if (message.kind === "playback" && isDuplicatePlayback(message.from, message.text, message.sentAt)) return;
     setState({ messages: [...state.messages, message].slice(-200) });
     return;
   }
@@ -348,6 +410,8 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     if (mode === "control") {
       lastControlSentAt = Math.max(lastControlSentAt, message.sentAt);
       ignoreIncomingUntil = Date.now() + 800;
+      logControlPlayback(message);
+      noteControlPlayer({ paused: message.paused, time: message.time });
     }
     suppressOutUntil = Date.now() + 800;
     const result = await applyHostSync(adapter, message, applying);
@@ -448,7 +512,7 @@ export async function boot(adapter: PlayerAdapter) {
         overlayOpen: keepLounge,
       });
       lastSync = null;
-      lastPlayer = null;
+      lastControlPlayer = null;
       ignoreIncomingUntil = 0;
       suppressOutUntil = 0;
       lastControlSentAt = 0;
@@ -626,7 +690,7 @@ export async function boot(adapter: PlayerAdapter) {
   });
 
   adapter.onChange(() => {
-    if (applying.current || Date.now() < suppressOutUntil) return;
+    if (applying.current) return;
     if (!canControlPlayback()) {
       if (lastSync) void applyHostSync(adapter, lastSync, applying);
       return;

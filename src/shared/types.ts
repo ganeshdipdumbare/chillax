@@ -16,6 +16,8 @@ export type ChatMessage = {
   kind?: "playback";
 };
 
+export type PlaybackAction = "play" | "pause" | "seek";
+
 export type Participant = {
   peerId: string;
   nickname: string;
@@ -85,6 +87,9 @@ export type ProtocolMessage =
       guestPlayback?: boolean;
       controllers?: string[];
       mode?: "control" | "heartbeat" | "followup";
+      action?: PlaybackAction;
+      nickname?: string;
+      avatarId?: string;
     }
   | { type: "control-policy"; controllers: string[]; guestPlayback?: boolean }
   | {
