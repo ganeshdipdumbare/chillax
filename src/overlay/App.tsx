@@ -51,16 +51,41 @@ export function OverlayApp({ session }: { session: SessionController }) {
     };
   }, [session, needMedia]);
 
+  const hostId = state.party?.roomId;
+  const me = state.localPeerId;
+  const everyoneDrives = state.controllers.includes("*");
   const people = useMemo(
     () =>
-      state.participants.map((person) => (
-        <span className="chip" key={person.peerId}>
-          <AvatarFace avatarId={person.avatarId} size={22} />
-          {person.nickname}
-          {person.muted ? " · muted" : ""}
-        </span>
-      )),
-    [state.participants],
+      state.participants.map((person) => {
+        const isHostPerson = Boolean(hostId && person.peerId === hostId);
+        const canDrive = isHostPerson || everyoneDrives || state.controllers.includes(person.peerId);
+        const isYou = Boolean(me && person.peerId === me);
+        const hostView = state.party?.role === "host";
+        if (hostView && !isHostPerson) {
+          return (
+            <button
+              className={`chip${canDrive ? " is-driver" : ""}`}
+              key={person.peerId}
+              type="button"
+              aria-pressed={canDrive}
+              title={canDrive ? `Stop ${person.nickname} from controlling playback` : `Let ${person.nickname} play, pause, and seek`}
+              onClick={() => session.setController(person.peerId, !canDrive)}
+            >
+              <AvatarFace avatarId={person.avatarId} size={22} />
+              {person.nickname}
+              {canDrive ? " · drive" : ""}
+            </button>
+          );
+        }
+        return (
+          <span className={`chip${canDrive ? " is-driver" : ""}`} key={person.peerId}>
+            <AvatarFace avatarId={person.avatarId} size={22} />
+            {isYou ? "You" : person.nickname}
+            {isHostPerson ? " · host" : canDrive ? " · drive" : ""}
+          </span>
+        );
+      }),
+    [state.participants, state.controllers, state.party?.role, state.party?.roomId, state.localPeerId, hostId, me, everyoneDrives, session],
   );
 
   const panelClass = [
@@ -133,9 +158,9 @@ export function OverlayApp({ session }: { session: SessionController }) {
         ) : null}
         {state.wrongTitle ? (
           <div className="banner" role="status">
-            Open the same title as the host.{" "}
-            <a href={state.wrongTitle.hostUrl} target="_blank" rel="noreferrer">
-              Host link
+            Taking you to the host’s video…{" "}
+            <a href={state.wrongTitle.hostUrl} rel="noreferrer">
+              Open it
             </a>
           </div>
         ) : null}
@@ -229,24 +254,12 @@ export function OverlayApp({ session }: { session: SessionController }) {
               <div className="party-code">
                 <strong className="code-pill">{copied ? "Invite copied" : state.party.roomId}</strong>
                 {state.party.role === "host" ? (
-                  <button
-                    className="control-toggle"
-                    type="button"
-                    aria-pressed={state.guestPlayback}
-                    onClick={() => session.setGuestPlayback(!state.guestPlayback)}
-                  >
-                    <span>
-                      {state.guestPlayback
-                        ? "Friends can play, pause, and seek"
-                        : "Only you control playback"}
-                    </span>
-                    <span className="switch" aria-hidden="true" />
-                  </button>
+                  <p className="control-hint">Tap a friend to let them play, pause, and seek.</p>
                 ) : (
                   <p className="control-hint">
-                    {state.guestPlayback
+                    {everyoneDrives || (me && state.controllers.includes(me))
                       ? "You can play, pause, and seek for everyone."
-                      : "Playback follows the host."}
+                      : "Playback follows the host. They can give you control."}
                   </p>
                 )}
                 <button className="ghost is-leave" type="button" onClick={() => session.leaveParty()}>
@@ -266,7 +279,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
                 ? state.callDetail || "Connecting…"
                 : state.callDetail ||
                   (state.callConnected
-                    ? "Voice is P2P. Camera starts off. Smash a reaction."
+                    ? "Voice is P2P. Mic and camera start off. Smash a reaction."
                     : "Call could not connect. Chat and reactions may still work.")}
             </p>
           </>

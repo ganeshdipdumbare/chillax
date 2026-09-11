@@ -88,11 +88,11 @@ Open [http://localhost:6006](http://localhost:6006). Static export: `npm run bui
 2. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code).
 3. Chat **docks on the right**. The movie stays on the left. **Hide chat** tucks the panel without leaving; **Leave party** is the pink control.
 4. Copy the invite link (YouTube query `?chillax=`, Netflix hash `#chillax=`).
-5. Guests install Chillax, open the link, and allow the microphone when prompted.
-6. Camera starts **off**. Mute is one click. Use the reaction bar under chat. Parties cap at **8** people.
-7. Hosts keep playback by default (**Only you control playback**). Turn on **Friends can play, pause, and seek** if you want guests to drive.
+5. Guests install Chillax and open the invite link — they join automatically. Mic and camera stay **off** until someone turns them on.
+6. Mute and camera are one click. Use the reaction bar under chat. Parties cap at **8** people.
+7. Hosts keep playback by default. **Tap a person** in the party to let them play, pause, and seek.
 
-If Netflix strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. They must already be on the same title.
+If Netflix strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. Chillax opens the host’s title for them.
 
 A YouTube host cannot sync a Netflix guest.
 
@@ -198,8 +198,8 @@ If rejected, Google emails a reason. Fix, bump the version, upload a new zip.
 
 Use two Chrome profiles with the unpacked extension.
 
-- YouTube: same video; play/pause/seek follow the host unless the host turns on “Friends can play, pause, and seek”; chat and reactions appear in the right dock; SPA navigation still finds the player.
-- Voice/video: mic both ways; camera tiles only in the Chillax panel; mute and camera-off; movie audio still plays.
+- YouTube: same video; play/pause/seek follow the host; tap a person to grant them control; chat and reactions appear in the right dock; SPA navigation still finds the player.
+- Voice/video: mic and camera start off; tiles only in the Chillax panel; movie audio still plays.
 - Netflix: logged-in profiles that can play the same title; hash invite or join-with-code; wrong-title prompt if IDs differ.
 
 Netflix cannot be verified without a logged-in Netflix session.

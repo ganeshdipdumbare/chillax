@@ -24,7 +24,7 @@ export class NetflixPlayer implements PlayerAdapter {
 
   getState(): PlayerState | null {
     const video = videoEl();
-    if (!video) return { paused: true, time: 0 };
+    if (!video || video.readyState < 1 || Number.isNaN(video.currentTime)) return null;
     return { paused: video.paused, time: video.currentTime };
   }
 

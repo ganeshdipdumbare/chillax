@@ -44,6 +44,7 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
 }
 
 export function mountOverlay(session: SessionController) {
+  document.querySelectorAll("#chillax-root").forEach((el) => el.remove());
   const host = document.createElement("div");
   host.id = "chillax-root";
   host.style.cssText =

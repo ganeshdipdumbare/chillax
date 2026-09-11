@@ -2,6 +2,7 @@ import { OVERLAY_RESERVE } from "../shared/constants";
 import { getState } from "../shared/store";
 
 const STYLE_ID = "chillax-page-offset";
+const LOUNGE_STYLE_ID = "chillax-lounge-hide";
 const HOST_ID = "chillax-root";
 const PINNED_PROPS = [
   "position",
@@ -97,6 +98,50 @@ html.chillax-overlay-open.chillax-fs :fullscreen .ytp-gradient-top {
   right: auto !important;
 }
 `;
+}
+
+function loungeCss(): string {
+  return `
+html.chillax-lounge {
+  --ytd-mini-guide-width: 0px !important;
+  --ytd-guide-width: 0px !important;
+}
+html.chillax-lounge ytd-mini-guide-renderer,
+html.chillax-lounge #guide,
+html.chillax-lounge tp-yt-app-drawer#guide,
+html.chillax-lounge ytd-guide-renderer,
+html.chillax-lounge #guide-spacer,
+html.chillax-lounge #guide-wrapper {
+  display: none !important;
+}
+html.chillax-lounge #content.ytd-app,
+html.chillax-lounge ytd-page-manager,
+html.chillax-lounge #page-manager {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+`;
+}
+
+function setInjectedStyle(id: string, css: string | null) {
+  const existing = document.getElementById(id);
+  if (!css) {
+    existing?.remove();
+    return;
+  }
+  const style = existing ?? document.createElement("style");
+  style.id = id;
+  style.textContent = css;
+  if (!existing) (document.head || document.documentElement).appendChild(style);
+}
+
+function collapseYouTubeGuide() {
+  const drawer = document.querySelector("tp-yt-app-drawer#guide");
+  if (!drawer?.hasAttribute("opened")) return;
+  document.querySelector<HTMLElement>("#guide-button, #guide-button-icon, ytd-masthead #guide-button")?.click();
 }
 
 function exitYouTubeTheater() {
@@ -308,6 +353,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
 
   const root = document.documentElement;
   root.classList.toggle("chillax-overlay-open", docked);
+  root.classList.toggle("chillax-lounge", lounge);
   root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
   root.style.marginRight = docked && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
@@ -337,6 +383,15 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
 
   const existing = document.getElementById(STYLE_ID);
   fsReserve = docked && fullscreen ? OVERLAY_RESERVE : 0;
+  if (lounge) {
+    existing?.remove();
+    watchFullscreenLayout(false);
+    setInjectedStyle(LOUNGE_STYLE_ID, loungeCss());
+    collapseYouTubeGuide();
+    placeHost();
+    return;
+  }
+  setInjectedStyle(LOUNGE_STYLE_ID, null);
   if (!docked) {
     existing?.remove();
     watchFullscreenLayout(false);

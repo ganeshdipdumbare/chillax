@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { AvatarPicker } from "./AvatarPicker";
+import { AvatarFace } from "./AvatarFace";
 import { Chat } from "./Chat";
 import { HideIcon } from "./icons";
 import { LoungeArt } from "./SpotArt";
@@ -60,6 +61,13 @@ function Lounge() {
   const [avatarId, setAvatarId] = useState("disco");
   const [messages, setMessages] = useState(seed);
   const [bursts, setBursts] = useState<ReactionBurst[]>([]);
+  const [drivers, setDrivers] = useState<string[]>(["jules"]);
+
+  function toggleDrive(id: string) {
+    setDrivers((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
+  }
 
   function react(emoji: ReactionEmoji) {
     const extra = sprayBursts(emoji);
@@ -100,6 +108,33 @@ function Lounge() {
           <AvatarPicker value={avatarId} onChange={setAvatarId} />
         </label>
       </div>
+      <div className="people">
+        <span className="chip is-driver">
+          <AvatarFace avatarId={avatarId} size={22} />
+          You · host
+        </span>
+        <button
+          className={`chip${drivers.includes("maya") ? " is-driver" : ""}`}
+          type="button"
+          aria-pressed={drivers.includes("maya")}
+          onClick={() => toggleDrive("maya")}
+        >
+          <AvatarFace avatarId="fox" size={22} />
+          Maya{drivers.includes("maya") ? " · drive" : ""}
+        </button>
+        <button
+          className={`chip${drivers.includes("jules") ? " is-driver" : ""}`}
+          type="button"
+          aria-pressed={drivers.includes("jules")}
+          onClick={() => toggleDrive("jules")}
+        >
+          <AvatarFace avatarId="ghost" size={22} />
+          Jules{drivers.includes("jules") ? " · drive" : ""}
+        </button>
+      </div>
+      <p className="control-hint" style={{ padding: "0 14px 8px" }}>
+        Tap a friend to let them play, pause, and seek.
+      </p>
       <Chat
         messages={messages}
         onReact={react}

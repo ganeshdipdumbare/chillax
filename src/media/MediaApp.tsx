@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MSG_SOURCE_CONTENT, MSG_SOURCE_MEDIA } from "../shared/constants";
-import { captureLocalMedia } from "../p2p/mesh";
+import { placeholderLocalStream } from "../p2p/mesh";
 import { PeerRoom } from "../p2p/room";
 import type { Participant, Platform, ProtocolMessage } from "../shared/types";
 import { CameraIcon, MicIcon } from "../overlay/icons";
@@ -28,10 +28,10 @@ export function MediaApp() {
   const initRef = useRef<InitPayload | null>(null);
   const startingRef = useRef(false);
   const generationRef = useRef(0);
-  const mutedRef = useRef(false);
+  const mutedRef = useRef(true);
   const cameraOnRef = useRef(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [cameraOn, setCameraOn] = useState(false);
   const [status, setStatus] = useState("Connecting…");
   const [tick, setTick] = useState(0);
@@ -87,29 +87,25 @@ export function MediaApp() {
     if (roomRef.current || startingRef.current) return;
     startingRef.current = true;
     const generation = generationRef.current;
-    setStatus("Allow microphone to talk while you watch");
-    let stream: MediaStream;
-    try {
-      stream = await captureLocalMedia();
-    } catch {
-      if (generation !== generationRef.current) return;
-      startingRef.current = false;
-      postToParent({
-        type: "error",
-        message: "Microphone permission is needed for party voice. You can still use chat if you retry and allow access.",
-      });
-      setStatus("Microphone blocked");
-      return;
+    const placeholder = placeholderLocalStream();
+    if (placeholder.ctx.state === "suspended") {
+      await placeholder.ctx.resume().catch(() => undefined);
     }
     if (generation !== generationRef.current) {
-      stream.getTracks().forEach((track) => track.stop());
+      placeholder.stream.getTracks().forEach((track) => track.stop());
+      await placeholder.ctx.close().catch(() => undefined);
       return;
     }
-    streamRef.current = stream;
+    streamRef.current = placeholder.stream;
+    mutedRef.current = true;
+    cameraOnRef.current = false;
+    setMuted(true);
+    setCameraOn(false);
+    postToParent({ type: "local-media", muted: true, cameraOn: false });
     const room = new PeerRoom({
       onReady: (peerId) => {
         postToParent({ type: "ready", peerId });
-        setStatus("Voice ready · camera starts off");
+        setStatus("Mic and camera start off");
       },
       onDataOpen: () => {
         const peerId = room.peerId;
@@ -149,17 +145,18 @@ export function MediaApp() {
       },
     });
     roomRef.current = room;
+    room.bindSilentAudio(placeholder.ctx);
     try {
       if (init.role === "host") {
         setStatus("Opening your party…");
-        await room.startHost(init.roomId, stream, init.nickname, init.avatarId || "fox");
+        await room.startHost(init.roomId, placeholder.stream, init.nickname, init.avatarId || "fox");
       } else {
         setStatus("Looking for that party…");
-        await room.join(init.roomId, stream, init.nickname, init.avatarId || "fox");
+        await room.join(init.roomId, placeholder.stream, init.nickname, init.avatarId || "fox");
       }
       if (generation !== generationRef.current) {
         room.destroy();
-        stream.getTracks().forEach((track) => track.stop());
+        placeholder.stream.getTracks().forEach((track) => track.stop());
         return;
       }
       startingRef.current = false;
@@ -168,6 +165,7 @@ export function MediaApp() {
       startingRef.current = false;
       room.destroy();
       if (roomRef.current === room) roomRef.current = null;
+      placeholder.stream.getTracks().forEach((track) => track.stop());
       const message =
         error instanceof Error ? error.message : "Could not start the party connection.";
       setStatus(message);
@@ -233,6 +231,7 @@ export function MediaApp() {
               mutedRef.current = !next;
               setMuted(!next);
               postToParent({ type: "local-media", muted: !next, cameraOn: cameraOnRef.current });
+              if (!next) setStatus("Microphone blocked. Turn mic on to retry.");
             });
           }}
         >

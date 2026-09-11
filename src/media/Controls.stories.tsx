@@ -21,13 +21,15 @@ function Controls({ muted, cameraOn }: { muted: boolean; cameraOn: boolean }) {
 const meta = {
   title: "Lounge/MediaControls",
   component: Controls,
-  args: { muted: false, cameraOn: false },
+  args: { muted: true, cameraOn: false },
 } satisfies Meta<typeof Controls>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const MicOnCameraOff: Story = {};
+export const MicOnCameraOff: Story = {
+  args: { muted: false, cameraOn: false },
+};
 
 export const BothOff: Story = {
   args: { muted: true, cameraOn: false },

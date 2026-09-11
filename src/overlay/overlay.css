@@ -569,20 +569,38 @@ input[type="text"] {
 .avatar-picker {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px 6px;
+  justify-items: center;
 }
 
 .pick {
-  padding: 2px;
-  border: 0;
-  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
   background: transparent;
+  box-sizing: content-box;
   cursor: pointer;
+  line-height: 0;
+}
+
+.pick .face {
+  box-shadow: none !important;
 }
 
 .pick.is-on {
-  background: rgb(243 199 126 / 0.2);
-  box-shadow: 0 0 0 1px #f3c77e;
+  border-color: #f3c77e;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pick:focus-visible {
+  outline: none;
+  border-color: #ffe1a3;
 }
 
 .face {
@@ -679,9 +697,27 @@ input[type="text"] {
   align-items: center;
   gap: 6px;
   padding: 4px 10px 4px 4px;
+  border: 0;
   border-radius: 999px;
   background: rgb(255 255 255 / 0.06);
+  color: inherit;
+  font: inherit;
   font-size: 12px;
+}
+
+button.chip {
+  cursor: pointer;
+}
+
+button.chip:hover,
+button.chip:focus-visible {
+  background: rgb(243 199 126 / 0.16);
+}
+
+.chip.is-driver {
+  background: rgb(125 255 208 / 0.16);
+  color: #9dfff0;
+  box-shadow: 0 0 0 1px rgb(125 255 208 / 0.35);
 }
 
 .code-pill {

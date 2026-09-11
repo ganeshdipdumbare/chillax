@@ -48,13 +48,10 @@ export async function captureMicTrack(): Promise<MediaStreamTrack> {
   return track;
 }
 
-export async function captureLocalMedia(): Promise<MediaStream> {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: VIDEO_CONSTRAINTS.audio,
-    video: false,
-  });
-  stream.addTrack(placeholderVideoTrack());
-  return stream;
+export function placeholderLocalStream(): { stream: MediaStream; ctx: AudioContext } {
+  const silent = createSilentAudio();
+  const stream = new MediaStream([silent.track, placeholderVideoTrack()]);
+  return { stream, ctx: silent.ctx };
 }
 
 export function partyFull(memberCount: number): boolean {

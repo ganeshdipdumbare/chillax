@@ -24,20 +24,25 @@ export function shouldSeek(
 
 export async function applyHostSync(
   adapter: PlayerAdapter,
-  host: { paused: boolean; time: number },
+  host: { paused: boolean; time: number; sentAt?: number },
   applying: { current: boolean },
 ): Promise<"ok" | "ad" | "gesture"> {
   if (adapter.isAdPlaying()) return "ad";
   const local = adapter.getState();
   if (!local) return "ok";
+  let target = host.time;
+  if (!host.paused && host.sentAt) {
+    const delay = Math.min(8, Math.max(0, (Date.now() - host.sentAt) / 1000));
+    target += delay;
+  }
   applying.current = true;
   try {
-    if (shouldSeek(local.time, host.time, adapter.driftThreshold)) {
-      await adapter.seek(host.time);
+    if (shouldSeek(local.time, target, adapter.driftThreshold)) {
+      await adapter.seek(target);
     }
     if (host.paused) {
-      await adapter.pause();
-    } else {
+      if (!local.paused) await adapter.pause();
+    } else if (local.paused) {
       try {
         await adapter.play();
       } catch {

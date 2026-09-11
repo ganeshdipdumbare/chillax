@@ -51,9 +51,10 @@ export class PeerRoom {
   private avatars = new Map<string, string>();
   private mediaState = new Map<string, { muted: boolean; cameraOn: boolean }>();
   private isHost = false;
+  private controllerIds: string[] = [];
   private localStream: MediaStream | null = null;
   private handlers: RoomHandlers;
-  private muted = false;
+  private muted = true;
   private cameraOn = false;
   private cameraTrack: MediaStreamTrack | null = null;
   private silentAudioCtx: AudioContext | null = null;
@@ -113,6 +114,8 @@ export class PeerRoom {
   }
 
   send(message: ProtocolMessage, exceptPeerId?: string) {
+    if (message.type === "control-policy") this.controllerIds = message.controllers;
+    if (message.type === "sync" && message.controllers) this.controllerIds = message.controllers;
     const payload = encodeMessage(message);
     if (this.isHost) {
       for (const [id, conn] of this.connections) {
@@ -215,6 +218,11 @@ export class PeerRoom {
     this.silentAudioCtx = null;
   }
 
+  bindSilentAudio(ctx: AudioContext) {
+    this.silentAudioCtx = ctx;
+    this.muted = true;
+  }
+
   getRemoteStream(peerId: string): MediaStream | undefined {
     return this.remoteStreams.get(peerId);
   }
@@ -268,12 +276,20 @@ export class PeerRoom {
       this.isHost &&
       message.type !== "peers" &&
       message.type !== "room-full" &&
-      message.type !== "sync" &&
-      message.type !== "control-policy"
+      this.shouldRelay(message, fromPeerId)
     ) {
       this.send(message, fromPeerId);
     }
     this.handlers.onProtocol(message, fromPeerId);
+  }
+
+  private shouldRelay(message: ProtocolMessage, fromPeerId: string) {
+    if (message.type !== "sync") return true;
+    const from = message.from || fromPeerId;
+    if (from === this.peer?.id) return true;
+    if (this.controllerIds.includes("*")) return true;
+    if (this.controllerIds.includes(from)) return true;
+    return false;
   }
 
   private async openPeer(id?: string, attempt = 0): Promise<void> {
@@ -298,7 +314,10 @@ export class PeerRoom {
           window.clearTimeout(timer);
           this.nicknames.set(peerId, this.localNickname);
           this.avatars.set(peerId, this.localAvatarId);
-          if (this.isHost) this.handlers.onReady(peerId);
+          if (this.isHost) {
+            this.controllerIds = [peerId];
+            this.handlers.onReady(peerId);
+          }
           resolve();
         });
         peer.once("error", (err) => {
@@ -459,7 +478,7 @@ export class PeerRoom {
       peerId: id,
       nickname: this.nicknames.get(id) || (id === myId ? this.localNickname : "Guest"),
       avatarId: this.avatars.get(id) || (id === myId ? this.localAvatarId : "fox"),
-      muted: this.mediaState.get(id)?.muted ?? false,
+      muted: this.mediaState.get(id)?.muted ?? (id === myId ? this.muted : false),
       cameraOn: this.mediaState.get(id)?.cameraOn ?? (id === myId ? this.cameraOn : false),
     }));
     this.handlers.onParticipants(participants);

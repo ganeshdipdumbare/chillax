@@ -1,5 +1,5 @@
 export type SessionController = {
-  startParty: () => void;
+  startParty: (roomId?: string) => void;
   joinParty: (roomId: string) => void;
   leaveParty: () => void;
   sendChat: (text: string) => void;
@@ -7,7 +7,7 @@ export type SessionController = {
   setNickname: (name: string) => Promise<void>;
   setAvatar: (avatarId: string) => Promise<void>;
   toggleOverlay: (open?: boolean) => void;
-  setGuestPlayback: (on: boolean) => void;
+  setController: (peerId: string, allowed: boolean) => void;
   enablePlayback: () => void;
   registerMediaWindow: (win: Window | null) => void;
 };

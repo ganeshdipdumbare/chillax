@@ -4,6 +4,7 @@ import {
   clearTokenFromLocation,
   extensionOrigin,
   normalizeRoomCode,
+  parseRoomToken,
   randomRoomId,
   writeTokenToLocation,
 } from "../shared/ids";
@@ -20,8 +21,15 @@ import { pushPageOffset, watchFullscreen } from "./pageOffset";
 const applying = { current: false };
 let mediaWindow: Window | null = null;
 let heartbeat: number | null = null;
+let syncOutTimer = 0;
+let hostFollowupTimer = 0;
+let ignoreIncomingUntil = 0;
+let lastSync: { paused: boolean; time: number; sentAt?: number } | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
+let booted = false;
+let followingHost = false;
+const HOST_ROOM_KEY = "chillax-host-room";
 
 function sendPartyInit(adapter: PlayerAdapter) {
   if (!mediaWindow || !pendingRole || !pendingRoomId) return;
@@ -49,36 +57,126 @@ function currentWatchUrl(adapter: PlayerAdapter, roomId?: string) {
   return location.href;
 }
 
+function hostRoomFromSession(): string | null {
+  try {
+    return sessionStorage.getItem(HOST_ROOM_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberHostRoom(roomId: string | null) {
+  try {
+    if (roomId) sessionStorage.setItem(HOST_ROOM_KEY, roomId);
+    else sessionStorage.removeItem(HOST_ROOM_KEY);
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
+function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId: string): boolean {
+  if (!watchUrl && !hostContentId) return false;
+  const mine = adapter.getContentId();
+  if (mine && hostContentId && mine === hostContentId) return false;
+  const roomId = pendingRoomId || parseRoomToken() || parseRoomToken(watchUrl);
+  try {
+    const dest = roomId
+      ? buildInviteUrl(
+          adapter.platform,
+          hostContentId || mine || "",
+          roomId,
+          watchUrl || location.href,
+        )
+      : new URL(watchUrl, location.href).toString();
+    if (dest === location.href) return false;
+    followingHost = true;
+    location.replace(dest);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function maybeAutoJoin(session: SessionController) {
+  if (getState().status !== "idle") return;
+  const token = parseRoomToken();
+  if (!token) return;
+  if (hostRoomFromSession() === token) session.startParty(token);
+  else session.joinParty(token);
+}
+
 function stopHeartbeat() {
   if (heartbeat) {
     window.clearInterval(heartbeat);
     heartbeat = null;
   }
+  window.clearTimeout(syncOutTimer);
+  window.clearTimeout(hostFollowupTimer);
 }
 
-function canSendSync() {
+function hostPeerId() {
+  return getState().party?.roomId || null;
+}
+
+function myPeerId() {
+  const state = getState();
+  return state.localPeerId || (state.party?.role === "host" ? state.party.roomId : null);
+}
+
+function withHostController(list: string[]) {
+  const hostId = hostPeerId();
+  const next = list.filter((id) => id === "*" || Boolean(id));
+  if (hostId && !next.includes(hostId) && !next.includes("*")) next.unshift(hostId);
+  return [...new Set(next)];
+}
+
+function canControlPlayback() {
   const state = getState();
   if (state.status !== "in-party" || !state.party) return false;
-  return state.party.role === "host" || state.guestPlayback;
+  if (state.party.role === "host") return true;
+  if (state.controllers.includes("*")) return true;
+  const me = myPeerId();
+  return Boolean(me && state.controllers.includes(me));
+}
+
+function canAcceptSyncFrom(from?: string) {
+  if (from && from === myPeerId()) return false;
+  if (Date.now() < ignoreIncomingUntil) return false;
+  const state = getState();
+  if (state.controllers.includes("*")) return true;
+  const hostId = hostPeerId();
+  if (!from) return state.party?.role === "guest";
+  if (from === hostId) return true;
+  return state.controllers.includes(from);
+}
+
+function applyControllers(list: string[]) {
+  setState({ controllers: withHostController(list) });
 }
 
 function sendControlPolicy() {
   const state = getState();
   if (state.party?.role !== "host") return;
+  const controllers = withHostController(state.controllers);
   sendToMedia({
     type: "send-protocol",
-    message: { type: "control-policy", guestPlayback: state.guestPlayback } satisfies ProtocolMessage,
+    message: {
+      type: "control-policy",
+      controllers,
+      guestPlayback: controllers.includes("*") || controllers.length > 1,
+    } satisfies ProtocolMessage,
   });
 }
 
 function broadcastSync(adapter: PlayerAdapter) {
   const state = getState();
-  if (!canSendSync()) return;
+  if (!canControlPlayback()) return;
   const party = state.party;
   if (!party) return;
   if (applying.current || adapter.isAdPlaying()) return;
   const player = adapter.getState();
   if (!player) return;
+  if (party.role !== "host") ignoreIncomingUntil = Date.now() + 700;
   sendToMedia({
     type: "send-protocol",
     message: {
@@ -89,7 +187,8 @@ function broadcastSync(adapter: PlayerAdapter) {
       platform: adapter.platform,
       contentId: adapter.getContentId() || "",
       watchUrl: currentWatchUrl(adapter, party.roomId),
-      guestPlayback: party.role === "host" ? state.guestPlayback : undefined,
+      from: myPeerId() || undefined,
+      controllers: party.role === "host" ? withHostController(state.controllers) : undefined,
     } satisfies ProtocolMessage,
   });
 }
@@ -121,18 +220,32 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
   }
   if (message.type === "control-policy") {
     if (state.party?.role === "host") return;
-    setState({ guestPlayback: message.guestPlayback });
+    if (message.controllers?.length) {
+      applyControllers(message.controllers);
+      return;
+    }
+    applyControllers(message.guestPlayback ? ["*"] : []);
     return;
   }
   if (message.type === "hello") {
-    if (state.party?.role === "host") sendControlPolicy();
+    if (state.party?.role === "host") {
+      sendControlPolicy();
+      broadcastSync(adapter);
+    }
   }
   if (message.type === "sync" || message.type === "hello") {
     const contentId = adapter.getContentId();
+    if (message.platform !== adapter.platform) {
+      setState({
+        wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
+      });
+      return;
+    }
     if (
-      message.platform !== adapter.platform ||
+      (!contentId && message.contentId) ||
       (contentId && message.contentId && message.contentId !== contentId)
     ) {
+      if (followHostWatch(adapter, message.watchUrl, message.contentId)) return;
       setState({
         wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
       });
@@ -140,41 +253,39 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     }
     setState({ wrongTitle: null });
   }
-  if (message.type === "sync" && typeof message.guestPlayback === "boolean" && state.party?.role !== "host") {
-    setState({ guestPlayback: message.guestPlayback });
+  if (message.type === "sync" && message.controllers && state.party?.role !== "host") {
+    applyControllers(message.controllers);
   }
   if (message.type === "sync") {
-    const role = getState().party?.role;
-    if (role === "host") {
-      if (!getState().guestPlayback) return;
-      const result = await applyHostSync(adapter, message, applying);
-      if (result === "gesture") setState({ needsGesture: true });
-      applying.current = false;
-      broadcastSync(adapter);
-      return;
-    }
-    if (role === "guest") {
-      const result = await applyHostSync(adapter, message, applying);
-      if (result === "gesture") setState({ needsGesture: true });
+    if (!canAcceptSyncFrom(message.from)) return;
+    lastSync = { paused: message.paused, time: message.time, sentAt: message.sentAt };
+    const result = await applyHostSync(adapter, message, applying);
+    if (result === "gesture") setState({ needsGesture: true });
+    if (getState().party?.role === "host") {
+      window.clearTimeout(hostFollowupTimer);
+      hostFollowupTimer = window.setTimeout(() => broadcastSync(adapter), 500);
     }
   }
 }
 
 export async function boot(adapter: PlayerAdapter) {
-  if (document.getElementById("chillax-root")) return;
+  if (window !== window.top) return;
+  if (booted || document.getElementById("chillax-root")) return;
+  booted = true;
 
-  const nickname = await loadNickname();
-  const avatarId = await loadAvatarId();
-  setState({
-    nickname,
-    avatarId,
-    isWatchPage: adapter.isWatchPage(),
-    contentId: adapter.getContentId(),
-    overlayOpen: false,
-  });
+  try {
+    const nickname = await loadNickname();
+    const avatarId = await loadAvatarId();
+    setState({
+      nickname,
+      avatarId,
+      isWatchPage: adapter.isWatchPage(),
+      contentId: adapter.getContentId(),
+      overlayOpen: false,
+    });
 
   const session: SessionController = {
-    startParty: () => {
+    startParty: (roomId) => {
       const status = getState().status;
       if (status === "connecting" || status === "in-party") return;
       if (!adapter.isWatchPage() || !adapter.getContentId()) {
@@ -182,13 +293,14 @@ export async function boot(adapter: PlayerAdapter) {
         return;
       }
       pendingRole = "host";
-      pendingRoomId = randomRoomId();
+      pendingRoomId = normalizeRoomCode(roomId || "") || randomRoomId();
+      rememberHostRoom(pendingRoomId);
       setState({
         status: "connecting",
         error: null,
         overlayOpen: true,
         callDetail: "Opening your party…",
-        guestPlayback: false,
+        controllers: [],
         messages: [],
         participants: [],
         bursts: [],
@@ -206,21 +318,14 @@ export async function boot(adapter: PlayerAdapter) {
         });
         return;
       }
-      if (!adapter.isWatchPage()) {
-        setState({
-          error: "Open the same video or title as the host, then join.",
-          overlayOpen: true,
-        });
-        return;
-      }
       pendingRole = "guest";
       pendingRoomId = code;
       setState({
         status: "connecting",
         error: null,
         overlayOpen: true,
-        callDetail: "Looking for that party…",
-        guestPlayback: false,
+        callDetail: "Joining that party…",
+        controllers: [],
         messages: [],
         participants: [],
         bursts: [],
@@ -233,6 +338,7 @@ export async function boot(adapter: PlayerAdapter) {
       stopHeartbeat();
       pendingRole = null;
       pendingRoomId = null;
+      rememberHostRoom(null);
       clearTokenFromLocation(adapter.platform);
       setState({
         party: null,
@@ -243,9 +349,12 @@ export async function boot(adapter: PlayerAdapter) {
         participants: [],
         bursts: [],
         callDetail: null,
-        guestPlayback: false,
+        controllers: [],
+        localPeerId: null,
         overlayOpen: keepLounge,
       });
+      lastSync = null;
+      ignoreIncomingUntil = 0;
       pushPageOffset(adapter.platform, keepLounge);
     },
     sendChat: (text: string) => {
@@ -294,11 +403,16 @@ export async function boot(adapter: PlayerAdapter) {
       setState({ overlayOpen: next });
       pushPageOffset(adapter.platform, next);
     },
-    setGuestPlayback: (on: boolean) => {
+    setController: (peerId: string, allowed: boolean) => {
       if (getState().party?.role !== "host") return;
-      setState({ guestPlayback: on });
+      const hostId = hostPeerId();
+      if (!hostId || peerId === hostId) return;
+      const current = withHostController(getState().controllers).filter((id) => id !== "*");
+      const next = allowed
+        ? withHostController([...current, peerId])
+        : withHostController(current.filter((id) => id !== peerId));
+      setState({ controllers: next });
       sendControlPolicy();
-      broadcastSync(adapter);
     },
     enablePlayback: () => {
       void adapter.play();
@@ -367,20 +481,27 @@ export async function boot(adapter: PlayerAdapter) {
       setState({
         status: "in-party",
         party: { role, roomId, inviteUrl },
+        localPeerId: data.peerId,
+        controllers: role === "host" ? [data.peerId] : getState().controllers,
         error: null,
         callDetail: null,
       });
       pushPageOffset(adapter.platform, true);
-      if (role === "host") {
-        startHeartbeat(adapter);
-        broadcastSync(adapter);
-      }
+      startHeartbeat(adapter);
+      if (role === "host") broadcastSync(adapter);
     }
     if (data.type === "protocol" && data.message) {
       void handleProtocol(adapter, data.message);
     }
     if (data.type === "participants") {
-      setState({ participants: data.participants });
+      const people = data.participants;
+      const hostId = hostPeerId();
+      const allowed = new Set(people.map((person) => person.peerId));
+      if (hostId) allowed.add(hostId);
+      const prev = getState().controllers;
+      const controllers = prev.filter((id) => id === "*" || allowed.has(id));
+      setState({ participants: people, controllers });
+      if (getState().party?.role === "host" && controllers.join() !== prev.join()) sendControlPolicy();
     }
     if (data.type === "local-media") {
       setState({ muted: data.muted, cameraOn: data.cameraOn });
@@ -407,7 +528,14 @@ export async function boot(adapter: PlayerAdapter) {
     }
   });
 
-  adapter.onChange(() => broadcastSync(adapter));
+  adapter.onChange(() => {
+    if (!canControlPlayback()) {
+      if (lastSync && !applying.current) void applyHostSync(adapter, lastSync, applying);
+      return;
+    }
+    window.clearTimeout(syncOutTimer);
+    syncOutTimer = window.setTimeout(() => broadcastSync(adapter), 70);
+  });
   let leaveWatchTimer: number | null = null;
   adapter.onNavigate(() => {
     const onWatch = adapter.isWatchPage();
@@ -437,10 +565,17 @@ export async function boot(adapter: PlayerAdapter) {
       });
     }
     pushPageOffset(adapter.platform, getState().overlayOpen);
+    maybeAutoJoin(session);
   });
 
   window.addEventListener("pagehide", (event) => {
     if (event.persisted) return;
+    if (followingHost) return;
     session.leaveParty();
   });
+  maybeAutoJoin(session);
+  } catch (error) {
+    booted = false;
+    throw error;
+  }
 }

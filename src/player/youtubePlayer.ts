@@ -46,9 +46,15 @@ export class YoutubePlayer implements PlayerAdapter {
   }
 
   async seek(timeSeconds: number): Promise<void> {
+    const player = moviePlayer() as
+      | (HTMLElement & { seekTo?: (time: number, allowSeekAhead?: boolean) => void })
+      | null;
+    if (player?.seekTo) {
+      player.seekTo(timeSeconds, true);
+      return;
+    }
     const video = videoEl();
-    if (!video) return;
-    video.currentTime = timeSeconds;
+    if (video) video.currentTime = timeSeconds;
   }
 
   isAdPlaying(): boolean {
