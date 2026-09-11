@@ -329,7 +329,11 @@ export class PeerRoom {
     } catch (err) {
       if (this.peer === peer) this.peer = null;
       peer.destroy();
-      if (id && peerErrorType(err) === "unavailable-id" && attempt < 4 && !this.tearingDown) {
+      if (id && peerErrorType(err) === "unavailable-id" && attempt < 6 && !this.tearingDown) {
+        if (attempt < 4) {
+          await new Promise((resolve) => window.setTimeout(resolve, 400 * (attempt + 1)));
+          return this.openPeer(id, attempt + 1);
+        }
         return this.openPeer(randomRoomId(), attempt + 1);
       }
       throw new Error(mapPeerError(err));

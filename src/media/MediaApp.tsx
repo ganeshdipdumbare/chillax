@@ -75,8 +75,19 @@ export function MediaApp() {
     };
     window.addEventListener("message", onMessage);
     window.addEventListener("pagehide", onPageExit);
-    parent.postMessage({ source: MSG_SOURCE_MEDIA, type: "iframe-ready" }, "*");
+    const ping = () => {
+      parent.postMessage({ source: MSG_SOURCE_MEDIA, type: "iframe-ready" }, "*");
+    };
+    ping();
+    const timer = window.setInterval(() => {
+      if (initRef.current) {
+        window.clearInterval(timer);
+        return;
+      }
+      ping();
+    }, 250);
     return () => {
+      window.clearInterval(timer);
       window.removeEventListener("message", onMessage);
       window.removeEventListener("pagehide", onPageExit);
       hangup();

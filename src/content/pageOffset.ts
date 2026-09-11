@@ -230,14 +230,20 @@ function sizePlayerToReserve(restore = false) {
 }
 
 function fullscreenTarget(): Element {
-  return document.fullscreenElement || document.documentElement;
+  const fs = document.fullscreenElement;
+  if (!fs) return document.documentElement;
+  if (fs instanceof HTMLVideoElement) return fs.parentElement || fs;
+  return fs;
 }
 
 function placeHost() {
   const host = document.getElementById(HOST_ID);
   if (!host) return;
   const target = fullscreenTarget();
-  if (host.parentElement !== target) target.appendChild(host);
+  if (host.parentElement === target) return;
+  // Moving an already-visible host reloads the call iframe.
+  if (target !== document.documentElement && target.contains(host)) return;
+  target.appendChild(host);
 }
 
 function watchHostParent() {

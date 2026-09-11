@@ -32,21 +32,52 @@ let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 let booted = false;
 let followingHost = false;
+let initTimer = 0;
 const HOST_ROOM_KEY = "chillax-host-room";
 
+function partyInitRole() {
+  return pendingRole || getState().party?.role || null;
+}
+
+function partyInitRoomId() {
+  return pendingRoomId || getState().party?.roomId || null;
+}
+
 function sendPartyInit(adapter: PlayerAdapter) {
-  if (!mediaWindow || !pendingRole || !pendingRoomId) return;
+  if (!mediaWindow) return;
+  const role = partyInitRole();
+  const roomId = partyInitRoomId();
+  if (!role || !roomId) return;
   const state = getState();
   sendToMedia({
     type: "init",
-    role: pendingRole,
-    roomId: pendingRoomId,
+    role,
+    roomId,
     nickname: state.nickname,
     avatarId: state.avatarId,
     platform: adapter.platform,
     contentId: adapter.getContentId(),
-    watchUrl: currentWatchUrl(adapter, pendingRoomId),
+    watchUrl: currentWatchUrl(adapter, roomId),
   });
+}
+
+function stopInitRetries() {
+  window.clearInterval(initTimer);
+  initTimer = 0;
+}
+
+function keepTryingInit(adapter: PlayerAdapter) {
+  sendPartyInit(adapter);
+  window.clearInterval(initTimer);
+  let tries = 0;
+  initTimer = window.setInterval(() => {
+    tries += 1;
+    if (!mediaWindow || !partyInitRole() || !partyInitRoomId() || tries > 40) {
+      stopInitRetries();
+      return;
+    }
+    sendPartyInit(adapter);
+  }, 400);
 }
 
 function sendToMedia(payload: Record<string, unknown>) {
@@ -494,6 +525,7 @@ export async function boot(adapter: PlayerAdapter) {
       const keepLounge = getState().status === "connecting";
       sendToMedia({ type: "leave" });
       stopHeartbeat();
+      stopInitRetries();
       pendingRole = null;
       pendingRoomId = null;
       rememberHostRoom(null);
@@ -581,7 +613,8 @@ export async function boot(adapter: PlayerAdapter) {
     },
     registerMediaWindow: (win) => {
       mediaWindow = win && win !== window ? win : null;
-      sendPartyInit(adapter);
+      if (mediaWindow) keepTryingInit(adapter);
+      else stopInitRetries();
     },
   };
 
@@ -622,34 +655,46 @@ export async function boot(adapter: PlayerAdapter) {
     return false;
   });
 
-  window.addEventListener("message", (event) => {
+  window.addEventListener(
+    "message",
+    (event) => {
     if (event.origin !== extensionOrigin()) return;
     const data = event.data as MediaToContent;
     if (data?.source !== MSG_SOURCE_MEDIA) return;
     if (data.type === "iframe-ready") {
       sendPartyInit(adapter);
     }
-    if (data.type === "ready" && data.peerId && pendingRole) {
-      const role = pendingRole;
-      const roomId = role === "host" ? data.peerId : pendingRoomId!;
+    if (data.type === "ready" && data.peerId) {
+      const role = pendingRole || getState().party?.role;
+      const roomId = pendingRole
+        ? pendingRole === "host"
+          ? data.peerId
+          : pendingRoomId || data.peerId
+        : getState().party?.roomId || data.peerId;
+      if (!role || !roomId) return;
       const inviteUrl = buildInviteUrl(
         adapter.platform,
         adapter.getContentId() || "",
         roomId,
       );
       writeTokenToLocation(adapter.platform, roomId);
+      const firstJoin = Boolean(pendingRole);
       pendingRole = null;
+      stopInitRetries();
       setState({
         status: "in-party",
         party: { role, roomId, inviteUrl },
         localPeerId: data.peerId,
-        controllers: role === "host" ? [data.peerId] : getState().controllers,
+        controllers: firstJoin && role === "host" ? [data.peerId] : getState().controllers,
         error: null,
         callDetail: null,
+        callConnected: true,
       });
-      pushPageOffset(adapter.platform, true);
-      startHeartbeat(adapter);
-      if (role === "host") broadcastSync(adapter);
+      if (firstJoin) {
+        pushPageOffset(adapter.platform, true);
+        startHeartbeat(adapter);
+        if (role === "host") broadcastSync(adapter);
+      }
     }
     if (data.type === "protocol" && data.message) {
       void handleProtocol(adapter, data.message);
@@ -675,6 +720,7 @@ export async function boot(adapter: PlayerAdapter) {
       pendingRole = null;
       pendingRoomId = null;
       stopHeartbeat();
+      stopInitRetries();
       setState({ status: "error", error: data.message });
     }
     if (data.type === "call-status") {
@@ -687,7 +733,9 @@ export async function boot(adapter: PlayerAdapter) {
       session.leaveParty();
       setState({ error: "The host left the party." });
     }
-  });
+  },
+    true,
+  );
 
   adapter.onChange(() => {
     if (applying.current) return;
@@ -702,6 +750,8 @@ export async function boot(adapter: PlayerAdapter) {
   adapter.onNavigate(() => {
     const onWatch = adapter.isWatchPage();
     const contentId = adapter.getContentId();
+    const prev = getState();
+    if (prev.isWatchPage === onWatch && prev.contentId === contentId) return;
     setState({
       isWatchPage: onWatch,
       contentId,

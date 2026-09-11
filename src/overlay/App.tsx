@@ -14,6 +14,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const mediaSrc = useMemo(() => mediaPageUrl(), []);
 
   useEffect(() => subscribe(() => {
     setLocal(getState());
@@ -48,7 +49,6 @@ export function OverlayApp({ session }: { session: SessionController }) {
     onLoad();
     return () => {
       iframe.removeEventListener("load", onLoad);
-      session.registerMediaWindow(null);
     };
   }, [session, needMedia]);
 
@@ -177,14 +177,10 @@ export function OverlayApp({ session }: { session: SessionController }) {
         {needMedia ? (
           <iframe
             ref={iframeRef}
-            className={
-              docked && state.overlayOpen && state.status === "in-party"
-                ? "media-frame"
-                : "media-frame is-hid"
-            }
+            className="media-frame"
             title="Chillax voice and video"
             allow="camera; microphone; autoplay"
-            src={mediaPageUrl()}
+            src={mediaSrc}
           />
         ) : null}
 
