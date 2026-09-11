@@ -20,7 +20,8 @@
   width: var(--chillax-reserve, 360px) !important;
 }
 
-:host(.is-lounge) {
+:host(.is-lounge),
+:host(.is-party) {
   inset: 0 !important;
   width: auto !important;
   left: 0 !important;
@@ -81,12 +82,15 @@ textarea {
 .panel {
   pointer-events: auto;
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
   z-index: 2147483646;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: auto;
+  width: var(--chillax-reserve, 360px);
   height: auto;
   color: #f7f0e6;
   background:
@@ -145,31 +149,74 @@ textarea {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  z-index: 8;
+  z-index: 9;
   overflow: hidden;
 }
 
 .floatie {
   position: absolute;
-  bottom: 88px;
-  font-size: 28px;
-  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.35));
-  animation: float-up 2.6s ease-out forwards;
-  transform: rotate(var(--spin, 0deg));
+  bottom: 4%;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: var(--float-size, 48px);
+  height: var(--float-size, 48px);
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
+  font-size: var(--float-size, 48px);
+  line-height: 1;
+  font-style: normal;
+  font-variant-emoji: emoji;
+  filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.4));
+  animation: float-live 3.8s ease-out forwards;
+  will-change: transform, opacity;
 }
 
-@keyframes float-up {
+.floatie-face {
+  display: block;
+  transform-origin: center;
+  animation: emoji-live 0.9s ease-in-out infinite;
+}
+
+@keyframes float-live {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.6) rotate(var(--spin, 0deg));
+    transform: translate3d(0, 28px, 0) scale(0.28) rotate(var(--spin, 0deg));
   }
-  12% {
+  10% {
     opacity: 1;
-    transform: translateY(0) scale(1.08) rotate(var(--spin, 0deg));
+    transform: translate3d(calc(var(--drift, 0px) * 0.12), -2vh, 0) scale(1.22)
+      rotate(calc(var(--spin, 0deg) - 10deg));
+  }
+  22% {
+    transform: translate3d(calc(var(--drift, 0px) * 0.28), -14vh, 0) scale(0.9)
+      rotate(calc(var(--spin, 0deg) + 8deg));
+  }
+  40% {
+    transform: translate3d(calc(var(--drift, 0px) * 0.55), -38vh, 0) scale(1.12)
+      rotate(calc(var(--spin, 0deg) - 6deg));
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(calc(var(--drift, 0px) * 0.82), -72vh, 0) scale(1.04)
+      rotate(calc(var(--spin, 0deg) + 14deg));
   }
   100% {
     opacity: 0;
-    transform: translateY(-72vh) scale(1.15) rotate(calc(var(--spin, 0deg) + 18deg));
+    transform: translate3d(var(--drift, 0px), -108vh, 0) scale(1.28)
+      rotate(calc(var(--spin, 0deg) + 32deg));
+  }
+}
+
+@keyframes emoji-live {
+  0%,
+  100% {
+    transform: translateX(0) rotate(-8deg) scale(1, 1);
+  }
+  35% {
+    transform: translateX(6%) rotate(9deg) scale(1.08, 0.92);
+  }
+  70% {
+    transform: translateX(-5%) rotate(-6deg) scale(0.94, 1.08);
   }
 }
 
@@ -568,22 +615,46 @@ input[type="text"] {
 }
 
 .panel.story {
-  position: relative;
+  position: absolute;
   inset: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 360px;
-  height: 640px;
-  border-radius: 22px;
+  height: auto;
+  border-radius: 22px 0 0 22px;
   border: 1px solid rgb(243 199 126 / 0.18);
   pointer-events: auto;
   box-shadow: 0 24px 80px rgb(0 0 0 / 0.45);
 }
 
+.story-stage {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 880px;
+  max-width: 92vw;
+  height: 560px;
+  border-radius: 22px;
+  background:
+    radial-gradient(80% 60% at 30% 40%, rgb(122 48 140 / 0.28), transparent 55%),
+    #140c18;
+}
+
+.story-stage .sky {
+  z-index: 4;
+}
+
 .panel.story.is-lounge {
+  position: relative;
   width: 328px;
   height: auto;
   max-height: none;
   top: auto;
+  right: auto;
+  bottom: auto;
   left: auto;
+  border-radius: 22px;
 }
 
 .people {
@@ -659,12 +730,15 @@ input[type="text"] {
   border: 0;
   border-radius: 11px;
   background: rgb(255 255 255 / 0.05);
-  font-size: 18px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  font-variant-emoji: emoji;
   cursor: pointer;
 }
 
 .react-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.08);
+  transform: translateY(-3px) scale(1.14) rotate(-8deg);
   background: rgb(243 199 126 / 0.16);
 }
 
@@ -709,6 +783,7 @@ input[type="text"] {
 
 @media (prefers-reduced-motion: reduce) {
   .floatie,
+  .floatie-face,
   .react-btn:hover:not(:disabled),
   .switch::after,
   .spot-art .sparkle,

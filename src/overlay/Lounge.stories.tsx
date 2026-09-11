@@ -64,19 +64,22 @@ function Lounge() {
     const burst: ReactionBurst = {
       id: crypto.randomUUID(),
       emoji,
-      x: 12 + Math.random() * 70,
+      x: 8 + Math.random() * 52,
       spin: Math.round(-20 + Math.random() * 40),
       wobble: 0,
+      size: 40 + Math.round(Math.random() * 24),
+      drift: Math.round(-70 + Math.random() * 140),
     };
     setBursts((current) => [...current, burst].slice(-12));
     window.setTimeout(() => {
       setBursts((current) => current.filter((item) => item.id !== burst.id));
-    }, 2600);
+    }, 4000);
   }
 
   return (
-    <div className="panel story">
+    <div className="story-stage">
       <ReactionSky bursts={bursts} />
+      <div className="panel story">
       <header className="header">
         <div className="brand">
           <span className="logo">Cx</span>
@@ -119,6 +122,7 @@ function Lounge() {
           ])
         }
       />
+      </div>
     </div>
   );
 }

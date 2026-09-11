@@ -29,6 +29,8 @@ export type ReactionBurst = {
   x: number;
   spin: number;
   wobble: number;
+  size: number;
+  drift: number;
 };
 
 export type ContentState = {

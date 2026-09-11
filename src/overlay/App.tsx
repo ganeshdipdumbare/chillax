@@ -83,8 +83,8 @@ export function OverlayApp({ session }: { session: SessionController }) {
           Show chat
         </button>
       )}
-      <div className={panelClass}>
       <ReactionSky bursts={state.bursts} />
+      <div className={panelClass}>
       <header className="header">
         <div className="brand">
           <span className="logo" aria-hidden="true">Cx</span>

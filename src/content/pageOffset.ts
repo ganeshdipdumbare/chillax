@@ -330,9 +330,10 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   host?.classList.toggle("is-fullscreen", fullscreen);
   host?.classList.toggle("is-open", docked);
   host?.classList.toggle("is-lounge", lounge);
+  host?.classList.toggle("is-party", getState().status === "in-party");
   if (host) {
     host.style.position = fullscreen ? "absolute" : "fixed";
-    if (lounge) {
+    if (lounge || getState().status === "in-party") {
       host.style.left = "0px";
       host.style.right = "0px";
       host.style.top = "0px";
@@ -343,7 +344,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
       host.style.right = "0px";
       host.style.top = "0px";
       host.style.bottom = "0px";
-      host.style.width = docked ? `${OVERLAY_RESERVE}px` : "0px";
+      host.style.width = "0px";
     }
   }
 

@@ -102,9 +102,11 @@ function makeBurst(emoji: string): ReactionBurst {
   return {
     id: crypto.randomUUID(),
     emoji,
-    x: 10 + Math.random() * 70,
-    spin: Math.round(-28 + Math.random() * 56),
-    wobble: Math.round(Math.random() * 220),
+    x: 6 + Math.random() * 70,
+    spin: Math.round(-36 + Math.random() * 72),
+    wobble: Math.round(Math.random() * 180),
+    size: 38 + Math.round(Math.random() * 28),
+    drift: Math.round(-90 + Math.random() * 180),
   };
 }
 
@@ -113,7 +115,7 @@ function addBurst(emoji: string) {
   setState({ bursts: [...getState().bursts, burst].slice(-24) });
   window.setTimeout(() => {
     setState({ bursts: getState().bursts.filter((item) => item.id !== burst.id) });
-  }, 2800);
+  }, 4200);
 }
 
 async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) {

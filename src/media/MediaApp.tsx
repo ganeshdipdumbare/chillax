@@ -124,7 +124,7 @@ export function MediaApp() {
           contentId: cfg.contentId || "",
           watchUrl: cfg.watchUrl,
         });
-        room.setMuted(mutedRef.current);
+        void room.setMuted(mutedRef.current);
         void room.setCameraOn(cameraOnRef.current);
       },
       onProtocol: (message) => {
@@ -228,8 +228,12 @@ export function MediaApp() {
             const next = !mutedRef.current;
             mutedRef.current = next;
             setMuted(next);
-            roomRef.current?.setMuted(next);
             postToParent({ type: "local-media", muted: next, cameraOn: cameraOnRef.current });
+            void roomRef.current?.setMuted(next).catch(() => {
+              mutedRef.current = !next;
+              setMuted(!next);
+              postToParent({ type: "local-media", muted: !next, cameraOn: cameraOnRef.current });
+            });
           }}
         >
           <MicIcon off={muted} />

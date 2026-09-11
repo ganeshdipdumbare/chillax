@@ -77,9 +77,9 @@ body,
 }
 
 .controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  justify-content: center;
   padding: 8px 10px 4px;
 }
 
@@ -88,15 +88,21 @@ body,
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-width: 44px;
+  width: 100%;
+  min-width: 0;
   min-height: 36px;
-  padding: 0 12px;
+  padding: 0 10px;
   border: 0;
   border-radius: 12px;
   cursor: pointer;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.controls button svg {
+  flex-shrink: 0;
 }
 
 .controls button.is-off {

@@ -2,7 +2,7 @@ import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import { PEER_CONFIG } from "../shared/constants";
 import { randomRoomId } from "../shared/ids";
 import { decodeMessage, encodeMessage } from "./protocol";
-import { partyFull, captureCameraTrack, placeholderVideoTrack } from "./mesh";
+import { partyFull, captureCameraTrack, captureMicTrack, createSilentAudio, placeholderVideoTrack } from "./mesh";
 import type { Participant, ProtocolMessage } from "../shared/types";
 
 type RoomHandlers = {
@@ -56,6 +56,8 @@ export class PeerRoom {
   private muted = false;
   private cameraOn = false;
   private cameraTrack: MediaStreamTrack | null = null;
+  private silentAudioCtx: AudioContext | null = null;
+  private muteOp = 0;
   private tearingDown = false;
   localNickname = "Guest";
   localAvatarId = "fox";
@@ -123,12 +125,40 @@ export class PeerRoom {
     hostConn?.open && hostConn.send(payload);
   }
 
-  setMuted(muted: boolean) {
+  async setMuted(muted: boolean) {
+    if (this.tearingDown) return;
+    if (muted === this.muted) {
+      this.broadcastMediaState();
+      return;
+    }
+    const op = ++this.muteOp;
     this.muted = muted;
-    this.localStream?.getAudioTracks().forEach((track) => {
-      track.enabled = !muted;
-    });
     this.broadcastMediaState();
+    if (muted) {
+      const silent = createSilentAudio();
+      if (silent.ctx.state === "suspended") await silent.ctx.resume();
+      if (op !== this.muteOp || this.tearingDown) {
+        silent.track.stop();
+        await silent.ctx.close().catch(() => undefined);
+        return;
+      }
+      await this.replaceLocalTrack("audio", silent.track);
+      if (op !== this.muteOp || this.tearingDown) {
+        silent.track.stop();
+        await silent.ctx.close().catch(() => undefined);
+        return;
+      }
+      await this.closeSilentAudio();
+      this.silentAudioCtx = silent.ctx;
+      return;
+    }
+    const track = await captureMicTrack();
+    if (op !== this.muteOp || this.tearingDown) {
+      track.stop();
+      return;
+    }
+    await this.replaceLocalTrack("audio", track);
+    await this.closeSilentAudio();
   }
 
   async setCameraOn(cameraOn: boolean) {
@@ -143,22 +173,23 @@ export class PeerRoom {
         track.stop();
         return;
       }
-      await this.replaceVideoTrack(track);
+      await this.replaceLocalTrack("video", track);
       this.cameraTrack = track;
       this.cameraOn = true;
     } else {
       this.cameraTrack?.stop();
       this.cameraTrack = null;
       const dummy = placeholderVideoTrack();
-      await this.replaceVideoTrack(dummy);
+      await this.replaceLocalTrack("video", dummy);
       this.cameraOn = false;
     }
     this.broadcastMediaState();
   }
 
-  private async replaceVideoTrack(next: MediaStreamTrack) {
+  private async replaceLocalTrack(kind: "audio" | "video", next: MediaStreamTrack) {
     if (this.localStream) {
-      for (const old of this.localStream.getVideoTracks()) {
+      const olds = kind === "audio" ? this.localStream.getAudioTracks() : this.localStream.getVideoTracks();
+      for (const old of olds) {
         this.localStream.removeTrack(old);
         if (old !== next) old.stop();
       }
@@ -168,10 +199,20 @@ export class PeerRoom {
       [...this.calls.values()].map(async (call) => {
         const sender = call.peerConnection
           ?.getSenders()
-          .find((item) => item.track?.kind === "video");
+          .find((item) => item.track?.kind === kind);
         if (sender) await sender.replaceTrack(next);
       }),
     );
+  }
+
+  private async closeSilentAudio() {
+    if (!this.silentAudioCtx) return;
+    try {
+      await this.silentAudioCtx.close();
+    } catch {
+      // Already closed with the dummy track.
+    }
+    this.silentAudioCtx = null;
   }
 
   getRemoteStream(peerId: string): MediaStream | undefined {
@@ -193,6 +234,7 @@ export class PeerRoom {
     for (const conn of this.connections.values()) conn.close();
     this.cameraTrack?.stop();
     this.cameraTrack = null;
+    void this.closeSilentAudio();
     this.peer?.destroy();
     this.peer = null;
     this.connections.clear();

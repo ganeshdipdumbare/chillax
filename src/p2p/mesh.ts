@@ -14,6 +14,20 @@ export function placeholderVideoTrack(): MediaStreamTrack {
   return track;
 }
 
+export function createSilentAudio(): { ctx: AudioContext; track: MediaStreamTrack } {
+  const ctx = new AudioContext();
+  const dest = ctx.createMediaStreamDestination();
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  const osc = ctx.createOscillator();
+  osc.connect(gain);
+  gain.connect(dest);
+  osc.start();
+  const track = dest.stream.getAudioTracks()[0];
+  track.enabled = false;
+  return { ctx, track };
+}
+
 export async function captureCameraTrack(): Promise<MediaStreamTrack> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
@@ -21,6 +35,16 @@ export async function captureCameraTrack(): Promise<MediaStreamTrack> {
   });
   const track = stream.getVideoTracks()[0];
   if (!track) throw new Error("Camera was not available.");
+  return track;
+}
+
+export async function captureMicTrack(): Promise<MediaStreamTrack> {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: VIDEO_CONSTRAINTS.audio,
+    video: false,
+  });
+  const track = stream.getAudioTracks()[0];
+  if (!track) throw new Error("Microphone was not available.");
   return track;
 }
 
