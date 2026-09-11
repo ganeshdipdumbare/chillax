@@ -48,5 +48,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const PopcornRain: Story = {
+  args: { bursts: [] },
   render: () => <LiveRain />,
 };
