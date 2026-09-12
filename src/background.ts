@@ -21,6 +21,19 @@ async function handleActionClick(tab: chrome.tabs.Tab) {
       return;
     } catch {
       // Content script is not ready yet (refresh, or the page just loaded).
+      try {
+        const isNetflix = tab.url?.includes("netflix.com");
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: [isNetflix ? "src/content/netflix.ts" : "src/content/youtube.ts"],
+        });
+        // Give it a small amount of time to initialize
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        await chrome.tabs.sendMessage(tab.id, { type: "CHILLAX_TOGGLE_OVERLAY" });
+        return;
+      } catch (e) {
+        // Fall back to popup if injection truly fails
+      }
     }
   }
   await openHintPopup();

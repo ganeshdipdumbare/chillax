@@ -50,6 +50,7 @@ function SetupCard({ onVideo = true }: { onVideo?: boolean }) {
           <div className="storyboard">
             <LoungeArt />
           </div>
+          <p className="kicker">Handmade night in</p>
           <strong>Make the couch bigger.</strong>
           <span className="lede">Pick a face, start a party, then chat on the right.</span>
         </div>
@@ -69,6 +70,7 @@ function SetupCard({ onVideo = true }: { onVideo?: boolean }) {
         <button className="primary" type="button" disabled={!onVideo}>
           {onVideo ? "Start the night" : "Open a video to start"}
         </button>
+        <p className="or-rule">or join</p>
         <form
           className="join-form"
           onSubmit={(event) => event.preventDefault()}

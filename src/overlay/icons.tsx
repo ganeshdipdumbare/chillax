@@ -5,16 +5,18 @@ export function IconButton({
   pressed,
   onClick,
   children,
+  className,
 }: {
   label: string;
   pressed?: boolean;
   onClick: () => void;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <button
       type="button"
-      className="icon-btn"
+      className={["icon-btn", className].filter(Boolean).join(" ")}
       aria-label={label}
       aria-pressed={pressed}
       onClick={onClick}

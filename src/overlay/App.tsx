@@ -129,6 +129,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
         {state.party ? (
           <IconButton
             label={copied ? "Invite copied" : "Copy invite link"}
+            className={copied ? "is-copied" : undefined}
             onClick={async () => {
               await navigator.clipboard.writeText(state.party!.inviteUrl);
               setCopied(true);
@@ -190,6 +191,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               <div className="storyboard">
                 <LoungeArt />
               </div>
+              <p className="kicker">Handmade night in</p>
               <strong>Make the couch bigger.</strong>
               <span className="lede">
                 Pick a face, start a party, then chat on the right.
@@ -219,6 +221,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             >
               {canWatch ? "Start the night" : "Open a video to start"}
             </button>
+            <p className="or-rule">or join</p>
             <form
               className="join-form"
               onSubmit={(event) => {

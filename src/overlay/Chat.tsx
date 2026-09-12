@@ -51,7 +51,7 @@ export function Chat({
               );
             }
             return (
-              <article className="msg" key={msg.id}>
+              <article className={`msg${you ? " is-you" : ""}`} key={msg.id}>
                 <AvatarFace avatarId={msg.avatarId} size={28} title={name} />
                 <div>
                   <div className="who">{name}</div>

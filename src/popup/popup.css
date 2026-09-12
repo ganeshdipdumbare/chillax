@@ -5,12 +5,20 @@ html.popup-page body {
 }
 
 .popup-root {
+  --ink: #f7f0e6;
+  --mute: #cbbba6;
+  --butter: #f3c77e;
+  --mint: #7dffd0;
+  --blush: #ffd0d8;
   width: 340px;
-  color: #f7f0e6;
+  color: var(--ink);
   background:
-    radial-gradient(120% 80% at 100% 0%, rgb(122 48 140 / 0.4), transparent 55%),
+    radial-gradient(rgb(243 199 126 / 0.07) 0.7px, transparent 0.8px),
+    radial-gradient(120% 80% at 100% 0%, rgb(122 48 140 / 0.42), transparent 55%),
     #09060f;
+  background-size: 13px 13px, auto, auto;
   font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .popup-root * {
@@ -19,8 +27,8 @@ html.popup-page body {
 
 .popup-root main {
   display: grid;
-  gap: 10px;
-  padding: 16px;
+  gap: 12px;
+  padding: 18px 16px 16px;
 }
 
 .popup-root .brand {
@@ -32,32 +40,53 @@ html.popup-page body {
 .popup-root .logo {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 12px;
   background: conic-gradient(from 210deg, #f3c77e, #7dffd0, #c084fc, #f3c77e);
   color: #140c18;
   font-weight: 900;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: -0.04em;
   line-height: 1;
+  box-shadow:
+    0 8px 20px rgb(243 199 126 / 0.28),
+    inset 0 0 0 1px rgb(255 255 255 / 0.28);
+}
+
+.popup-root .kicker {
+  margin: 0;
+  color: var(--butter);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .popup-root h1 {
   margin: 0;
   font-size: 17px;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.popup-root .brand p {
+  margin: 2px 0 0;
+  color: var(--mute);
+  font-size: 11px;
 }
 
 .popup-root p {
   margin: 0;
-  color: #cbbba6;
+  color: var(--mute);
   font-size: 13px;
+  line-height: 1.45;
 }
 
 .popup-root .error {
-  color: #ffd0d8;
+  color: var(--blush);
   background: rgb(255 90 120 / 0.12);
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgb(255 90 120 / 0.16);
 }

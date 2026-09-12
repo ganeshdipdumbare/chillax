@@ -9,6 +9,7 @@ export function PopupHint() {
             <p>Watch together · chat · call</p>
           </div>
         </div>
+        <p className="kicker">Open a video first</p>
         <p className="error" role="status">
           Open YouTube or Netflix first, then click Chillax again.
         </p>
