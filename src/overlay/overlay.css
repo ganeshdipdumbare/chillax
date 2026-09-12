@@ -768,7 +768,8 @@ input[type="text"]:focus {
   min-height: 210px;
   height: 228px;
   border: 0;
-  background: transparent;
+  background: #09060f;
+  color-scheme: dark;
 }
 
 .media-frame.is-hid {

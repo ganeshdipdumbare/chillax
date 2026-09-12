@@ -4,7 +4,8 @@ body,
   margin: 0;
   height: 100%;
   color: #f7f0e6;
-  background: transparent;
+  color-scheme: dark;
+  background: #09060f;
   font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
