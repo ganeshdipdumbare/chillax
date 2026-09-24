@@ -35,6 +35,9 @@ function mapPeerError(err: unknown): string {
   if (type === "peer-unavailable") {
     return "Could not find that party. Check the code and try again.";
   }
+  if (type === "negotiation-failed") {
+    return "Found the party, but your networks could not connect directly. Try home Wi‑Fi without a VPN on both sides.";
+  }
   if (type === "network" || type === "server-error" || type === "socket-error") {
     return "Signaling broker failed. Chat and calls need a connection — retry in a moment.";
   }
@@ -94,19 +97,37 @@ export class PeerRoom {
 
   private connectToHost(hostId: string) {
     return new Promise<void>((resolve, reject) => {
-      const conn = this.peer!.connect(hostId, { reliable: true });
+      const peer = this.peer!;
+      const conn = peer.connect(hostId, { reliable: true });
+      const networkBlocked = new Error(
+        "Found the party, but your networks could not connect directly. Try home Wi‑Fi without a VPN on both sides.",
+      );
       let settled = false;
       const timer = window.setTimeout(() => {
         conn.close();
-        done(new Error("Could not find that party. Check the code and that the host is still in."));
+        done(networkBlocked);
       }, 15000);
+      const onPeerError = (err: unknown) => {
+        if (peerErrorType(err) !== "peer-unavailable") return;
+        conn.close();
+        done(new Error("That party isn’t open right now. Ask the host to keep the party tab open and send a fresh link."));
+      };
+      const onIceChange = () => {
+        if (conn.peerConnection?.iceConnectionState !== "failed") return;
+        conn.close();
+        done(networkBlocked);
+      };
       const done = (error?: Error) => {
         if (settled) return;
         settled = true;
         window.clearTimeout(timer);
+        peer.off("error", onPeerError);
+        conn.peerConnection?.removeEventListener("iceconnectionstatechange", onIceChange);
         if (error) reject(error);
         else resolve();
       };
+      peer.on("error", onPeerError);
+      conn.peerConnection?.addEventListener("iceconnectionstatechange", onIceChange);
       conn.once("open", () => done());
       conn.once("error", (err) => done(new Error(mapPeerError(err))));
       this.attachData(conn);
