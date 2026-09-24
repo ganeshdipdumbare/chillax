@@ -100,7 +100,8 @@ export function MediaApp() {
     const generation = generationRef.current;
     const placeholder = placeholderLocalStream();
     if (placeholder.ctx.state === "suspended") {
-      await placeholder.ctx.resume().catch(() => undefined);
+      // Chrome leaves resume() pending until a user gesture, which never comes on invite-link joins.
+      void placeholder.ctx.resume().catch(() => undefined);
     }
     if (generation !== generationRef.current) {
       placeholder.stream.getTracks().forEach((track) => track.stop());
