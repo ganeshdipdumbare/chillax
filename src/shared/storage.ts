@@ -1,7 +1,9 @@
 import { randomAvatarId } from "./avatars";
+import { isGuestPeerId, randomGuestPeerId } from "./ids";
 
 const NICK_KEY = "chillax.nickname";
 const AVATAR_KEY = "chillax.avatar";
+const GUEST_PEER_KEY = "chillax.guestPeerId";
 
 export async function loadNickname(): Promise<string> {
   const stored = await chrome.storage.local.get(NICK_KEY);
@@ -30,4 +32,19 @@ export async function loadAvatarId(): Promise<string> {
 export async function saveAvatarId(avatarId: string): Promise<string> {
   await chrome.storage.local.set({ [AVATAR_KEY]: avatarId });
   return avatarId;
+}
+
+export async function loadGuestPeerId(): Promise<string> {
+  const stored = await chrome.storage.local.get(GUEST_PEER_KEY);
+  const value = stored[GUEST_PEER_KEY];
+  if (typeof value === "string" && isGuestPeerId(value)) return value;
+  const generated = randomGuestPeerId();
+  await saveGuestPeerId(generated);
+  return generated;
+}
+
+export async function saveGuestPeerId(peerId: string): Promise<string> {
+  const next = isGuestPeerId(peerId) ? peerId : randomGuestPeerId();
+  await chrome.storage.local.set({ [GUEST_PEER_KEY]: next });
+  return next;
 }

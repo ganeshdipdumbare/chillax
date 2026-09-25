@@ -11,6 +11,19 @@ export function randomRoomId(): string {
   return id;
 }
 
+/** Stable PeerJS id for guests — `gx` prefix so it never collides with party codes (`cx…`). */
+export function randomGuestPeerId(): string {
+  let id = "gx";
+  for (let i = 0; i < 10; i += 1) {
+    id += ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)];
+  }
+  return id;
+}
+
+export function isGuestPeerId(id: string): boolean {
+  return new RegExp(`^gx[${ROOM_CHARS}]{10}$`).test(id);
+}
+
 export function parseRoomToken(href = location.href): string | null {
   try {
     const url = new URL(href);

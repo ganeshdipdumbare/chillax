@@ -1,6 +1,7 @@
 import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import { PEER_CONFIG } from "../shared/constants";
-import { randomRoomId } from "../shared/ids";
+import { randomGuestPeerId, randomRoomId } from "../shared/ids";
+import { loadGuestPeerId, saveGuestPeerId } from "../shared/storage";
 import { loadIceServers } from "./ice";
 import { decodeMessage, encodeMessage } from "./protocol";
 import { partyFull, captureCameraTrack, captureMicTrack, createSilentAudio, placeholderVideoTrack } from "./mesh";
@@ -90,7 +91,8 @@ export class PeerRoom {
     this.localStream = stream;
     this.localNickname = nickname;
     this.localAvatarId = avatarId;
-    await this.openPeer();
+    const guestId = await loadGuestPeerId();
+    await this.openPeer(guestId);
     if (!this.peer) throw new Error("Could not start peer");
     await this.connectToHost(hostId);
     this.handlers.onReady(this.peer.id);
@@ -359,7 +361,12 @@ export class PeerRoom {
           await new Promise((resolve) => window.setTimeout(resolve, 400 * (attempt + 1)));
           return this.openPeer(id, attempt + 1);
         }
-        return this.openPeer(randomRoomId(), attempt + 1);
+        // Host: mint a new party code. Guest: rotate the stored peer id so this browser keeps one identity.
+        if (this.isHost) {
+          return this.openPeer(randomRoomId(), attempt + 1);
+        }
+        const nextGuestId = await saveGuestPeerId(randomGuestPeerId());
+        return this.openPeer(nextGuestId, attempt + 1);
       }
       throw new Error(mapPeerError(err));
     }
