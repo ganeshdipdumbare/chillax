@@ -20,7 +20,7 @@ export function AvatarPicker({
           onClick={() => onChange(avatar.id)}
           title={avatar.name}
         >
-          <AvatarFace avatarId={avatar.id} size={36} />
+          <AvatarFace avatarId={avatar.id} size={30} />
         </button>
       ))}
     </div>

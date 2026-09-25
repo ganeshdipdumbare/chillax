@@ -763,37 +763,38 @@ input[type="text"]:disabled {
 .avatar-picker {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 8px 6px;
+  gap: 10px 6px;
+  padding: 4px;
   justify-items: center;
 }
 
 .pick {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: 2px solid transparent;
+  border: 0;
   border-radius: 50%;
   background: transparent;
-  box-sizing: content-box;
   cursor: pointer;
   line-height: 0;
 }
 
 .pick.is-on {
-  border-color: var(--ink);
+  z-index: 1;
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--ink);
 }
 
 .pick:hover:not(.is-on) {
-  border-color: var(--line-strong);
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--line-strong);
 }
 
 .pick:focus-visible {
   outline: none;
-  border-color: var(--ink);
-  box-shadow: 0 0 0 3px var(--tint);
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--ink), 0 0 0 7px var(--tint);
 }
 
 .face {
