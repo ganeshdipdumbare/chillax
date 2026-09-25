@@ -32,6 +32,7 @@ function ThemeButton() {
 export function OverlayApp({ session }: { session: SessionController }) {
   const [state, setLocal] = useState(getState());
   const [copied, setCopied] = useState(false);
+  const [nicknameDraft, setNicknameDraft] = useState(() => getState().nickname);
   const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const mediaSrc = useMemo(() => mediaPageUrl(), []);
@@ -43,6 +44,15 @@ export function OverlayApp({ session }: { session: SessionController }) {
       setJoinCode((current) => current || token);
     }
   }), []);
+
+  // Keep the draft in sync when storage loads or a commit lands — not while typing.
+  useEffect(() => {
+    setNicknameDraft(state.nickname);
+  }, [state.nickname]);
+
+  async function commitNickname(next = nicknameDraft) {
+    await session.setNickname(next);
+  }
 
   const canWatch = state.isWatchPage && Boolean(state.contentId);
   const docked = state.status === "in-party" || state.status === "connecting";
@@ -222,9 +232,12 @@ export function OverlayApp({ session }: { session: SessionController }) {
               Nickname
               <input
                 type="text"
-                value={state.nickname}
+                value={nicknameDraft}
                 maxLength={24}
-                onChange={(event) => void session.setNickname(event.target.value)}
+                placeholder="Your name"
+                autoComplete="nickname"
+                onChange={(event) => setNicknameDraft(event.target.value)}
+                onBlur={() => void commitNickname()}
               />
             </label>
             <label>
@@ -238,7 +251,9 @@ export function OverlayApp({ session }: { session: SessionController }) {
               className="primary"
               type="button"
               disabled={!canWatch}
-              onClick={() => session.startParty()}
+              onClick={() => {
+                void commitNickname().then(() => session.startParty());
+              }}
             >
               {canWatch ? "Start the night" : "Open a video to start"}
             </button>
@@ -247,7 +262,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               className="join-form"
               onSubmit={(event) => {
                 event.preventDefault();
-                session.joinParty(joinCode);
+                void commitNickname().then(() => session.joinParty(joinCode));
               }}
             >
               <label>
