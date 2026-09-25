@@ -25,9 +25,16 @@ export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   },
 };
 
+export const TURN_ENDPOINT =
+  import.meta.env.VITE_TURN_ENDPOINT || "https://chillax-ruby.vercel.app/api/turn";
+
+export const STUN_SERVERS: RTCIceServer[] = [
+  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+];
+
 export const PEER_CONFIG = {
   debug: 0 as const,
   config: {
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    iceServers: STUN_SERVERS,
   },
 };

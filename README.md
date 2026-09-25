@@ -106,7 +106,22 @@ Mic and camera run in an extension page, so Chrome should prompt for **Chillax**
 
 Audio and video are **WebRTC mesh** between browsers. Chat and playback sync use a host-centered DataChannel. Signaling uses the public [PeerJS](https://peerjs.com/) broker; media is not sent through that broker after connect.
 
-v1 uses STUN only (no TURN). Some networks (symmetric NAT / strict firewalls) will fail the call. Chat and playback sync may still work. A TURN server (for example [Metered](https://www.metered.ca/tools/openrelay/)) is the first reliability upgrade.
+Without a TURN server, guests on a different network than the host often cannot join at all (symmetric NAT, mobile hotspots, VPNs, strict firewalls), because chat and sync also need a direct connection. Same-Wi‑Fi parties work without TURN.
+
+### TURN relay (coturn)
+
+Chillax relays through a self-hosted [coturn](https://github.com/coturn/coturn) server when a direct connection fails. Before joining, the extension fetches short-lived credentials from `/api/turn` on the Vercel site. That function signs them with `TURN_SECRET`, so no password ships in the extension. If the endpoint is unreachable, Chillax falls back to STUN only.
+
+coturn and an `ngrok tcp` tunnel run together from `turn/docker-compose.yml` on any machine with Docker; no public IP is needed. ngrok forwards TCP only, so relaying works only when both browsers relay through this server. coturn then passes traffic between them internally. All relayed video goes through that machine and counts against ngrok's bandwidth allowance.
+
+1. Add a card to your ngrok account (required for TCP tunnels on the free plan, not charged): <https://dashboard.ngrok.com/settings#id-verification>.
+2. `turn/.env` (git-ignored) needs `TURN_SECRET` (same value as in Vercel) and `NGROK_AUTHTOKEN`.
+3. Start the relay with `turn/start.sh`. It starts coturn and a fresh ngrok tunnel, sets `TURN_URLS` in Vercel to the new tunnel address, and redeploys production. It needs the Vercel CLI logged in.
+4. Stop it with `cd turn && docker compose down`. Parties keep working without it, but only where a direct connection is possible.
+
+The ngrok address changes on every tunnel restart, so always start the relay with `turn/start.sh`.
+
+To rotate the secret, change `TURN_SECRET` in both `turn/.env` and Vercel. Extensions pick it up without a rebuild.
 
 Use headphones so the mic does not pick up the movie or other people.
 

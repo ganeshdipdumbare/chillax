@@ -1,6 +1,7 @@
 import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import { PEER_CONFIG } from "../shared/constants";
 import { randomRoomId } from "../shared/ids";
+import { loadIceServers } from "./ice";
 import { decodeMessage, encodeMessage } from "./protocol";
 import { partyFull, captureCameraTrack, captureMicTrack, createSilentAudio, placeholderVideoTrack } from "./mesh";
 import type { Participant, ProtocolMessage } from "../shared/types";
@@ -317,7 +318,10 @@ export class PeerRoom {
   private async openPeer(id?: string, attempt = 0): Promise<void> {
     if (this.tearingDown) return;
     this.peer?.destroy();
-    const peer = id ? new Peer(id, PEER_CONFIG) : new Peer(PEER_CONFIG);
+    const iceServers = await loadIceServers();
+    if (this.tearingDown) return;
+    const options = { ...PEER_CONFIG, config: { ...PEER_CONFIG.config, iceServers } };
+    const peer = id ? new Peer(id, options) : new Peer(options);
     this.peer = peer;
     peer.on("disconnected", () => {
       if (this.tearingDown || this.peer !== peer) return;
@@ -452,7 +456,7 @@ export class PeerRoom {
     call.on("error", () => {
       this.handlers.onCallStatus(
         false,
-        "Voice/video couldn't connect (no TURN in v1). Chat may still work.",
+        "Voice/video couldn't connect. Try another network if this keeps happening.",
       );
     });
   }

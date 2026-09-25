@@ -1,0 +1,30 @@
+services:
+  coturn:
+    image: coturn/coturn:4.6
+    restart: unless-stopped
+    networks:
+      turn:
+        ipv4_address: 172.31.250.2
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command:
+      - -c
+      - /etc/coturn/turnserver.conf
+      - --static-auth-secret=${TURN_SECRET:?set TURN_SECRET in turn/.env}
+
+  ngrok:
+    image: ngrok/ngrok:3
+    restart: unless-stopped
+    depends_on:
+      - coturn
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?set NGROK_AUTHTOKEN in turn/.env}
+    command: ["tcp", "coturn:3478", "--log", "stdout", "--log-format", "logfmt"]
+    networks:
+      - turn
+
+networks:
+  turn:
+    ipam:
+      config:
+        - subnet: 172.31.250.0/29
