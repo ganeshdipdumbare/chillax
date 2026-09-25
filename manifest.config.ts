@@ -55,6 +55,7 @@ export default defineManifest({
         "src/media/index.html",
         "assets/*",
         "icons/*",
+        "fonts/*",
       ],
       matches: [
         "*://*.youtube.com/*",

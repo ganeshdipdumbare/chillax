@@ -1,4 +1,5 @@
 import type { Preview } from "@storybook/react-vite";
+import "../src/shared/fonts.css";
 import "../src/overlay/overlay.css";
 import "../src/media/media.css";
 
@@ -7,20 +8,37 @@ const preview: Preview = {
     layout: "centered",
     backgrounds: {
       options: {
-        lounge: { name: "lounge", value: "#09060f" },
-        light: { name: "light", value: "#f7f0e6" },
+        canvas: { name: "canvas", value: "#fbfaf4" },
+        sand: { name: "sand", value: "#d6d0c3" },
+        ink: { name: "ink", value: "#0e1113" },
+      },
+    },
+  },
+  globalTypes: {
+    theme: {
+      description: "Chillax theme",
+      toolbar: {
+        title: "Theme",
+        icon: "mirror",
+        items: ["light", "dark"],
+        dynamicTitle: true,
       },
     },
   },
   initialGlobals: {
-    backgrounds: { value: "lounge" },
+    backgrounds: { value: "canvas" },
+    theme: "light",
   },
   decorators: [
-    (Story) => (
-      <div className="chillax-scope">
-        <Story />
-      </div>
-    ),
+    (Story, context) => {
+      const dark = context.globals.theme === "dark";
+      document.documentElement.classList.toggle("theme-dark", dark);
+      return (
+        <div className={dark ? "chillax-scope theme-dark" : "chillax-scope"}>
+          <Story />
+        </div>
+      );
+    },
   ],
 };
 

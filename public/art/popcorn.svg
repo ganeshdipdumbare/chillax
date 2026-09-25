@@ -2,7 +2,7 @@
   <title id="popcorn-title">A smiling popcorn bucket with a soda</title>
   <defs>
     <pattern id="cx-dots-popcorn" width="14" height="14" patternUnits="userSpaceOnUse">
-      <circle cx="7" cy="7" r="1.05" fill="#e4d9cc" />
+      <circle cx="7" cy="7" r="1.05" fill="#e6c9b8" />
     </pattern>
     <style>
       .sparkle {
@@ -28,43 +28,43 @@
       }
     </style>
   </defs>
-  <rect width="180" height="140" fill="#f6f1ea" />
+  <rect width="180" height="140" fill="#f8dbca" />
   <rect width="180" height="140" fill="url(#cx-dots-popcorn)" />
   <g transform="translate(28 28)">
-    <path class="sparkle" fill="#c084fc" d="M0 -5 C1.4 -1 1 -1.4 5 0 C1 1.4 1.4 1 0 5 C-1.4 1 -1 1.4 -5 0 C-1 -1.4 -1.4 -1 0 -5Z" />
+    <path class="sparkle" fill="#1c525d" d="M0 -5 C1.4 -1 1 -1.4 5 0 C1 1.4 1.4 1 0 5 C-1.4 1 -1 1.4 -5 0 C-1 -1.4 -1.4 -1 0 -5Z" />
   </g>
   <g transform="translate(156 34)">
-    <path class="sparkle" fill="#7dffd0" d="M0 -4.5 C1.4 -0.9 0.9 -1.4 4.5 0 C0.9 1.4 1.4 0.9 0 4.5 C-1.4 0.9 -0.9 1.4 -4.5 0 C-0.9 -1.4 -1.4 -0.9 0 -4.5Z" />
+    <path class="sparkle" fill="#adb49c" d="M0 -4.5 C1.4 -0.9 0.9 -1.4 4.5 0 C0.9 1.4 1.4 0.9 0 4.5 C-1.4 0.9 -0.9 1.4 -4.5 0 C-0.9 -1.4 -1.4 -0.9 0 -4.5Z" />
   </g>
   <g transform="translate(148 108)">
-    <path class="sparkle" fill="#f3c77e" d="M0 -4 C1.4 -0.8 0.8 -1.4 4 0 C0.8 1.4 1.4 0.8 0 4 C-1.4 0.8 -0.8 1.4 -4 0 C-0.8 -1.4 -1.4 -0.8 0 -4Z" />
+    <path class="sparkle" fill="#db704c" d="M0 -4 C1.4 -0.8 0.8 -1.4 4 0 C0.8 1.4 1.4 0.8 0 4 C-1.4 0.8 -0.8 1.4 -4 0 C-0.8 -1.4 -1.4 -0.8 0 -4Z" />
   </g>
-  <ellipse cx="90" cy="118" rx="46" ry="10" fill="#eadfd3" />
-  <path d="M58 62h64l10 52H48Z" fill="#f3c77e" />
-  <path d="M66 62h48l7 52H59Z" fill="#ffe1a3" />
-  <path d="M70 78h8l3 36h-8Z" fill="#fff6e4" opacity="0.55" />
-  <path d="M102 78h8l3 36h-8Z" fill="#fff6e4" opacity="0.55" />
-  <ellipse cx="90" cy="62" rx="34" ry="13" fill="#fff6e4" />
+  <ellipse cx="90" cy="118" rx="46" ry="10" fill="#e8c4b0" />
+  <path d="M58 62h64l10 52H48Z" fill="#db704c" />
+  <path d="M66 62h48l7 52H59Z" fill="#e8906f" />
+  <path d="M70 78h8l3 36h-8Z" fill="#fbfaf4" opacity="0.55" />
+  <path d="M102 78h8l3 36h-8Z" fill="#fbfaf4" opacity="0.55" />
+  <ellipse cx="90" cy="62" rx="34" ry="13" fill="#fbfaf4" />
   <g class="kernel-pop">
-    <circle cx="72" cy="48" r="11" fill="#fff6e4" />
-    <circle cx="90" cy="40" r="13" fill="#ffe1a3" />
-    <circle cx="108" cy="50" r="11" fill="#f3c77e" />
-    <circle cx="82" cy="34" r="8" fill="#fff6e4" />
-    <circle cx="100" cy="32" r="7" fill="#ffe1a3" />
-    <circle cx="94" cy="50" r="8" fill="#fff6e4" />
+    <circle cx="72" cy="48" r="11" fill="#fbfaf4" />
+    <circle cx="90" cy="40" r="13" fill="#e8906f" />
+    <circle cx="108" cy="50" r="11" fill="#db704c" />
+    <circle cx="82" cy="34" r="8" fill="#fbfaf4" />
+    <circle cx="100" cy="32" r="7" fill="#e8906f" />
+    <circle cx="94" cy="50" r="8" fill="#fbfaf4" />
   </g>
-  <circle cx="84" cy="82" r="2.1" fill="#1c1524" />
-  <circle cx="96" cy="82" r="2.1" fill="#1c1524" />
-  <circle cx="83.3" cy="81.2" r="0.65" fill="#fff6e4" />
-  <circle cx="95.3" cy="81.2" r="0.65" fill="#fff6e4" />
-  <ellipse cx="80" cy="88" rx="3.2" ry="1.6" fill="#ff8fa3" opacity="0.5" />
-  <ellipse cx="100" cy="88" rx="3.2" ry="1.6" fill="#ff8fa3" opacity="0.5" />
-  <path d="M86 93c2.4 3 6.6 3 9 0" fill="none" stroke="#1c1524" stroke-width="1.5" stroke-linecap="round" />
-  <rect x="22" y="84" width="24" height="28" rx="9" fill="#7dffd0" />
-  <ellipse cx="34" cy="84" rx="12" ry="5" fill="#b8f5e0" />
-  <rect x="32" y="58" width="4" height="28" rx="2" fill="#c084fc" />
-  <circle cx="34" cy="56" r="3.5" fill="#c084fc" />
-  <circle cx="29" cy="96" r="1.45" fill="#08221c" />
-  <circle cx="38" cy="96" r="1.45" fill="#08221c" />
-  <ellipse cx="33.5" cy="101" rx="3.2" ry="1.3" fill="#08221c" opacity="0.2" />
+  <circle cx="84" cy="82" r="2.1" fill="#0e1113" />
+  <circle cx="96" cy="82" r="2.1" fill="#0e1113" />
+  <circle cx="83.3" cy="81.2" r="0.65" fill="#fbfaf4" />
+  <circle cx="95.3" cy="81.2" r="0.65" fill="#fbfaf4" />
+  <ellipse cx="80" cy="88" rx="3.2" ry="1.6" fill="#db704c" opacity="0.5" />
+  <ellipse cx="100" cy="88" rx="3.2" ry="1.6" fill="#db704c" opacity="0.5" />
+  <path d="M86 93c2.4 3 6.6 3 9 0" fill="none" stroke="#0e1113" stroke-width="1.5" stroke-linecap="round" />
+  <rect x="22" y="84" width="24" height="28" rx="9" fill="#adb49c" />
+  <ellipse cx="34" cy="84" rx="12" ry="5" fill="#d6d0c3" />
+  <rect x="32" y="58" width="4" height="28" rx="2" fill="#1c525d" />
+  <circle cx="34" cy="56" r="3.5" fill="#1c525d" />
+  <circle cx="29" cy="96" r="1.45" fill="#0e1113" />
+  <circle cx="38" cy="96" r="1.45" fill="#0e1113" />
+  <ellipse cx="33.5" cy="101" rx="3.2" ry="1.3" fill="#0e1113" opacity="0.2" />
 </svg>

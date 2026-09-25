@@ -18,8 +18,8 @@ export function AvatarFace({
         width: size,
         height: size,
         fontSize: size * 0.52,
-        background: `linear-gradient(145deg, ${avatar.from}, ${avatar.to})`,
-        boxShadow: `0 0 0 1px rgb(255 255 255 / 0.18), 0 8px 18px ${avatar.to}66`,
+        background: avatar.fill,
+        boxShadow: "inset 0 0 0 1px var(--face-ring, rgb(14 17 19 / 0.08))",
       }}
     >
       <span aria-hidden="true">{avatar.emoji}</span>

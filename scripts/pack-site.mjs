@@ -14,6 +14,7 @@ cpSync(resolve(root, "public/install.html"), resolve(site, "index.html"));
 stampInstallHtml(resolve(site, "index.html"), version);
 cpSync(resolve(root, "public/icons"), resolve(site, "icons"), { recursive: true });
 cpSync(resolve(root, "public/art"), resolve(site, "art"), { recursive: true });
+cpSync(resolve(root, "public/fonts"), resolve(site, "fonts"), { recursive: true });
 cpSync(zipPath, resolve(site, zipName));
 cpSync(aliasPath, resolve(site, "chillax-for-friends.zip"));
 

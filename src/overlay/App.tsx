@@ -1,13 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chat } from "./Chat";
-import { CloseIcon, CopyIcon, HideIcon, IconButton } from "./icons";
+import { CloseIcon, CopyIcon, HideIcon, IconButton, MoonIcon, SunIcon, SystemThemeIcon } from "./icons";
 import { AvatarFace } from "./AvatarFace";
 import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
 import { ReactionSky } from "./ReactionSky";
 import { mediaPageUrl, parseRoomToken } from "../shared/ids";
 import { getState, subscribe } from "../shared/store";
+import { nextThemePref, saveThemePref, watchTheme, type ThemePref } from "../shared/theme";
 import type { SessionController } from "../content/session";
+
+const THEME_LABEL: Record<ThemePref, string> = { system: "System", light: "Light", dark: "Dark" };
+
+function ThemeButton() {
+  const [pref, setPref] = useState<ThemePref>("system");
+  useEffect(() => watchTheme((next) => setPref(next)), []);
+  const next = nextThemePref(pref);
+  return (
+    <IconButton
+      label={`Theme: ${THEME_LABEL[pref]}. Switch to ${THEME_LABEL[next]}`}
+      onClick={() => {
+        setPref(next);
+        void saveThemePref(next);
+      }}
+    >
+      {pref === "light" ? <SunIcon /> : pref === "dark" ? <MoonIcon /> : <SystemThemeIcon />}
+    </IconButton>
+  );
+}
 
 export function OverlayApp({ session }: { session: SessionController }) {
   const [state, setLocal] = useState(getState());
@@ -126,6 +146,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             </p>
           </div>
         </div>
+        <ThemeButton />
         {state.party ? (
           <IconButton
             label={copied ? "Invite copied" : "Copy invite link"}

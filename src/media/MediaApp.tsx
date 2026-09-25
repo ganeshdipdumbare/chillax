@@ -206,7 +206,7 @@ export function MediaApp() {
         {tiles.length === 0 ? (
           <div className="tile">
             <div className="letter">
-              <span className="face" style={{ width: 48, height: 48, fontSize: 28, background: "linear-gradient(145deg,#f3c77e,#7dffd0)" }}>🍿</span>
+              <span className="face" style={{ width: 48, height: 48, fontSize: 28, background: "#f8dbca" }}>🍿</span>
             </div>
             <div className="name">Connecting</div>
           </div>

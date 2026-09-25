@@ -1,8 +1,19 @@
 import { createRoot } from "react-dom/client";
 import { OverlayApp } from "../overlay/App";
 import overlayCss from "../overlay/overlay.css?inline";
+import fontsCss from "../shared/fonts.css?inline";
 import { OVERLAY_RESERVE } from "../shared/constants";
+import { watchTheme } from "../shared/theme";
 import type { SessionController } from "./session";
+
+// @font-face is ignored inside shadow roots, so the faces live in the page document.
+function installFonts() {
+  if (document.getElementById("chillax-fonts")) return;
+  const style = document.createElement("style");
+  style.id = "chillax-fonts";
+  style.textContent = fontsCss.replaceAll("/fonts/", chrome.runtime.getURL("fonts/"));
+  (document.head || document.documentElement).appendChild(style);
+}
 
 function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
   const typingInOverlay = () => {
@@ -44,6 +55,7 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
 }
 
 export function mountOverlay(session: SessionController) {
+  installFonts();
   document.querySelectorAll("#chillax-root").forEach((el) => el.remove());
   const host = document.createElement("div");
   host.id = "chillax-root";
@@ -51,6 +63,7 @@ export function mountOverlay(session: SessionController) {
     "position:fixed;top:0;right:0;bottom:0;width:0;overflow:visible;pointer-events:none;background:transparent;z-index:2147483646;";
   host.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
   document.documentElement.appendChild(host);
+  watchTheme((_, dark) => host.classList.toggle("theme-dark", dark));
   const shadow = host.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
   style.textContent = overlayCss;

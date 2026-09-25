@@ -1,23 +1,37 @@
+html.popup-page {
+  --canvas: #fbfaf4;
+  --ink: #0e1113;
+  --ink-2: #2c3134;
+  --mute: rgb(14 17 19 / 0.62);
+  --inset: #e9e8e0;
+  --peach: #f8dbca;
+  --tint: rgb(14 17 19 / 0.05);
+  --font-sans: "Chillax Sans", "Inclusive Sans", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+
+html.popup-page.theme-dark {
+  --canvas: #0e1113;
+  --ink: #fbfaf4;
+  --ink-2: rgb(251 250 244 / 0.82);
+  --mute: rgb(251 250 244 / 0.6);
+  --inset: #262c2f;
+  --peach: #4d2a1f;
+  --tint: rgb(251 250 244 / 0.07);
+  color-scheme: dark;
+}
+
 html.popup-page,
 html.popup-page body {
   margin: 0;
-  background: #09060f;
+  background: var(--canvas);
 }
 
 .popup-root {
-  --ink: #f7f0e6;
-  --mute: #cbbba6;
-  --butter: #f3c77e;
-  --mint: #7dffd0;
-  --blush: #ffd0d8;
   width: 340px;
   color: var(--ink);
-  background:
-    radial-gradient(rgb(243 199 126 / 0.07) 0.7px, transparent 0.8px),
-    radial-gradient(120% 80% at 100% 0%, rgb(122 48 140 / 0.42), transparent 55%),
-    #09060f;
-  background-size: 13px 13px, auto, auto;
-  font-family: "Avenir Next", "Segoe UI Variable", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  background: var(--canvas);
+  font-family: "Chillax Mono", "JetBrains Mono", SFMono-Regular, ui-monospace, Menlo, monospace;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -27,8 +41,8 @@ html.popup-page body {
 
 .popup-root main {
   display: grid;
-  gap: 12px;
-  padding: 18px 16px 16px;
+  gap: 14px;
+  padding: 20px 18px 18px;
 }
 
 .popup-root .brand {
@@ -40,53 +54,59 @@ html.popup-page body {
 .popup-root .logo {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  background: conic-gradient(from 210deg, #f3c77e, #7dffd0, #c084fc, #f3c77e);
-  color: #140c18;
-  font-weight: 900;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--inset);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 13px;
   letter-spacing: -0.04em;
   line-height: 1;
-  box-shadow:
-    0 8px 20px rgb(243 199 126 / 0.28),
-    inset 0 0 0 1px rgb(255 255 255 / 0.28);
 }
 
 .popup-root .kicker {
+  justify-self: start;
   margin: 0;
-  color: var(--butter);
+  padding: 4px 12px;
+  border-radius: 40px;
+  background: var(--tint);
+  color: var(--ink-2);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
   text-transform: uppercase;
 }
 
 .popup-root h1 {
   margin: 0;
-  font-size: 17px;
-  letter-spacing: -0.045em;
+  font-family: var(--font-sans);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   line-height: 1.1;
 }
 
 .popup-root .brand p {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   color: var(--mute);
   font-size: 11px;
 }
 
 .popup-root p {
   margin: 0;
-  color: var(--mute);
-  font-size: 13px;
-  line-height: 1.45;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .popup-root .error {
-  color: var(--blush);
-  background: rgb(255 90 120 / 0.12);
-  padding: 10px 12px;
-  border-radius: 14px;
-  box-shadow: inset 0 0 0 1px rgb(255 90 120 / 0.16);
+  color: var(--ink);
+  background: var(--peach);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
 }
