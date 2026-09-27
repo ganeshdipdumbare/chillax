@@ -1,8 +1,9 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 import { version } from "./package.json";
-import { allHostPermissions, PLATFORMS } from "./src/shared/platforms";
+import { allHostPermissions, allWarMatches, PLATFORMS } from "./src/shared/platforms";
 
 const hosts = allHostPermissions();
+const warMatches = allWarMatches();
 
 export default defineManifest({
   manifest_version: 3,
@@ -51,7 +52,7 @@ export default defineManifest({
         "icons/*",
         "fonts/*",
       ],
-      matches: hosts,
+      matches: warMatches,
     },
   ],
 });

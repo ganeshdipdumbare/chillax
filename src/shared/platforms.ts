@@ -197,6 +197,24 @@ export function allHostPermissions(): string[] {
   return out;
 }
 
+/**
+ * Origin-level patterns for web_accessible_resources.
+ * Chrome rejects path-restricted match patterns in WAR `matches`
+ * (e.g. `*://*.amazon.com/gp/video/*`), so collapse every host to `/*`.
+ */
+export function allWarMatches(): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const pattern of allHostPermissions()) {
+    const slash = pattern.indexOf("/", pattern.indexOf("://") + 3);
+    const next = slash === -1 ? pattern : `${pattern.slice(0, slash)}/*`;
+    if (seen.has(next)) continue;
+    seen.add(next);
+    out.push(next);
+  }
+  return out;
+}
+
 export function supportedPlatformLabels(): string {
   return PLATFORMS.map((p) => p.label).join(", ");
 }
