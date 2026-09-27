@@ -16,25 +16,38 @@ let hostGuard: MutationObserver | null = null;
 
 function offsetCss(): string {
   const space = `${OVERLAY_RESERVE}px`;
-  /** Full-bleed / fixed players: pin the right edge so chat does not cover video. */
-  const bleed = `
+  const leftover = `calc(100vw - ${space})`;
+
+  /** Netflix Akira: explicit leftover width — right/width:auto blanks the picture. */
+  const netflix = `
 html.chillax-overlay-open .watch-video,
 html.chillax-overlay-open .watch-video--player-view,
 html.chillax-overlay-open [data-uia="player"],
 html.chillax-overlay-open .nfp,
-html.chillax-overlay-open .nfp.AkiraPlayer,
+html.chillax-overlay-open .nfp.AkiraPlayer`;
+
+  /**
+   * Prime Video outer shells are fixed/full-viewport; margin on html does nothing.
+   * Shrink them to the leftover column so chat docks beside the player.
+   */
+  const primeShell = `
 html.chillax-overlay-open #dv-web-player,
 html.chillax-overlay-open #dv-web-player.dv-player-fullscreen,
 html.chillax-overlay-open .webPlayerContainer,
 html.chillax-overlay-open .webPlayerUIContainer,
 html.chillax-overlay-open .atvwebplayersdk-player-container,
-html.chillax-overlay-open .atvwebplayersdk-player-root,
+html.chillax-overlay-open .atvwebplayersdk-player-root`;
+
+  const primeInner = `
 html.chillax-overlay-open .scalingVideoContainer,
 html.chillax-overlay-open .scalingVideoContainerBottom,
 html.chillax-overlay-open .rendererContainer,
 html.chillax-overlay-open .cascadingWindowsParent,
 html.chillax-overlay-open [class*="atvwebplayersdk-player"],
-html.chillax-overlay-open .media-element-container,
+html.chillax-overlay-open .media-element-container`;
+
+  /** Other full-bleed / fixed players: pin the right edge so chat does not cover video. */
+  const bleed = `
 html.chillax-overlay-open #hive-player,
 html.chillax-overlay-open #hivePlayer,
 html.chillax-overlay-open .btm-media-client-element,
@@ -98,8 +111,7 @@ html.chillax-overlay-open:not(.chillax-fs) #player-container-outer,
 html.chillax-overlay-open:not(.chillax-fs) #player-container-inner,
 html.chillax-overlay-open:not(.chillax-fs) #player-container,
 html.chillax-overlay-open:not(.chillax-fs) #ytd-player,
-html.chillax-overlay-open:not(.chillax-fs) ytd-player,
-html.chillax-overlay-open:not(.chillax-fs) #appMountPoint {
+html.chillax-overlay-open:not(.chillax-fs) ytd-player {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -118,10 +130,47 @@ html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #player-full
 html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #player-theater-container,
 html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #player-wide-container {
   position: relative !important;
-  width: calc(100vw - ${space}) !important;
-  max-width: calc(100vw - ${space}) !important;
+  width: ${leftover} !important;
+  max-width: ${leftover} !important;
   left: 0 !important;
   right: auto !important;
+}
+${netflix} {
+  left: 0 !important;
+  right: auto !important;
+  width: ${leftover} !important;
+  max-width: ${leftover} !important;
+  box-sizing: border-box !important;
+}
+${primeShell} {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  width: ${leftover} !important;
+  max-width: ${leftover} !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  box-sizing: border-box !important;
+}
+${primeInner} {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  box-sizing: border-box !important;
+}
+html.chillax-overlay-open #dv-web-player video,
+html.chillax-overlay-open .atvwebplayersdk-player-container video,
+html.chillax-overlay-open .webPlayerContainer video {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
 }
 ${bleed} {
   left: 0 !important;
@@ -129,13 +178,6 @@ ${bleed} {
   width: auto !important;
   max-width: none !important;
   box-sizing: border-box !important;
-}
-/* Cap HTML5 streamers only — never touch YouTube's .html5-main-video
-   (absolute pixel sizing via setSize; max-height:100% blanks the picture). */
-html.chillax-overlay-open:not(:has(ytd-app)) video {
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
 }
 `;
 }
