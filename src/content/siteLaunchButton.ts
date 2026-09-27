@@ -87,21 +87,20 @@ function installStyles() {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  vertical-align: top !important;
+  flex: 0 0 auto !important;
+  box-sizing: border-box !important;
+  position: relative !important;
   padding: 0 !important;
   opacity: 1 !important;
 }
 #${YT_BTN_ID} .chillax-yt-mark {
   display: grid !important;
   place-items: center !important;
-  width: 58% !important;
-  aspect-ratio: 1 !important;
-  max-width: 28px !important;
+  flex: 0 0 auto !important;
   border-radius: 50% !important;
   background: ${GRADIENT} !important;
   color: #fbfaf4 !important;
   font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif !important;
-  font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: -0.04em !important;
   line-height: 1 !important;
@@ -172,6 +171,15 @@ export function findPlayControl(): HTMLElement | null {
   return best;
 }
 
+/** YouTube enforces Trusted Types, so innerHTML assignments throw; build nodes directly. */
+function markSpan(className: string) {
+  const span = document.createElement("span");
+  span.className = className;
+  span.setAttribute("aria-hidden", "true");
+  span.textContent = "Cx";
+  return span;
+}
+
 function isRound(width: number, height: number) {
   return width <= 72 && Math.abs(width - height) <= 6;
 }
@@ -209,9 +217,8 @@ function mirrorPlay(btn: HTMLElement, play: HTMLElement) {
     btn.dataset.shape = shape;
     btn.classList.toggle(`${LAUNCH_CLASS}--round`, round);
     btn.classList.toggle(`${LAUNCH_CLASS}--pill`, !round);
-    btn.innerHTML = round
-      ? "Cx"
-      : '<span class="chillax-launch-mark" aria-hidden="true">Cx</span><span>Start Chillax</span>';
+    if (round) btn.replaceChildren("Cx");
+    else btn.replaceChildren(markSpan("chillax-launch-mark"), "Start Chillax");
   }
   const h = `${height}px`;
   btn.style.setProperty("height", h, "important");
@@ -286,7 +293,7 @@ function ensureYoutubeButton(session: SessionController): HTMLButtonElement {
   btn.id = YT_BTN_ID;
   btn.type = "button";
   btn.className = "ytp-button";
-  btn.innerHTML = '<span class="chillax-yt-mark" aria-hidden="true">Cx</span>';
+  btn.replaceChildren(markSpan("chillax-yt-mark"));
   btn.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -304,9 +311,48 @@ function placeYoutubeButton(session: SessionController) {
   btn.title = label;
   btn.setAttribute("aria-label", label);
   if (play.nextElementSibling !== btn) play.insertAdjacentElement("afterend", btn);
-  const rect = play.getBoundingClientRect();
-  if (rect.width > 0) btn.style.setProperty("width", `${Math.round(rect.width)}px`, "important");
-  if (rect.height > 0) btn.style.setProperty("height", `${Math.round(rect.height)}px`, "important");
+  mirrorYoutubePlay(btn, play);
+}
+
+function paintsBackground(el: HTMLElement) {
+  const clear = (color: string) => color === "transparent" || /rgba\([^)]*,\s*0\)$/.test(color);
+  return (
+    !clear(getComputedStyle(el).backgroundColor) ||
+    !clear(getComputedStyle(el, "::before").backgroundColor)
+  );
+}
+
+/** Same box as YouTube's Play (size, margins, float), with the Cx disc matching its circle or glyph. */
+function mirrorYoutubePlay(btn: HTMLElement, play: HTMLElement) {
+  const width = play.offsetWidth;
+  const height = play.offsetHeight;
+  if (!width || !height) return;
+  const cs = getComputedStyle(play);
+  btn.style.setProperty("width", `${width}px`, "important");
+  btn.style.setProperty("min-width", `${width}px`, "important");
+  btn.style.setProperty("height", `${height}px`, "important");
+  let next = btn.nextElementSibling as HTMLElement | null;
+  while (next && !next.offsetWidth) next = next.nextElementSibling as HTMLElement | null;
+  const gap = next ? getComputedStyle(next).marginLeft : "8px";
+  btn.style.setProperty(
+    "margin",
+    `${cs.marginTop} ${cs.marginRight} ${cs.marginBottom} ${gap === "0px" ? "8px" : gap}`,
+    "important",
+  );
+  btn.style.setProperty("float", cs.float, "important");
+  btn.style.setProperty("vertical-align", cs.verticalAlign, "important");
+  btn.style.setProperty("align-self", cs.alignSelf, "important");
+  btn.style.setProperty("border-radius", cs.borderRadius, "important");
+  const side = Math.min(width, height);
+  // Modern player paints a circle behind Play; the classic one only shows a glyph.
+  const disc = Math.round(paintsBackground(play) ? side : side * 0.62);
+  const mark = btn.firstElementChild as HTMLElement | null;
+  if (mark) {
+    mark.style.setProperty("width", `${disc}px`, "important");
+    mark.style.setProperty("height", `${disc}px`, "important");
+    mark.style.setProperty("font-size", `${Math.max(10, Math.round(disc * 0.38))}px`, "important");
+  }
+  alignCenters(btn, play);
 }
 
 /** Put a Chillax launch control right after every site Play button (Teleparty-style). */
