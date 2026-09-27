@@ -16,6 +16,63 @@ let hostGuard: MutationObserver | null = null;
 
 function offsetCss(): string {
   const space = `${OVERLAY_RESERVE}px`;
+  /** Full-bleed / fixed players: pin the right edge so chat does not cover video. */
+  const bleed = `
+html.chillax-overlay-open .watch-video,
+html.chillax-overlay-open .watch-video--player-view,
+html.chillax-overlay-open [data-uia="player"],
+html.chillax-overlay-open .nfp,
+html.chillax-overlay-open .nfp.AkiraPlayer,
+html.chillax-overlay-open #dv-web-player,
+html.chillax-overlay-open #dv-web-player.dv-player-fullscreen,
+html.chillax-overlay-open .webPlayerContainer,
+html.chillax-overlay-open .webPlayerUIContainer,
+html.chillax-overlay-open .atvwebplayersdk-player-container,
+html.chillax-overlay-open .atvwebplayersdk-player-root,
+html.chillax-overlay-open .scalingVideoContainer,
+html.chillax-overlay-open .scalingVideoContainerBottom,
+html.chillax-overlay-open .rendererContainer,
+html.chillax-overlay-open .cascadingWindowsParent,
+html.chillax-overlay-open [class*="atvwebplayersdk-player"],
+html.chillax-overlay-open .media-element-container,
+html.chillax-overlay-open #hive-player,
+html.chillax-overlay-open #hivePlayer,
+html.chillax-overlay-open .btm-media-client-element,
+html.chillax-overlay-open .btm-media-overlays-container,
+html.chillax-overlay-open .btm-media-player,
+html.chillax-overlay-open .content-video-player,
+html.chillax-overlay-open .PlayerCenterWrapper,
+html.chillax-overlay-open .HuluPlayer,
+html.chillax-overlay-open .hulu-player,
+html.chillax-overlay-open [class*="PlayerContainer"],
+html.chillax-overlay-open [data-testid="player"],
+html.chillax-overlay-open [data-testid="player-ui-container"],
+html.chillax-overlay-open [data-testid="video-player"],
+html.chillax-overlay-open [data-testid="video_player"],
+html.chillax-overlay-open [data-testid="playback"],
+html.chillax-overlay-open [data-testid="PlaybackContainer"],
+html.chillax-overlay-open .default-media-player,
+html.chillax-overlay-open .video-player-wrapper,
+html.chillax-overlay-open .video-player,
+html.chillax-overlay-open .video-player-container,
+html.chillax-overlay-open .video-player__container,
+html.chillax-overlay-open .player-container,
+html.chillax-overlay-open .player-view-content,
+html.chillax-overlay-open .layout-player,
+html.chillax-overlay-open .videoContainer,
+html.chillax-overlay-open .persistentPlayer,
+html.chillax-overlay-open .persistent-player,
+html.chillax-overlay-open .video-ref,
+html.chillax-overlay-open [data-a-target="player-overlay-click-handler"],
+html.chillax-overlay-open [data-a-player-state],
+html.chillax-overlay-open .player-root,
+html.chillax-overlay-open .vpc-player,
+html.chillax-overlay-open.chillax-fs #movie_player,
+html.chillax-overlay-open.chillax-fs #ytd-player,
+html.chillax-overlay-open.chillax-fs #player-container,
+html.chillax-overlay-open.chillax-fs #player-full-bleed-container,
+html.chillax-overlay-open.chillax-fs #full-bleed-container`;
+
   return `
 html.chillax-overlay-open:not(.chillax-fs) {
   box-sizing: border-box !important;
@@ -68,20 +125,17 @@ html.chillax-overlay-open:not(.chillax-fs) ytd-watch-flexy[theater] #player-wide
   left: 0 !important;
   right: auto !important;
 }
-html.chillax-overlay-open .watch-video,
-html.chillax-overlay-open .watch-video--player-view,
-html.chillax-overlay-open [data-uia="player"],
-html.chillax-overlay-open .nfp,
-html.chillax-overlay-open .nfp.AkiraPlayer,
-html.chillax-overlay-open.chillax-fs #movie_player,
-html.chillax-overlay-open.chillax-fs #ytd-player,
-html.chillax-overlay-open.chillax-fs #player-container,
-html.chillax-overlay-open.chillax-fs #player-full-bleed-container,
-html.chillax-overlay-open.chillax-fs #full-bleed-container {
-  width: calc(100vw - ${space}) !important;
-  max-width: calc(100vw - ${space}) !important;
+${bleed} {
   left: 0 !important;
-  right: auto !important;
+  right: ${space} !important;
+  width: auto !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+html.chillax-overlay-open video {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
 }
 `;
 }
