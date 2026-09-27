@@ -380,8 +380,29 @@ function sizePrimePlayer(docked: boolean) {
 
     const widthPx = `${leftoverWidth()}px`;
     const heightPx = `${Math.max(160, window.innerHeight)}px`;
+    const stale = new Set(document.querySelectorAll<HTMLElement>(`[${PRIME_DOCK_ATTR}]`));
+    const fs = document.fullscreenElement;
+    const fsBox =
+      fs instanceof HTMLElement && fs !== document.documentElement && fs !== document.body ? fs : null;
+    // The UA forces the fullscreen element to fill the screen, so shrink what is inside it instead.
+    const shrinkable = (el: HTMLElement) => !fsBox || (el !== fsBox && fsBox.contains(el));
+
+    if (fsBox) {
+      for (const child of fsBox.children) {
+        if (!(child instanceof HTMLElement) || child.id === HOST_ID) continue;
+        stale.delete(child);
+        child.setAttribute(PRIME_DOCK_ATTR, "fs-child");
+        child.style.setProperty("left", "0px", "important");
+        child.style.setProperty("right", "auto", "important");
+        child.style.setProperty("width", widthPx, "important");
+        child.style.setProperty("max-width", widthPx, "important");
+        child.style.setProperty("box-sizing", "border-box", "important");
+      }
+    }
 
     for (const el of new Set([...collectPrimeNodes(PRIME_SHELL_SELECTORS), ...primeFixedAncestors()])) {
+      if (!shrinkable(el)) continue;
+      stale.delete(el);
       el.setAttribute(PRIME_DOCK_ATTR, "shell");
       el.style.setProperty("position", "fixed", "important");
       el.style.setProperty("top", "0px", "important");
@@ -396,6 +417,8 @@ function sizePrimePlayer(docked: boolean) {
     }
 
     for (const el of collectPrimeNodes(PRIME_INNER_SELECTORS)) {
+      if (!shrinkable(el)) continue;
+      stale.delete(el);
       el.setAttribute(PRIME_DOCK_ATTR, "inner");
       el.style.setProperty("width", "100%", "important");
       el.style.setProperty("max-width", "100%", "important");
@@ -411,6 +434,7 @@ function sizePrimePlayer(docked: boolean) {
         "#dv-web-player video, .webPlayerContainer video, .atvwebplayersdk-player-container video",
       )
       .forEach((video) => {
+        stale.delete(video);
         video.setAttribute(PRIME_DOCK_ATTR, "video");
         video.style.setProperty("width", "100%", "important");
         video.style.setProperty("height", "100%", "important");
@@ -418,6 +442,8 @@ function sizePrimePlayer(docked: boolean) {
         video.style.setProperty("max-height", "100%", "important");
         video.style.setProperty("object-fit", "contain", "important");
       });
+
+    stale.forEach((el) => clearPrimeInline(el));
   } finally {
     primeApplying = false;
   }
@@ -531,7 +557,7 @@ export function pushPageOffset(platform: Platform, open: boolean) {
   const party = inSession();
   const docked = isWindowDock(open);
   const lounge = open && !party;
-  const primeDock = platform === "prime" && docked && !fullscreen;
+  const primeDock = platform === "prime" && docked;
   placeHost();
   watchHostParent();
 
