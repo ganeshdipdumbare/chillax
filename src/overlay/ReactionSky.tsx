@@ -13,6 +13,8 @@ export function ReactionSky({ bursts }: { bursts: ReactionBurst[] }) {
             animationDelay: `${burst.delay}ms`,
             animationDuration: `${burst.duration}ms`,
             ["--spin" as string]: `${burst.spin}deg`,
+            ["--rise" as string]: `${burst.rise}px`,
+            ["--drift" as string]: `${burst.drift}px`,
             ["--float-size" as string]: `${burst.size}px`,
           }}
         >

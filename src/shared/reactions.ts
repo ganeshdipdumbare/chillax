@@ -12,21 +12,23 @@ export function makeBurst(emoji: string): ReactionBurst {
   return {
     id: crypto.randomUUID(),
     emoji,
-    x: rand(18, 82),
-    y: rand(28, 72),
-    spin: randInt(-14, 14),
-    delay: randInt(0, 180),
-    size: randInt(36, 56),
-    duration: randInt(900, 1400),
+    x: rand(22, 78),
+    y: rand(58, 78),
+    spin: randInt(-16, 16),
+    delay: randInt(0, 240),
+    size: randInt(34, 52),
+    duration: randInt(1900, 2800),
+    rise: randInt(160, 280),
+    drift: randInt(-56, 56),
   };
 }
 
-/** A few of the same emoji that pop in place, then fade (Instagram-style). */
+/** A few emoji that pop, drift up, and fade — Instagram Live style. */
 export function sprayBursts(emoji: string): ReactionBurst[] {
-  const count = randInt(3, 5);
+  const count = randInt(4, 7);
   return Array.from({ length: count }, () => makeBurst(emoji));
 }
 
 export function burstTtlMs(burst: ReactionBurst) {
-  return burst.delay + burst.duration + 60;
+  return burst.delay + burst.duration + 80;
 }

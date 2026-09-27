@@ -41,16 +41,20 @@ export type Participant = {
 export type ReactionBurst = {
   id: string;
   emoji: string;
-  /** Horizontal position (%). */
+  /** Horizontal start (%). */
   x: number;
-  /** Vertical position (%). */
+  /** Vertical start from top (%). */
   y: number;
   spin: number;
-  /** Stagger before the pop starts (ms). */
+  /** Stagger before the float starts (ms). */
   delay: number;
   size: number;
-  /** Total pop duration (ms). */
+  /** Total float duration (ms). */
   duration: number;
+  /** How far it rises (px). */
+  rise: number;
+  /** Sideways drift over the float (px). */
+  drift: number;
 };
 
 export type ContentState = {

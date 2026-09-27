@@ -24,7 +24,7 @@ function LiveRain() {
     <div className="story-stage">
       <ReactionSky bursts={bursts} />
       <p className="status" style={{ position: "absolute", bottom: 16, left: 16, zIndex: 5 }}>
-        One tap pops a few emoji in place, then they fade.
+        One tap floats a few emoji up, then they fade.
       </p>
     </div>
   );

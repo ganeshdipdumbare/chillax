@@ -254,36 +254,59 @@ button {
   font-style: normal;
   font-variant-emoji: emoji;
   filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.28));
-  transform: translate(-50%, -50%);
   transform-origin: center;
-  animation-name: react-pop;
-  animation-timing-function: cubic-bezier(0.22, 1.2, 0.36, 1);
+  animation-name: react-float;
+  animation-timing-function: linear;
   animation-fill-mode: both;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
-/* Instagram-style: pop in place, hold, fade out (no long float). */
-@keyframes react-pop {
+/* Instagram Live style: pop, drift up with a soft arc, fade out. */
+@keyframes react-float {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.35) rotate(var(--spin, 0deg));
+    transform: translate3d(-50%, 8px, 0) scale(0.4) rotate(var(--spin, 0deg));
+  }
+  8% {
+    opacity: 1;
+    transform: translate3d(calc(-50% + var(--drift, 0px) * 0.12), -4px, 0) scale(1.18)
+      rotate(var(--spin, 0deg));
   }
   16% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2) rotate(var(--spin, 0deg));
+    transform: translate3d(calc(-50% + var(--drift, 0px) * 0.22), -18px, 0) scale(1)
+      rotate(calc(var(--spin, 0deg) * 0.85));
   }
-  28% {
+  45% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1) rotate(var(--spin, 0deg));
+    transform: translate3d(
+        calc(-50% + var(--drift, 0px) * 0.55),
+        calc(var(--rise, 200px) * -0.45),
+        0
+      )
+      scale(1.02)
+      rotate(calc(var(--spin, 0deg) * 0.4));
   }
-  68% {
-    opacity: 1;
-    transform: translate(-50%, -54%) scale(1) rotate(var(--spin, 0deg));
+  70% {
+    opacity: 0.85;
+    transform: translate3d(
+        calc(-50% + var(--drift, 0px) * 0.82),
+        calc(var(--rise, 200px) * -0.72),
+        0
+      )
+      scale(0.98)
+      rotate(calc(var(--spin, 0deg) * 0.15));
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -58%) scale(0.92) rotate(var(--spin, 0deg));
+    transform: translate3d(
+        calc(-50% + var(--drift, 0px)),
+        calc(var(--rise, 200px) * -1),
+        0
+      )
+      scale(0.88)
+      rotate(0deg);
   }
 }
 
