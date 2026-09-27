@@ -2,23 +2,32 @@ import type { SessionController } from "./session";
 import type { Platform } from "../shared/types";
 import { getState, subscribe } from "../shared/store";
 
-const BTN_ID = "chillax-site-launch";
-const CHIP_ID = "chillax-card-chip";
+const LAUNCH_CLASS = "chillax-launch";
 const YT_BTN_ID = "chillax-yt-launch";
 const STYLE_ID = "chillax-site-launch-style";
 const GRADIENT = "linear-gradient(110deg, #1c525d 0%, #db704c 100%)";
 
+/** Anchored so titles like "How to play guitar" never count as a Play control. */
 const PLAY_HINT =
-  /\b(play|resume|continue|watch(\s+now)?|reproducir|lecture|lesen|riproduci|assistir|再生|재생|재생하기)\b/i;
-const PLAY_EXCLUDE = /\b(trailer|clip|preview|playlist|promo|sample|teaser)\b/i;
+  /^(play|resume|continue|watch(\s+now)?|start\s+watching|reproducir|lecture|lesen|riproduci|assistir|再生|재생|재생하기)(\b|$)/i;
+const MAX_LABEL = 40;
+const PLAY_EXCLUDE =
+  /\b(trailer|clip|preview|playlist|promo|sample|teaser|later|party|together|autoplay|speed)\b/i;
 
-const NETFLIX_CARD_SELECTORS = [
-  ".previewModal--wrapper",
-  ".previewModal--container",
-  ".title-card-container",
-  ".slider-item",
-  ".title-card",
-  '[data-uia="title-card"]',
+/** In-player chrome: the Play/Pause toggle there flips labels and is not a launch point. */
+const PLAYER_CHROME = [
+  ".watch-video",
+  '[data-uia="player"]',
+  "#dv-web-player",
+  ".webPlayerContainer",
+  ".webPlayerSDKContainer",
+  '[class*="atvwebplayersdk"]',
+  "#movie_player",
+  ".html5-video-player",
+  ".btm-media-player",
+  '[data-testid="player-ui-container"]',
+  ".vjs-control-bar",
+  "#chillax-root",
 ].join(",");
 
 function installStyles() {
@@ -26,94 +35,68 @@ function installStyles() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-#${BTN_ID} {
+.${LAUNCH_CLASS} {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
   flex: 0 0 auto !important;
   box-sizing: border-box !important;
-  margin: 0 !important;
   border: 0 !important;
   border-radius: 999px !important;
-  padding: 0 18px !important;
-  min-height: 44px !important;
   background: ${GRADIENT} !important;
   color: #fbfaf4 !important;
   font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   letter-spacing: -0.02em !important;
   line-height: 1 !important;
   white-space: nowrap !important;
   cursor: pointer !important;
   text-decoration: none !important;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.28) !important;
-  z-index: 5 !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
-#${BTN_ID}:hover,
-#${BTN_ID}:focus-visible,
-#${CHIP_ID}:hover,
-#${CHIP_ID}:focus-visible {
+.${LAUNCH_CLASS}:hover,
+.${LAUNCH_CLASS}:focus-visible {
   filter: brightness(1.08) !important;
 }
-#${BTN_ID}:focus-visible,
-#${CHIP_ID}:focus-visible {
+.${LAUNCH_CLASS}:focus-visible {
   outline: 2px solid #fbfaf4 !important;
   outline-offset: 2px !important;
 }
-#${BTN_ID} .chillax-site-launch-mark {
+.${LAUNCH_CLASS}[hidden] {
+  display: none !important;
+}
+.${LAUNCH_CLASS}--round {
+  padding: 0 !important;
+  letter-spacing: -0.04em !important;
+}
+.${LAUNCH_CLASS}--pill .chillax-launch-mark {
   display: grid !important;
   place-items: center !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 1.45em !important;
+  height: 1.45em !important;
   border-radius: 50% !important;
   background: rgb(251 250 244 / 0.92) !important;
   color: #0e1113 !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
+  font-size: 0.68em !important;
   letter-spacing: -0.04em !important;
-}
-#${BTN_ID}[hidden],
-#${CHIP_ID}[hidden] {
-  display: none !important;
-}
-#${CHIP_ID} {
-  position: fixed !important;
-  z-index: 2147483645 !important;
-  display: grid !important;
-  place-items: center !important;
-  width: 34px !important;
-  height: 34px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 2px solid rgb(251 250 244 / 0.9) !important;
-  border-radius: 50% !important;
-  background: ${GRADIENT} !important;
-  color: #fbfaf4 !important;
-  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.04em !important;
-  line-height: 1 !important;
-  cursor: pointer !important;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.45) !important;
 }
 #${YT_BTN_ID} {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   vertical-align: top !important;
-  width: 48px !important;
-  height: 100% !important;
   padding: 0 !important;
   opacity: 1 !important;
 }
 #${YT_BTN_ID} .chillax-yt-mark {
   display: grid !important;
   place-items: center !important;
-  width: 26px !important;
-  height: 26px !important;
+  width: 58% !important;
+  aspect-ratio: 1 !important;
+  max-width: 28px !important;
   border-radius: 50% !important;
   background: ${GRADIENT} !important;
   color: #fbfaf4 !important;
@@ -137,123 +120,130 @@ function busy() {
 }
 
 function labelOf(el: HTMLElement): string {
-  return (
+  const attr =
     el.getAttribute("aria-label") ||
     el.getAttribute("title") ||
     el.getAttribute("data-uia") ||
     el.getAttribute("data-automation-id") ||
-    el.textContent ||
-    ""
-  )
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function isOurs(el: Element) {
-  return Boolean(el.closest(`#${BTN_ID}, #${CHIP_ID}, #${YT_BTN_ID}`));
+    el.getAttribute("data-testid");
+  if (attr) return attr.trim();
+  const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+  // Whole cards expose long text blobs; only short labels are real buttons.
+  return text.length <= 32 ? text : "";
 }
 
 function isPlayControl(el: HTMLElement): boolean {
-  if (isOurs(el)) return false;
+  if (el.classList.contains(LAUNCH_CLASS) || el.id === YT_BTN_ID) return false;
   const label = labelOf(el);
+  if (!label || label.length > MAX_LABEL) return false;
   if (!PLAY_HINT.test(label) || PLAY_EXCLUDE.test(label)) return false;
+  if (el.closest(PLAYER_CHROME)) return false;
   const rect = el.getBoundingClientRect();
-  if (rect.width < 44 || rect.height < 28) return false;
-  if (rect.bottom < 48 || rect.top > window.innerHeight * 0.92) return false;
-  return true;
+  return rect.width >= 20 && rect.height >= 20;
 }
 
-/** Largest visible Play/Resume control on a landing or detail page. */
-export function findPlayControl(): HTMLElement | null {
-  const preferred = document.querySelector<HTMLElement>(
-    [
-      '[data-automation-id="play"]',
-      '[data-automation-id*="play-button" i]',
-      '[data-uia="play-button"]',
-      '[data-uia="play-button-reload"]',
-      'button[aria-label*="Play" i]',
-      'a[aria-label*="Play" i]',
-      'button[aria-label*="Resume" i]',
-      'a[aria-label*="Resume" i]',
-    ].join(","),
-  );
-  if (preferred && isPlayControl(preferred)) return preferred;
+/** Every launch-worthy Play control, outermost only (e.g. <a><button>Play</button></a>). */
+function findPlayControls(): HTMLElement[] {
+  const hits = [
+    ...document.querySelectorAll<HTMLElement>('button, a, [role="button"]'),
+  ].filter(isPlayControl);
+  const set = new Set(hits);
+  return hits.filter((el) => {
+    for (let up = el.parentElement, depth = 0; up && depth < 4; up = up.parentElement, depth += 1) {
+      if (set.has(up)) return false;
+    }
+    return true;
+  });
+}
 
-  const nodes = document.querySelectorAll<HTMLElement>('button, a, [role="button"]');
+/** Largest on-screen Play control, used when a launch has no specific button. */
+export function findPlayControl(): HTMLElement | null {
   let best: HTMLElement | null = null;
   let bestArea = 0;
-  for (const node of nodes) {
-    if (!isPlayControl(node)) continue;
-    const rect = node.getBoundingClientRect();
+  for (const el of findPlayControls()) {
+    const rect = el.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
     const area = rect.width * rect.height;
-    // Prefer larger hero Play buttons over tiny player chrome.
     if (area > bestArea) {
-      best = node;
+      best = el;
       bestArea = area;
     }
   }
   return best;
 }
 
-function matchSiblingMetrics(btn: HTMLElement, sibling: HTMLElement) {
-  const cs = getComputedStyle(sibling);
-  const height = Number.parseFloat(cs.height);
-  if (Number.isFinite(height) && height >= 32) {
-    btn.style.minHeight = `${Math.round(height)}px`;
-    btn.style.height = `${Math.round(height)}px`;
+function isRound(rect: DOMRect) {
+  return rect.width <= 72 && Math.abs(rect.width - rect.height) <= 6;
+}
+
+function mirrorPlay(btn: HTMLElement, play: HTMLElement) {
+  const rect = play.getBoundingClientRect();
+  const cs = getComputedStyle(play);
+  const round = isRound(rect);
+  const shape = round ? "round" : "pill";
+  if (btn.dataset.shape !== shape) {
+    btn.dataset.shape = shape;
+    btn.classList.toggle(`${LAUNCH_CLASS}--round`, round);
+    btn.classList.toggle(`${LAUNCH_CLASS}--pill`, !round);
+    btn.innerHTML = round
+      ? "Cx"
+      : '<span class="chillax-launch-mark" aria-hidden="true">Cx</span><span>Start Chillax</span>';
   }
-  if (cs.borderRadius && cs.borderRadius !== "0px") {
-    btn.style.borderRadius = cs.borderRadius;
+  const h = `${Math.round(rect.height)}px`;
+  btn.style.setProperty("height", h, "important");
+  btn.style.setProperty("min-height", h, "important");
+  btn.style.setProperty("margin", `${cs.marginTop} ${cs.marginRight} ${cs.marginBottom} ${cs.marginLeft}`, "important");
+  const radius = cs.borderRadius && cs.borderRadius !== "0px" ? cs.borderRadius : round ? "50%" : "4px";
+  btn.style.setProperty("border-radius", radius, "important");
+  if (round) {
+    const w = `${Math.round(rect.width)}px`;
+    btn.style.setProperty("width", w, "important");
+    btn.style.setProperty("min-width", w, "important");
+    btn.style.setProperty("font-size", `${Math.max(10, Math.round(rect.height * 0.34))}px`, "important");
+    return;
   }
+  btn.style.setProperty("min-width", `${Math.round(rect.width)}px`, "important");
+  btn.style.removeProperty("width");
   const fontSize = Number.parseFloat(cs.fontSize);
-  if (Number.isFinite(fontSize) && fontSize >= 12) {
-    btn.style.fontSize = `${fontSize}px`;
-  }
-  const padY = Number.parseFloat(cs.paddingTop);
+  btn.style.setProperty("font-size", `${Number.isFinite(fontSize) && fontSize >= 11 ? fontSize : 15}px`, "important");
   const padX = Number.parseFloat(cs.paddingLeft);
-  if (Number.isFinite(padY) && Number.isFinite(padX) && padX > 0) {
-    btn.style.padding = `${Math.max(0, padY)}px ${Math.max(14, padX)}px`;
-  }
+  btn.style.setProperty("padding", `0 ${Math.max(14, Number.isFinite(padX) ? padX : 0)}px`, "important");
 }
 
-function stop(event: Event) {
-  event.preventDefault();
-  event.stopPropagation();
-}
-
-function ensurePill(session: SessionController): HTMLButtonElement {
-  let btn = document.getElementById(BTN_ID) as HTMLButtonElement | null;
-  if (btn) return btn;
-  btn = document.createElement("button");
-  btn.id = BTN_ID;
+function createLaunch(session: SessionController): HTMLButtonElement {
+  const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "chillax-site-launch";
+  btn.className = LAUNCH_CLASS;
   btn.title = "Play and start a Chillax watch party";
-  btn.innerHTML =
-    '<span class="chillax-site-launch-mark" aria-hidden="true">Cx</span><span>Start Chillax</span>';
+  btn.setAttribute("aria-label", btn.title);
+  const swallow = (event: Event) => event.stopPropagation();
+  btn.addEventListener("pointerdown", swallow);
+  btn.addEventListener("mousedown", swallow);
   btn.addEventListener("click", (event) => {
-    stop(event);
-    const play = btn!.previousElementSibling;
-    session.launchParty({
-      click: play instanceof HTMLElement && isPlayControl(play) ? play : null,
-    });
+    event.preventDefault();
+    event.stopPropagation();
+    const play = btn.previousElementSibling;
+    session.launchParty({ click: play instanceof HTMLElement ? play : null });
   });
   return btn;
 }
 
-function placePill(session: SessionController): boolean {
-  const play = findPlayControl();
-  if (!play?.parentElement) {
-    document.getElementById(BTN_ID)?.remove();
-    return false;
+function placeLaunchButtons(session: SessionController) {
+  const hidden = busy();
+  const plays = new Set(findPlayControls());
+  for (const btn of document.querySelectorAll<HTMLElement>(`.${LAUNCH_CLASS}`)) {
+    const prev = btn.previousElementSibling;
+    if (!(prev instanceof HTMLElement) || !plays.has(prev)) btn.remove();
   }
-  const btn = ensurePill(session);
-  btn.hidden = busy();
-  if (btn.parentElement !== play.parentElement || btn.previousElementSibling !== play) {
-    play.insertAdjacentElement("afterend", btn);
+  for (const play of plays) {
+    let btn = play.nextElementSibling as HTMLElement | null;
+    if (!btn?.classList.contains(LAUNCH_CLASS)) {
+      btn = createLaunch(session);
+      play.insertAdjacentElement("afterend", btn);
+    }
+    btn.hidden = hidden;
+    if (!hidden) mirrorPlay(btn, play);
   }
-  matchSiblingMetrics(btn, play);
-  return true;
 }
 
 function ensureYoutubeButton(session: SessionController): HTMLButtonElement {
@@ -265,162 +255,53 @@ function ensureYoutubeButton(session: SessionController): HTMLButtonElement {
   btn.className = "ytp-button";
   btn.innerHTML = '<span class="chillax-yt-mark" aria-hidden="true">Cx</span>';
   btn.addEventListener("click", (event) => {
-    stop(event);
+    event.preventDefault();
+    event.stopPropagation();
     session.launchParty();
   });
   return btn;
 }
 
+/** YouTube's own Play lives in the player bar; sit right beside it at the same size. */
 function placeYoutubeButton(session: SessionController) {
-  const bar =
-    document.querySelector<HTMLElement>("#movie_player .ytp-right-controls-left") ||
-    document.querySelector<HTMLElement>("#movie_player .ytp-right-controls");
-  if (!bar) return;
+  const play = document.querySelector<HTMLElement>("#movie_player .ytp-play-button");
+  if (!play) return;
   const btn = ensureYoutubeButton(session);
   const label = busy() ? "Open Chillax" : "Start Chillax party";
   btn.title = label;
   btn.setAttribute("aria-label", label);
-  if (btn.parentElement !== bar || bar.firstElementChild !== btn) bar.prepend(btn);
+  if (play.nextElementSibling !== btn) play.insertAdjacentElement("afterend", btn);
+  const rect = play.getBoundingClientRect();
+  if (rect.width > 0) btn.style.setProperty("width", `${Math.round(rect.width)}px`, "important");
+  if (rect.height > 0) btn.style.setProperty("height", `${Math.round(rect.height)}px`, "important");
 }
 
-function netflixTitleId(card: Element): string | null {
-  for (const link of card.querySelectorAll<HTMLAnchorElement>('a[href*="/watch/"], a[href*="/title/"]')) {
-    const id = link.getAttribute("href")?.match(/\/(?:watch|title)\/(\d+)/)?.[1];
-    if (id) return id;
-  }
-  const tracked = [card, ...card.querySelectorAll("[data-ui-tracking-context]")];
-  for (const el of tracked) {
-    const raw = el.getAttribute("data-ui-tracking-context");
-    if (!raw) continue;
-    let text = raw;
-    try {
-      text = decodeURIComponent(raw);
-    } catch {
-      // Keep the raw attribute.
-    }
-    const id = text.match(/"video_id"\s*:\s*(\d+)/)?.[1];
-    if (id) return id;
-  }
-  return null;
-}
-
-/** Teleparty-style round Cx chip on whichever Netflix title the pointer is over. */
-function mountNetflixCardChip(session: SessionController) {
-  let card: HTMLElement | null = null;
-  let hideTimer = 0;
-  let frame = 0;
-
-  const chip = document.createElement("button");
-  chip.id = CHIP_ID;
-  chip.type = "button";
-  chip.hidden = true;
-  chip.textContent = "Cx";
-  chip.title = "Play and start a Chillax watch party";
-  chip.setAttribute("aria-label", chip.title);
-  document.documentElement.appendChild(chip);
-
-  const position = () => {
-    frame = 0;
-    if (!card || chip.hidden) return;
-    if (!card.isConnected) {
-      hide();
-      return;
-    }
-    const rect = card.getBoundingClientRect();
-    if (rect.width < 60 || rect.height < 40) {
-      hide();
-      return;
-    }
-    chip.style.top = `${Math.round(rect.top + 8)}px`;
-    chip.style.left = `${Math.round(rect.right - 34 - 8)}px`;
-    frame = window.requestAnimationFrame(position);
-  };
-
-  const show = (next: HTMLElement) => {
-    window.clearTimeout(hideTimer);
-    if (busy()) return;
-    card = next;
-    chip.hidden = false;
-    if (!frame) position();
-  };
-
-  function hide() {
-    chip.hidden = true;
-    card = null;
-    if (frame) window.cancelAnimationFrame(frame);
-    frame = 0;
-  }
-
-  const onOver = (event: MouseEvent) => {
-    const target = event.target as Element | null;
-    if (!target) return;
-    if (target === chip) {
-      window.clearTimeout(hideTimer);
-      return;
-    }
-    const modal = target.closest<HTMLElement>(".previewModal--wrapper, .previewModal--container");
-    const next = modal || target.closest<HTMLElement>(NETFLIX_CARD_SELECTORS);
-    if (next && (netflixTitleId(next) || next.querySelector('[data-uia="play-button"]'))) {
-      show(next);
-      return;
-    }
-    window.clearTimeout(hideTimer);
-    hideTimer = window.setTimeout(hide, 250);
-  };
-
-  chip.addEventListener("click", (event) => {
-    stop(event);
-    const target = card;
-    if (!target) return;
-    const id = netflixTitleId(target);
-    hide();
-    if (id) {
-      session.launchParty({ href: `/watch/${id}` });
-      return;
-    }
-    session.launchParty({ click: target.querySelector<HTMLElement>('[data-uia="play-button"]') });
-  });
-
-  document.addEventListener("mouseover", onOver, true);
-  const unsub = subscribe(() => {
-    if (busy()) hide();
-  });
-
-  return () => {
-    document.removeEventListener("mouseover", onOver, true);
-    unsub();
-    hide();
-    window.clearTimeout(hideTimer);
-    chip.remove();
-  };
-}
-
-/** Inject Chillax launch controls next to the site's own Play UI (Teleparty-style). */
+/** Put a Chillax launch control right after every site Play button (Teleparty-style). */
 export function mountSiteLaunchButton(session: SessionController, platform: Platform) {
   installStyles();
   let timer = 0;
+  const run = () => {
+    timer = 0;
+    if (platform === "youtube") placeYoutubeButton(session);
+    placeLaunchButtons(session);
+  };
+  // Throttle rather than debounce: streaming sites mutate the DOM nonstop.
   const sync = () => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(() => {
-      if (platform === "youtube") placeYoutubeButton(session);
-      else placePill(session);
-    }, 80);
+    if (!timer) timer = window.setTimeout(run, 150);
   };
 
-  sync();
+  run();
   const observer = new MutationObserver(sync);
   observer.observe(document.documentElement, { childList: true, subtree: true });
   const unsub = subscribe(sync);
   window.addEventListener("resize", sync);
-  const unmountChip = platform === "netflix" ? mountNetflixCardChip(session) : () => undefined;
 
   return () => {
     observer.disconnect();
     unsub();
-    unmountChip();
     window.removeEventListener("resize", sync);
     window.clearTimeout(timer);
-    document.getElementById(BTN_ID)?.remove();
+    document.querySelectorAll(`.${LAUNCH_CLASS}`).forEach((el) => el.remove());
     document.getElementById(YT_BTN_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
   };
