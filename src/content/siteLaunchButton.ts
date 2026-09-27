@@ -172,14 +172,38 @@ export function findPlayControl(): HTMLElement | null {
   return best;
 }
 
-function isRound(rect: DOMRect) {
-  return rect.width <= 72 && Math.abs(rect.width - rect.height) <= 6;
+function isRound(width: number, height: number) {
+  return width <= 72 && Math.abs(width - height) <= 6;
+}
+
+/** The painted button inside a wrapper link like <a><button>Play</button></a>. */
+function visualOf(play: HTMLElement): HTMLElement {
+  if (play.tagName === "BUTTON") return play;
+  const inner = play.querySelector<HTMLElement>('button, [role="button"]');
+  return inner && inner.offsetHeight > 0 ? inner : play;
+}
+
+/** Nudge the launch button so its vertical center matches the Play button's. */
+function alignCenters(btn: HTMLElement, visual: HTMLElement) {
+  const target = visual.getBoundingClientRect();
+  const mine = btn.getBoundingClientRect();
+  if (!target.height || !mine.height) return;
+  // Hover previews animate with transform: scale, so convert screen px to layout px.
+  const scale = visual.offsetHeight > 0 ? target.height / visual.offsetHeight : 1;
+  const delta = (target.top + target.height / 2 - (mine.top + mine.height / 2)) / (scale || 1);
+  if (Math.abs(delta) < 0.5) return;
+  const current = Number.parseFloat(btn.style.top) || 0;
+  btn.style.setProperty("top", `${Math.round((current + delta) * 10) / 10}px`, "important");
 }
 
 function mirrorPlay(btn: HTMLElement, play: HTMLElement) {
-  const rect = play.getBoundingClientRect();
-  const cs = getComputedStyle(play);
-  const round = isRound(rect);
+  const visual = visualOf(play);
+  const width = visual.offsetWidth;
+  const height = visual.offsetHeight;
+  if (!width || !height) return;
+  const cs = getComputedStyle(visual);
+  const outer = getComputedStyle(play);
+  const round = isRound(width, height);
   const shape = round ? "round" : "pill";
   if (btn.dataset.shape !== shape) {
     btn.dataset.shape = shape;
@@ -189,25 +213,28 @@ function mirrorPlay(btn: HTMLElement, play: HTMLElement) {
       ? "Cx"
       : '<span class="chillax-launch-mark" aria-hidden="true">Cx</span><span>Start Chillax</span>';
   }
-  const h = `${Math.round(rect.height)}px`;
+  const h = `${height}px`;
   btn.style.setProperty("height", h, "important");
   btn.style.setProperty("min-height", h, "important");
-  btn.style.setProperty("margin", `${cs.marginTop} ${cs.marginRight} ${cs.marginBottom} ${cs.marginLeft}`, "important");
+  btn.style.setProperty("max-height", h, "important");
+  btn.style.setProperty("margin", `0 ${outer.marginRight} 0 ${outer.marginLeft}`, "important");
+  btn.style.setProperty("align-self", "center", "important");
   const radius = cs.borderRadius && cs.borderRadius !== "0px" ? cs.borderRadius : round ? "50%" : "4px";
   btn.style.setProperty("border-radius", radius, "important");
   if (round) {
-    const w = `${Math.round(rect.width)}px`;
+    const w = `${width}px`;
     btn.style.setProperty("width", w, "important");
     btn.style.setProperty("min-width", w, "important");
-    btn.style.setProperty("font-size", `${Math.max(10, Math.round(rect.height * 0.34))}px`, "important");
-    return;
+    btn.style.setProperty("font-size", `${Math.max(10, Math.round(height * 0.34))}px`, "important");
+  } else {
+    btn.style.setProperty("min-width", `${width}px`, "important");
+    btn.style.removeProperty("width");
+    const fontSize = Number.parseFloat(cs.fontSize);
+    btn.style.setProperty("font-size", `${Number.isFinite(fontSize) && fontSize >= 11 ? fontSize : 15}px`, "important");
+    const padX = Number.parseFloat(cs.paddingLeft);
+    btn.style.setProperty("padding", `0 ${Math.max(14, Number.isFinite(padX) ? padX : 0)}px`, "important");
   }
-  btn.style.setProperty("min-width", `${Math.round(rect.width)}px`, "important");
-  btn.style.removeProperty("width");
-  const fontSize = Number.parseFloat(cs.fontSize);
-  btn.style.setProperty("font-size", `${Number.isFinite(fontSize) && fontSize >= 11 ? fontSize : 15}px`, "important");
-  const padX = Number.parseFloat(cs.paddingLeft);
-  btn.style.setProperty("padding", `0 ${Math.max(14, Number.isFinite(padX) ? padX : 0)}px`, "important");
+  alignCenters(btn, visual);
 }
 
 function createLaunch(session: SessionController): HTMLButtonElement {
@@ -240,6 +267,12 @@ function placeLaunchButtons(session: SessionController) {
     if (!btn?.classList.contains(LAUNCH_CLASS)) {
       btn = createLaunch(session);
       play.insertAdjacentElement("afterend", btn);
+      const fresh = btn;
+      for (const wait of [350, 900]) {
+        window.setTimeout(() => {
+          if (fresh.isConnected && !fresh.hidden) mirrorPlay(fresh, play);
+        }, wait);
+      }
     }
     btn.hidden = hidden;
     if (!hidden) mirrorPlay(btn, play);
