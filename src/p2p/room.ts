@@ -55,6 +55,11 @@ export class PeerRoom {
   private nicknames = new Map<string, string>();
   private avatars = new Map<string, string>();
   private mediaState = new Map<string, { muted: boolean; cameraOn: boolean }>();
+  private disconnected = new Map<
+    string,
+    { nickname: string; avatarId: string; muted: boolean; cameraOn: boolean; until: number }
+  >();
+  private disconnectSweep = 0;
   private isHost = false;
   private controllerIds: string[] = [];
   private localStream: MediaStream | null = null;
@@ -254,6 +259,7 @@ export class PeerRoom {
   destroy() {
     if (this.tearingDown) return;
     this.tearingDown = true;
+    window.clearTimeout(this.disconnectSweep);
     const peerId = this.peer?.id;
     if (peerId) {
       try {
@@ -272,10 +278,12 @@ export class PeerRoom {
     this.connections.clear();
     this.calls.clear();
     this.remoteStreams.clear();
+    this.disconnected.clear();
   }
 
   handleProtocol(message: ProtocolMessage, fromPeerId: string) {
     if (message.type === "hello") {
+      this.disconnected.delete(message.peerId);
       this.nicknames.set(message.peerId, message.nickname);
       this.avatars.set(message.peerId, message.avatarId);
       this.emitParticipants();
@@ -492,6 +500,9 @@ export class PeerRoom {
   }
 
   private dropPeer(peerId: string) {
+    const nickname = this.nicknames.get(peerId);
+    const avatarId = this.avatars.get(peerId);
+    const media = this.mediaState.get(peerId);
     this.connections.get(peerId)?.close();
     this.connections.delete(peerId);
     this.calls.get(peerId)?.close();
@@ -500,24 +511,80 @@ export class PeerRoom {
     this.nicknames.delete(peerId);
     this.avatars.delete(peerId);
     this.mediaState.delete(peerId);
+    if (nickname && peerId !== this.peer?.id) {
+      this.disconnected.set(peerId, {
+        nickname,
+        avatarId: avatarId || "fox",
+        muted: media?.muted ?? true,
+        cameraOn: media?.cameraOn ?? false,
+        until: Date.now() + 20_000,
+      });
+      this.scheduleDisconnectSweep();
+    } else {
+      this.disconnected.delete(peerId);
+    }
     this.emitParticipants();
   }
 
+  private scheduleDisconnectSweep() {
+    window.clearTimeout(this.disconnectSweep);
+    const soonest = Math.min(...[...this.disconnected.values()].map((item) => item.until));
+    if (!Number.isFinite(soonest)) return;
+    const wait = Math.max(250, soonest - Date.now());
+    this.disconnectSweep = window.setTimeout(() => {
+      const now = Date.now();
+      let changed = false;
+      for (const [id, item] of this.disconnected) {
+        if (item.until <= now) {
+          this.disconnected.delete(id);
+          changed = true;
+        }
+      }
+      if (changed) this.emitParticipants();
+      if (this.disconnected.size) this.scheduleDisconnectSweep();
+    }, wait);
+  }
+
+  private peerIsLive(peerId: string, myId: string | null): boolean {
+    if (peerId === myId) return true;
+    const data = this.connections.get(peerId);
+    if (data?.open) return true;
+    if (this.calls.has(peerId) || this.remoteStreams.has(peerId)) return true;
+    return false;
+  }
+
   private emitParticipants() {
-    const myId = this.peer?.id;
+    const myId = this.peer?.id ?? null;
+    const now = Date.now();
+    for (const [id, item] of this.disconnected) {
+      if (item.until <= now) this.disconnected.delete(id);
+    }
     const ids = new Set<string>([
       ...this.connections.keys(),
       ...this.calls.keys(),
       ...this.remoteStreams.keys(),
     ]);
     if (myId) ids.add(myId);
-    const participants: Participant[] = [...ids].map((id) => ({
+    for (const id of ids) this.disconnected.delete(id);
+
+    const live: Participant[] = [...ids].map((id) => ({
       peerId: id,
       nickname: this.nicknames.get(id) || (id === myId ? this.localNickname : "Guest"),
       avatarId: this.avatars.get(id) || (id === myId ? this.localAvatarId : "fox"),
       muted: this.mediaState.get(id)?.muted ?? (id === myId ? this.muted : false),
       cameraOn: this.mediaState.get(id)?.cameraOn ?? (id === myId ? this.cameraOn : false),
+      connected: this.peerIsLive(id, myId),
     }));
-    this.handlers.onParticipants(participants);
+
+    const gone: Participant[] = [...this.disconnected.entries()].map(([id, item]) => ({
+      peerId: id,
+      nickname: item.nickname,
+      avatarId: item.avatarId,
+      muted: item.muted,
+      cameraOn: item.cameraOn,
+      connected: false,
+    }));
+
+    this.handlers.onParticipants([...live, ...gone]);
   }
 }

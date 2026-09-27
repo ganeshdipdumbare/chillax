@@ -1,7 +1,8 @@
 import type { PlayerState } from "../shared/types";
+import type { Platform } from "../shared/types";
 
 export type PlayerAdapter = {
-  platform: "youtube" | "netflix";
+  platform: Platform;
   driftThreshold: number;
   getContentId(): string | null;
   isWatchPage(): boolean;

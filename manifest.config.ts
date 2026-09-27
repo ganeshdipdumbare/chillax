@@ -1,12 +1,15 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 import { version } from "./package.json";
+import { allHostPermissions, PLATFORMS } from "./src/shared/platforms";
+
+const hosts = allHostPermissions();
 
 export default defineManifest({
   manifest_version: 3,
   name: "Chillax",
   version,
   description:
-    "Watch YouTube and Netflix together with synced playback, group chat, and free voice/video.",
+    "Watch together on YouTube, Netflix, Disney+, Hulu, Prime Video, Max, Paramount+, Apple TV+, Twitch, and Crunchyroll — synced playback, chat, and free voice/video.",
   icons: {
     16: "icons/icon16.png",
     32: "icons/icon32.png",
@@ -26,22 +29,13 @@ export default defineManifest({
     type: "module",
   },
   permissions: ["storage", "scripting"],
-  host_permissions: [
-    "*://*.youtube.com/*",
-    "*://youtube.com/*",
-    "*://*.netflix.com/*",
-  ],
+  host_permissions: hosts,
   content_scripts: [
-    {
-      matches: ["*://*.youtube.com/*", "*://youtube.com/*"],
-      js: ["src/content/youtube.ts"],
-      run_at: "document_idle",
-    },
-    {
-      matches: ["*://*.netflix.com/*"],
-      js: ["src/content/netflix.ts"],
-      run_at: "document_idle",
-    },
+    ...PLATFORMS.map((platform) => ({
+      matches: platform.matches,
+      js: [platform.contentScript],
+      run_at: "document_idle" as const,
+    })),
     {
       matches: ["*://*.netflix.com/*"],
       js: ["src/player/netflixBridge.ts"],
@@ -57,11 +51,7 @@ export default defineManifest({
         "icons/*",
         "fonts/*",
       ],
-      matches: [
-        "*://*.youtube.com/*",
-        "*://youtube.com/*",
-        "*://*.netflix.com/*",
-      ],
+      matches: hosts,
     },
   ],
 });

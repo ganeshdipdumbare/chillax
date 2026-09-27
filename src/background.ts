@@ -1,4 +1,4 @@
-import { isSupportedHost } from "./shared/ids";
+import { contentScriptForUrl, isSupportedHost } from "./shared/platforms";
 
 const HINT_POPUP = "src/popup/index.html";
 
@@ -42,16 +42,17 @@ async function handleActionClick(tab: chrome.tabs.Tab) {
     } catch {
       // Content script is not ready yet (refresh, or the page just loaded).
       try {
-        const isNetflix = tab.url?.includes("netflix.com");
+        const file = contentScriptForUrl(tab.url);
+        if (!file) throw new Error("no content script");
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: [isNetflix ? "src/content/netflix.ts" : "src/content/youtube.ts"],
+          files: [file],
         });
         // Give it a small amount of time to initialize
         await new Promise((resolve) => setTimeout(resolve, 200));
         await chrome.tabs.sendMessage(tab.id, { type: "CHILLAX_TOGGLE_OVERLAY" });
         return;
-      } catch (e) {
+      } catch {
         // Fall back to popup if injection truly fails
       }
     }
@@ -69,7 +70,7 @@ async function openHintPopup(tab: chrome.tabs.Tab) {
       url: chrome.runtime.getURL(HINT_POPUP),
       type: "popup",
       width: 380,
-      height: 260,
+              height: 360,
       focused: true,
     });
   } finally {

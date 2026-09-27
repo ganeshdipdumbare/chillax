@@ -14,7 +14,7 @@ const meta = {
         nickname: "Maya",
         avatarId: "fox",
         text: "this scene is everything",
-        sentAt: 1,
+        sentAt: Date.now() - 12 * 60_000,
       },
       {
         id: "2",
@@ -23,7 +23,7 @@ const meta = {
         avatarId: "ghost",
         kind: "playback",
         text: "paused the video",
-        sentAt: 2,
+        sentAt: Date.now() - 8 * 60_000,
       },
       {
         id: "3",
@@ -32,7 +32,7 @@ const meta = {
         avatarId: "disco",
         kind: "playback",
         text: "jumped to 1:12:04",
-        sentAt: 3,
+        sentAt: Date.now() - 5 * 60_000,
       },
       {
         id: "4",
@@ -40,7 +40,7 @@ const meta = {
         nickname: "Jules",
         avatarId: "ghost",
         text: "wait for the needle drop",
-        sentAt: 4,
+        sentAt: Date.now() - 90_000,
       },
     ],
   },

@@ -1,3 +1,4 @@
+import { detectPlatform } from "./platforms";
 import type { ChatMessage, ContentState, Participant, Platform, ReactionBurst } from "./types";
 
 export type OverlayState = ContentState & {
@@ -12,8 +13,7 @@ export type OverlayState = ContentState & {
 
 const listeners = new Set<() => void>();
 
-const platform: Platform =
-  location.hostname.includes("netflix.com") ? "netflix" : "youtube";
+const platform: Platform = detectPlatform(location.href) ?? "youtube";
 
 let state: OverlayState = {
   platform,

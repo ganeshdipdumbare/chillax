@@ -88,6 +88,27 @@ html.popup-page body {
   line-height: 1.1;
 }
 
+.popup-root .brand-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.popup-root .ver {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--mute);
+  font-family: "Chillax Mono", "JetBrains Mono", SFMono-Regular, ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
 .popup-root .brand p {
   margin: 3px 0 0;
   color: var(--mute);
@@ -109,4 +130,52 @@ html.popup-page body {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.4;
+}
+
+.popup-root .platform-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.popup-root .platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 8px 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--platform-accent) 12%, var(--inset));
+  color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--platform-accent) 20%, transparent);
+}
+
+.popup-root .platform-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--platform-accent) 18%, #fff);
+  color: var(--platform-accent);
+}
+
+html.popup-page.theme-dark .popup-root .platform-chip-icon {
+  background: color-mix(in srgb, var(--platform-accent) 22%, #1a1f21);
+}
+
+.popup-root .platform-chip-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.popup-root .foot {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tint);
+  color: var(--mute);
+  font-size: 11px;
 }

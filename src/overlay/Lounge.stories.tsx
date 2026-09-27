@@ -154,6 +154,7 @@ function Lounge() {
       </div>
       <div className="people">
         <span className="chip is-driver">
+          <span className="presence is-on" aria-label="Connected" />
           <AvatarFace avatarId={avatarId} size={22} />
           You · host
         </span>
@@ -163,6 +164,7 @@ function Lounge() {
           aria-pressed={drivers.includes("maya")}
           onClick={() => toggleDrive("maya")}
         >
+          <span className="presence is-on" aria-label="Connected" />
           <AvatarFace avatarId="fox" size={22} />
           Maya{drivers.includes("maya") ? " · drive" : ""}
         </button>
@@ -172,6 +174,7 @@ function Lounge() {
           aria-pressed={drivers.includes("jules")}
           onClick={() => toggleDrive("jules")}
         >
+          <span className="presence is-on" aria-label="Connected" />
           <AvatarFace avatarId="ghost" size={22} />
           Jules{drivers.includes("jules") ? " · drive" : ""}
         </button>

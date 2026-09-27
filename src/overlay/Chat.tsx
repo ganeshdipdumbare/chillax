@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../shared/types";
+import { formatChatTime } from "../shared/time";
 import { AvatarFace } from "./AvatarFace";
 import { ReactionBar } from "./ReactionBar";
 import { PopcornArt } from "./SpotArt";
@@ -40,12 +41,18 @@ export function Chat({
           messages.map((msg) => {
             const you = Boolean(localPeerId && msg.from === localPeerId);
             const name = you ? "You" : msg.nickname;
+            const when = formatChatTime(msg.sentAt);
             if (msg.kind === "playback") {
               return (
                 <article className="msg is-playback" key={msg.id}>
                   <AvatarFace avatarId={msg.avatarId} size={22} title={name} />
                   <p>
                     <span className="who">{name}</span> {msg.text}
+                    {when ? (
+                      <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
+                        {when}
+                      </time>
+                    ) : null}
                   </p>
                 </article>
               );
@@ -54,7 +61,14 @@ export function Chat({
               <article className={`msg${you ? " is-you" : ""}`} key={msg.id}>
                 <AvatarFace avatarId={msg.avatarId} size={28} title={name} />
                 <div>
-                  <div className="who">{name}</div>
+                  <div className="meta">
+                    <span className="who">{name}</span>
+                    {when ? (
+                      <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
+                        {when}
+                      </time>
+                    ) : null}
+                  </div>
                   <div className="text">{msg.text}</div>
                 </div>
               </article>

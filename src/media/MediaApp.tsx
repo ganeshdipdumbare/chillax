@@ -194,6 +194,7 @@ export function MediaApp() {
           avatarId: initRef.current?.avatarId || "fox",
           muted,
           cameraOn,
+          connected: true,
         },
       ]
     : [];

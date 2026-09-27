@@ -1,4 +1,14 @@
-export type Platform = "youtube" | "netflix";
+export type Platform =
+  | "youtube"
+  | "netflix"
+  | "disney"
+  | "hulu"
+  | "prime"
+  | "max"
+  | "paramount"
+  | "appletv"
+  | "twitch"
+  | "crunchyroll";
 export type PartyRole = "host" | "guest";
 
 export type PlayerState = {
@@ -24,6 +34,8 @@ export type Participant = {
   avatarId: string;
   muted: boolean;
   cameraOn: boolean;
+  /** False when the peer just dropped and is lingering in the roster. */
+  connected: boolean;
 };
 
 export type ReactionBurst = {

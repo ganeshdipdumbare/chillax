@@ -1,5 +1,8 @@
 import { TOKEN_KEY } from "./constants";
+import { detectPlatform, isSupportedHost, platformDef } from "./platforms";
 import type { Platform } from "./types";
+
+export { isSupportedHost, detectPlatform };
 
 const ROOM_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
 
@@ -66,46 +69,44 @@ export function buildInviteUrl(
 ): string {
   const url = new URL(href);
   url.searchParams.delete(TOKEN_KEY);
+  const mode = platformDef(platform).inviteToken;
   if (platform === "youtube") {
-    url.searchParams.set("v", contentId);
+    if (contentId) url.searchParams.set("v", contentId);
     url.searchParams.set(TOKEN_KEY, roomId);
     url.hash = "";
+    return url.toString();
+  }
+  // Strip our token from any existing hash, then re-apply.
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+  hashParams.delete(TOKEN_KEY);
+  if (mode === "hash") {
+    hashParams.set(TOKEN_KEY, roomId);
+    url.hash = hashParams.toString();
   } else {
-    url.hash = `${TOKEN_KEY}=${roomId}`;
+    url.searchParams.set(TOKEN_KEY, roomId);
+    url.hash = hashParams.toString();
   }
   return url.toString();
 }
 
 export function writeTokenToLocation(platform: Platform, roomId: string) {
-  const next = buildInviteUrl(
-    platform,
+  const contentId =
     platform === "youtube"
       ? new URLSearchParams(location.search).get("v") || ""
-      : location.pathname.match(/\/watch\/(\d+)/)?.[1] || "",
-    roomId,
-  );
+      : "";
+  const next = buildInviteUrl(platform, contentId, roomId);
   history.replaceState(history.state, "", next);
 }
 
 export function clearTokenFromLocation(platform: Platform) {
   const url = new URL(location.href);
   url.searchParams.delete(TOKEN_KEY);
-  if (platform === "netflix") {
+  if (platformDef(platform).inviteToken === "hash") {
     const params = new URLSearchParams(url.hash.replace(/^#/, ""));
     params.delete(TOKEN_KEY);
     url.hash = params.toString();
   }
   history.replaceState(history.state, "", url.toString());
-}
-
-export function isSupportedHost(url?: string | null): boolean {
-  if (!url) return false;
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    return host === "youtube.com" || host.endsWith(".youtube.com") || host === "netflix.com" || host.endsWith(".netflix.com");
-  } catch {
-    return false;
-  }
 }
 
 export function hueFromId(id: string): number {

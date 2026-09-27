@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Chat } from "./Chat";
 import { CloseIcon, CopyIcon, HideIcon, IconButton, MoonIcon, SunIcon, SystemThemeIcon } from "./icons";
 import { AvatarFace } from "./AvatarFace";
@@ -6,9 +6,13 @@ import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
 import { ReactionSky } from "./ReactionSky";
 import { mediaPageUrl, parseRoomToken } from "../shared/ids";
+import { PLATFORM_COLOR } from "../shared/platformColors";
+import { platformNightLabel } from "../shared/platforms";
 import { getState, subscribe } from "../shared/store";
 import { nextThemePref, saveThemePref, watchTheme, type ThemePref } from "../shared/theme";
+import { appVersionLabel } from "../shared/version";
 import type { SessionController } from "../content/session";
+import { PlatformMark } from "./PlatformMark";
 
 const THEME_LABEL: Record<ThemePref, string> = { system: "System", light: "Light", dark: "Dark" };
 
@@ -92,31 +96,48 @@ export function OverlayApp({ session }: { session: SessionController }) {
         const canDrive = isHostPerson || everyoneDrives || state.controllers.includes(person.peerId);
         const isYou = Boolean(me && person.peerId === me);
         const hostView = state.party?.role === "host";
+        const online = person.connected !== false;
+        const statusLabel = online ? "Connected" : "Disconnected";
+        const roleBit = isHostPerson ? " · host" : canDrive ? " · drive" : "";
+        const awayBit = online ? "" : " · away";
+        const titleBits = [
+          isHostPerson ? "Host always has playback control" : null,
+          online ? null : `${person.nickname} lost connection`,
+          hostView && !isHostPerson
+            ? canDrive
+              ? `Stop ${person.nickname} from controlling playback`
+              : `Let ${person.nickname} play, pause, and seek`
+            : null,
+        ].filter(Boolean);
         if (hostView && !isHostPerson) {
           return (
             <button
-              className={`chip${canDrive ? " is-driver" : ""}`}
+              className={`chip${canDrive ? " is-driver" : ""}${online ? "" : " is-away"}`}
               key={person.peerId}
               type="button"
               aria-pressed={canDrive}
-              title={canDrive ? `Stop ${person.nickname} from controlling playback` : `Let ${person.nickname} play, pause, and seek`}
+              title={titleBits.join(" · ") || undefined}
               onClick={() => session.setController(person.peerId, !canDrive)}
             >
+              <span className={`presence${online ? " is-on" : ""}`} title={statusLabel} aria-label={statusLabel} />
               <AvatarFace avatarId={person.avatarId} size={22} />
               {person.nickname}
               {canDrive ? " · drive" : ""}
+              {awayBit}
             </button>
           );
         }
         return (
           <span
-            className={`chip${canDrive ? " is-driver" : ""}`}
+            className={`chip${canDrive ? " is-driver" : ""}${online ? "" : " is-away"}`}
             key={person.peerId}
-            title={isHostPerson ? "Host always has playback control" : undefined}
+            title={titleBits.join(" · ") || undefined}
           >
+            <span className={`presence${online ? " is-on" : ""}`} title={statusLabel} aria-label={statusLabel} />
             <AvatarFace avatarId={person.avatarId} size={22} />
             {isYou ? "You" : person.nickname}
-            {isHostPerson ? " · host" : canDrive ? " · drive" : ""}
+            {roleBit}
+            {awayBit}
           </span>
         );
       }),
@@ -149,11 +170,22 @@ export function OverlayApp({ session }: { session: SessionController }) {
         <div className="brand">
           <span className="logo" aria-hidden="true">Cx</span>
           <div>
-            <h1>Chillax</h1>
-            <p>
-              {state.platform === "netflix" ? "Netflix night" : "YouTube night"}
-              {state.party ? ` · ${state.party.role}` : ""}
-            </p>
+            <div className="brand-title">
+              <h1>Chillax</h1>
+              <span className="ver" title={`Chillax ${appVersionLabel()}`}>
+                {appVersionLabel()}
+              </span>
+            </div>
+            <div
+              className="brand-night"
+              style={{ "--platform-accent": PLATFORM_COLOR[state.platform] } as CSSProperties}
+            >
+              <PlatformMark platform={state.platform} size={14} className="platform-mark" />
+              <p>
+                {platformNightLabel(state.platform)}
+                {state.party ? ` · ${state.party.role}` : ""}
+              </p>
+            </div>
           </div>
         </div>
         <ThemeButton />

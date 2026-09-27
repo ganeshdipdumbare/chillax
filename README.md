@@ -6,9 +6,9 @@
 
 <p align="center"><strong>Make the couch bigger.</strong></p>
 
-Free Chrome watch party for **YouTube** and **Netflix**: synced playback, group chat, voice/video, avatars, and emoji that float up the screen.
+Free Chrome watch party for **YouTube**, **Netflix**, **Disney+**, **Hulu**, **Prime Video**, **Max**, **Paramount+**, **Apple TV+**, **Twitch**, and **Crunchyroll**: synced playback, group chat, voice/video, avatars, and emoji that float up the screen.
 
-Everyone uses their own YouTube or Netflix account. Chillax does not skip, hide, or block platform ads, and it does not re-stream or decrypt video.
+Everyone uses their own streaming account. Chillax does not skip, hide, or block platform ads, and it does not re-stream or decrypt video.
 
 The overlay is a cream dotted storyboard on night purple — blob buddies, mint / lilac / butter sparkles — not a generic dark sidebar.
 
@@ -21,7 +21,7 @@ The overlay is a cream dotted storyboard on night purple — blob buddies, mint 
    npm run build
    ```
 3. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and select the `dist` folder.
-4. Pin Chillax. Click the **Cx** icon on YouTube or Netflix to open the lounge (name, avatar, start or join). Off those sites, Chillax asks you to open YouTube or Netflix first.
+4. Pin Chillax. Click the **Cx** icon on a supported streaming site to open the lounge (name, avatar, start or join). Off those sites, Chillax asks you to open one first.
 
 Development with reload:
 
@@ -87,14 +87,14 @@ Open [http://localhost:6006](http://localhost:6006). Static export: `npm run bui
 1. Host opens the same video everyone will watch.
 2. Click the **Cx** icon. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code). If you are not on a video yet, start stays off until you open one — join still works.
 3. Chat **docks on the right**. The movie stays on the left. **Hide chat** tucks the panel without leaving; **Leave party** is the pink control.
-4. Copy the invite link (YouTube query `?chillax=`, Netflix hash `#chillax=`).
+4. Copy the invite link (YouTube uses query `?chillax=`; other sites use hash `#chillax=`).
 5. Guests install Chillax and open the invite link — they join automatically. Mic and camera stay **off** until someone turns them on.
 6. Mute and camera are one click. Use the reaction bar under chat. Parties cap at **8** people.
 7. The host always has playback. **Tap people** in the party to share play/pause/seek with as many friends as you want; tap again to take it back.
 
-If Netflix strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. Chillax opens the host’s title for them.
+If a site strips the hash, guests can paste the party code (starts with `cx`) under **Join with code**. Chillax opens the host’s title for them.
 
-A YouTube host cannot sync a Netflix guest.
+Guests must be on the **same platform** as the host (a YouTube host cannot sync a Disney+ guest).
 
 <p align="center">
   <img src="public/art/popcorn.svg" width="280" alt="A smiling popcorn bucket with a soda" />
@@ -102,7 +102,7 @@ A YouTube host cannot sync a Netflix guest.
 
 ## Voice and video
 
-Mic and camera run in an extension page, so Chrome should prompt for **Chillax**, not YouTube or Netflix.
+Mic and camera run in an extension page, so Chrome should prompt for **Chillax**, not the streaming site.
 
 Audio and video are **WebRTC mesh** between browsers. Chat and playback sync use a host-centered DataChannel. Signaling uses the public [PeerJS](https://peerjs.com/) broker; media is not sent through that broker after connect.
 
@@ -132,7 +132,7 @@ Use headphones so the mic does not pick up the movie or other people.
 
 ## Publish to the Chrome Web Store
 
-Google reviews every listing. Watch-party extensions that overlay YouTube/Netflix can be approved (Teleparty is in the store), but it is not guaranteed. Follow these steps.
+Google reviews every listing. Watch-party extensions that overlay streaming sites can be approved (Teleparty is in the store), but it is not guaranteed. Follow these steps.
 
 ### 1. Make a developer account
 
@@ -146,7 +146,7 @@ Chrome will reject camera + microphone without a policy URL. Host a page (GitHub
 
 - What you collect: nickname and avatar in local storage only.
 - What you do **not** collect: chat, voice, video, and watch history are peer-to-peer and not stored by you.
-- Permissions: `storage`, `camera`, `microphone`, and access to YouTube/Netflix pages to sync the player and show the overlay.
+- Permissions: `storage`, `camera`, `microphone`, and access to supported streaming pages to sync the player and show the overlay.
 - How to delete data: uninstall the extension.
 - Contact email.
 
@@ -169,19 +169,19 @@ In the dashboard, **New item** → upload `chillax-extension.zip`.
 You will need:
 
 - **Icon:** 128×128 Cx mark (already at `public/icons/icon128.png`).
-- **Screenshots:** at least one 1280×800 or 640×400 of the overlay on YouTube (and Netflix if you can). Crop so Chillax is obviously a separate overlay, not YouTube/Netflix UI. The cream storyboard and Cx conic mark are the look — not a generic dark drawer.
+- **Screenshots:** at least one 1280×800 or 640×400 of the overlay on a streaming site. Crop so Chillax is obviously a separate overlay, not the site’s UI. The cream storyboard and Cx conic mark are the look — not a generic dark drawer.
 - **Small promo tile** (optional): 440×280. [public/art/lounge.svg](public/art/lounge.svg) is the same drawing as the overlay.
 - **Name:** Chillax
-- **Summary:** Watch YouTube and Netflix together with synced playback, chat, and voice/video.
+- **Summary:** Watch together on major streaming sites with synced playback, chat, and voice/video.
 - **Category:** Social or Fun (pick the closest).
 - **Language**
-- **Single purpose:** say it syncs playback and adds party chat/call on those sites. Do not claim to be YouTube or Netflix.
+- **Single purpose:** say it syncs playback and adds party chat/call on supported sites. Do not claim to be those services.
 
 Permission justifications (write honestly):
 
 - `storage` — save nickname and avatar on this device.
 - `camera` / `microphone` — optional in-party call; prompted as Chillax.
-- Host access to youtube.com / netflix.com — inject the party overlay and control the local player. Users still need their own account. You do not download or decrypt video.
+- Host access to supported streaming sites — inject the party overlay and control the local player. Users still need their own account. You do not download or decrypt video.
 
 ### 5. Privacy practices form
 
@@ -189,13 +189,13 @@ In the listing, declare:
 
 - You do **not** sell user data.
 - You do **not** use remote code except the PeerJS signaling host (disclose `0.peerjs.com` as the WebRTC broker).
-- Limited use of YouTube/Netflix page access: overlay + player sync only.
+- Limited use of streaming-page access: overlay + player sync only.
 
 ### 6. Submit for review
 
 Click **Submit for review**. First review often takes a few days. Common rejection reasons:
 
-- Overlay looks like official YouTube/Netflix chrome.
+- Overlay looks like official streaming-site chrome.
 - Missing or vague privacy policy.
 - Camera/mic used without a clear in-product prompt.
 - Unrelated host permissions.
@@ -216,5 +216,6 @@ Use two Chrome profiles with the unpacked extension.
 - YouTube: same video; host always has play/pause/seek; tap people to share control; chat and reactions appear in the right dock; SPA navigation still finds the player.
 - Voice/video: mic and camera start off; tiles only in the Chillax panel; movie audio still plays.
 - Netflix: logged-in profiles that can play the same title; hash invite or join-with-code; wrong-title prompt if IDs differ.
+- Other HTML5 sites (Disney+, Hulu, Prime, Max, Paramount+, Apple TV+, Twitch, Crunchyroll): same-title party; hash invite; play/pause/seek when the page’s `<video>` allows it. Twitch live seeks are skipped; VODs seek normally.
 
-Netflix cannot be verified without a logged-in Netflix session.
+Netflix and most paid services cannot be verified without a logged-in session.

@@ -336,6 +336,27 @@ button {
   line-height: 1.1;
 }
 
+.brand-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ver {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--mute);
+  font-family: var(--font-mono, "Chillax Mono", "JetBrains Mono", ui-monospace, Menlo, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
 .brand > div {
   min-width: 0;
 }
@@ -348,6 +369,79 @@ button {
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.brand-night {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 3px;
+}
+
+.brand-night .platform-mark {
+  flex: 0 0 auto;
+  color: var(--platform-accent, var(--ink));
+}
+
+.brand-night p {
+  margin: 0;
+}
+
+.platform-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platform-row.is-compact {
+  gap: 6px;
+}
+
+.platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 11px 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--platform-accent) 12%, var(--sunken));
+  color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--platform-accent) 22%, var(--line));
+}
+
+.platform-chip.is-compact {
+  min-height: 26px;
+  gap: 5px;
+  padding: 0 8px 0 6px;
+}
+
+.platform-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--platform-accent) 16%, var(--surface));
+  color: var(--platform-accent);
+}
+
+.platform-chip.is-compact .platform-chip-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+}
+
+.platform-chip-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.platform-chip.is-compact .platform-chip-label {
+  font-size: 11px;
 }
 
 .icon-btn,
@@ -900,6 +994,26 @@ input[type="text"]:disabled {
   letter-spacing: -0.02em;
 }
 
+.chip .presence {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  box-shadow: inset 0 0 0 1px rgb(14 17 19 / 0.12);
+}
+
+.chip .presence.is-on {
+  background: #2f9e6b;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #2f9e6b 28%, transparent);
+}
+
+.chip.is-away {
+  opacity: 0.62;
+  color: var(--mute);
+}
+
 button.chip {
   cursor: pointer;
   border-color: var(--line);
@@ -954,12 +1068,29 @@ button.chip:focus-visible {
   align-items: flex-start;
 }
 
+.msg .meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .msg .who {
   color: var(--mute);
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.msg .when {
+  flex: 0 0 auto;
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .msg .text {
@@ -993,6 +1124,10 @@ button.chip:focus-visible {
   color: var(--ink);
   font-size: 11px;
   font-weight: 500;
+}
+
+.msg.is-playback .when {
+  margin-left: 8px;
 }
 
 .react-bar {

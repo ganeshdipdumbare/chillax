@@ -2,6 +2,7 @@ export const TOKEN_KEY = "chillax";
 export const PARTY_CAP = 8;
 export const YT_DRIFT_SECONDS = 0.35;
 export const NETFLIX_DRIFT_SECONDS = 0.7;
+export const HTML5_DRIFT_SECONDS = 0.5;
 export const HEARTBEAT_MS = 1000;
 export const PEER_PREFIX = "cx";
 export const OVERLAY_PANEL_WIDTH = 360;

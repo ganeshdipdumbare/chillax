@@ -1,5 +1,6 @@
 import { OVERLAY_RESERVE } from "../shared/constants";
 import { getState } from "../shared/store";
+import type { Platform } from "../shared/types";
 
 const STYLE_ID = "chillax-page-offset";
 const LOUNGE_STYLE_ID = "chillax-lounge-hide";
@@ -269,7 +270,7 @@ function isWindowDock(open: boolean) {
   return open && inSession();
 }
 
-export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) {
+export function pushPageOffset(platform: Platform, open: boolean) {
   const fullscreen = Boolean(document.fullscreenElement);
   const party = inSession();
   const docked = isWindowDock(open);
@@ -300,7 +301,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   if (lounge) {
     existing?.remove();
     setInjectedStyle(LOUNGE_STYLE_ID, loungeCss());
-    collapseYouTubeGuide();
+    if (platform === "youtube") collapseYouTubeGuide();
     placeHost();
     return;
   }
@@ -316,7 +317,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
     }
     return;
   }
-  scheduleExitTheater();
+  if (platform === "youtube") scheduleExitTheater();
   const style = existing ?? document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = offsetCss();
@@ -330,7 +331,7 @@ export function pushPageOffset(_platform: "youtube" | "netflix", open: boolean) 
   }
 }
 
-export function watchFullscreen(platform: "youtube" | "netflix", isOpen: () => boolean) {
+export function watchFullscreen(platform: Platform, isOpen: () => boolean) {
   const sync = () => {
     if (!document.fullscreenElement && !windowIsUsable()) return;
     pushPageOffset(platform, isOpen());
