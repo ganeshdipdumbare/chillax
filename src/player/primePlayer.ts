@@ -17,6 +17,15 @@ export class PrimePlayer extends Html5Player {
         const titleId = new URLSearchParams(location.search).get("titleId");
         return titleId;
       },
+      isPlayerOpen: () =>
+        [
+          ...document.querySelectorAll<HTMLVideoElement>(
+            "#dv-web-player video, .webPlayerContainer video, .webPlayerSDKContainer video, .atvwebplayersdk-player-container video",
+          ),
+        ].some((video) => {
+          const rect = video.getBoundingClientRect();
+          return rect.width >= window.innerWidth * 0.4 && rect.height >= 120;
+        }),
       isAdPlaying: () =>
         Boolean(
           document.querySelector(".adContainer") ||

@@ -17,7 +17,7 @@ import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
-import { mountSiteLaunchButton } from "./siteLaunchButton";
+import { findPlayControl, mountSiteLaunchButton } from "./siteLaunchButton";
 
 const applying = { current: false };
 let mediaWindow: Window | null = null;
@@ -35,6 +35,47 @@ let booted = false;
 let followingHost = false;
 let initTimer = 0;
 const HOST_ROOM_KEY = "chillax-host-room";
+const AUTOSTART_KEY = "chillax-autostart";
+const AUTOSTART_TTL_MS = 60_000;
+let autostartTimer = 0;
+
+function armAutostart() {
+  try {
+    sessionStorage.setItem(AUTOSTART_KEY, String(Date.now()));
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
+function clearAutostart() {
+  window.clearInterval(autostartTimer);
+  autostartTimer = 0;
+  try {
+    sessionStorage.removeItem(AUTOSTART_KEY);
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
+function autostartPending() {
+  try {
+    const at = Number(sessionStorage.getItem(AUTOSTART_KEY));
+    return Number.isFinite(at) && at > 0 && Date.now() - at < AUTOSTART_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+function playerReady(adapter: PlayerAdapter) {
+  if (!adapter.isWatchPage() || !adapter.getContentId()) return false;
+  if (adapter.isPlayerOpen && !adapter.isPlayerOpen()) return false;
+  return adapter.getState() !== null;
+}
+
+function playIfPaused(adapter: PlayerAdapter) {
+  if (!adapter.getState()?.paused) return;
+  adapter.play().catch(() => setState({ needsGesture: true }));
+}
 
 function partyInitRole() {
   return pendingRole || getState().party?.role || null;
@@ -496,6 +537,34 @@ export async function boot(adapter: PlayerAdapter) {
         bursts: [],
       });
       pushPageOffset(adapter.platform, true);
+      playIfPaused(adapter);
+    },
+    launchParty: (opts) => {
+      const status = getState().status;
+      if (status === "in-party" || status === "connecting") {
+        session.toggleOverlay(true);
+        return;
+      }
+      if (!opts?.href && playerReady(adapter)) {
+        clearAutostart();
+        session.startParty();
+        return;
+      }
+      if (opts?.href) {
+        armAutostart();
+        location.assign(opts.href);
+        return;
+      }
+      const trigger = opts?.click ?? (adapter.platform === "youtube" ? null : findPlayControl());
+      if (!trigger) {
+        setState({ error: "Open a video or title first.", overlayOpen: true });
+        pushPageOffset(adapter.platform, true);
+        return;
+      }
+      armAutostart();
+      setState({ error: null });
+      trigger.click();
+      watchAutostart();
     },
     joinParty: (roomId: string) => {
       const status = getState().status;
@@ -619,8 +688,23 @@ export async function boot(adapter: PlayerAdapter) {
     },
   };
 
+  function watchAutostart() {
+    window.clearInterval(autostartTimer);
+    if (!autostartPending()) return;
+    autostartTimer = window.setInterval(() => {
+      const status = getState().status;
+      if (!autostartPending() || status === "connecting" || status === "in-party") {
+        clearAutostart();
+        return;
+      }
+      if (!playerReady(adapter)) return;
+      clearAutostart();
+      session.startParty();
+    }, 400);
+  }
+
   mountOverlay(session);
-  mountSiteLaunchButton(session);
+  mountSiteLaunchButton(session, adapter.platform);
   pushPageOffset(adapter.platform, getState().overlayOpen);
   watchFullscreen(adapter.platform, () => getState().overlayOpen);
 
@@ -630,7 +714,7 @@ export async function boot(adapter: PlayerAdapter) {
         sendResponse(getState());
         break;
       case "CHILLAX_START":
-        session.startParty();
+        session.launchParty();
         sendResponse({ ok: true });
         break;
       case "CHILLAX_JOIN":
@@ -788,6 +872,7 @@ export async function boot(adapter: PlayerAdapter) {
     session.leaveParty();
   });
   maybeAutoJoin(session);
+  watchAutostart();
   } catch (error) {
     booted = false;
     throw error;

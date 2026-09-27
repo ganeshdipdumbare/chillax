@@ -284,7 +284,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               type="button"
               disabled={!canWatch}
               onClick={() => {
-                void commitNickname().then(() => session.startParty());
+                void commitNickname().then(() => session.launchParty());
               }}
             >
               {canWatch ? "Start the night" : "Open a video to start"}

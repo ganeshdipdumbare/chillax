@@ -6,6 +6,8 @@ export type PlayerAdapter = {
   driftThreshold: number;
   getContentId(): string | null;
   isWatchPage(): boolean;
+  /** False while only a detail/landing page (or trailer) is showing. Defaults to true. */
+  isPlayerOpen?(): boolean;
   getState(): PlayerState | null;
   play(): Promise<void>;
   pause(): Promise<void>;

@@ -36,6 +36,7 @@ export type Html5PlayerOptions = {
   driftThreshold?: number;
   getContentId: () => string | null;
   isWatchPage?: () => boolean;
+  isPlayerOpen?: () => boolean;
   isAdPlaying?: () => boolean;
   /** When false, seek is a no-op (e.g. Twitch live). Default true. */
   canSeek?: () => boolean;
@@ -59,6 +60,10 @@ export class Html5Player implements PlayerAdapter {
   isWatchPage(): boolean {
     if (this.opts.isWatchPage) return this.opts.isWatchPage();
     return Boolean(this.getContentId());
+  }
+
+  isPlayerOpen(): boolean {
+    return this.opts.isPlayerOpen?.() ?? true;
   }
 
   getState(): PlayerState | null {

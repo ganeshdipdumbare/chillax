@@ -345,6 +345,25 @@ function collectPrimeNodes(selectors: string[]): HTMLElement[] {
 }
 
 /**
+ * Prime renames its player wrappers often; any fixed-position ancestor of the
+ * playing video spans the viewport and would slide under the chat column.
+ */
+function primeFixedAncestors(): HTMLElement[] {
+  const found = new Set<HTMLElement>();
+  for (const video of document.querySelectorAll<HTMLVideoElement>("video")) {
+    const rect = video.getBoundingClientRect();
+    if (rect.width < 200 || rect.height < 120) continue;
+    let el = video.parentElement;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (el.id === HOST_ID) break;
+      if (getComputedStyle(el).position === "fixed") found.add(el);
+      el = el.parentElement;
+    }
+  }
+  return [...found];
+}
+
+/**
  * Prime fights stylesheet overrides with continuous inline sizing against the
  * viewport. Pin shells with inline !important and re-apply when the player rebuilds.
  */
@@ -362,7 +381,7 @@ function sizePrimePlayer(docked: boolean) {
     const widthPx = `${leftoverWidth()}px`;
     const heightPx = `${Math.max(160, window.innerHeight)}px`;
 
-    for (const el of collectPrimeNodes(PRIME_SHELL_SELECTORS)) {
+    for (const el of new Set([...collectPrimeNodes(PRIME_SHELL_SELECTORS), ...primeFixedAncestors()])) {
       el.setAttribute(PRIME_DOCK_ATTR, "shell");
       el.style.setProperty("position", "fixed", "important");
       el.style.setProperty("top", "0px", "important");
