@@ -3,7 +3,6 @@ import type { ChatMessage } from "../shared/types";
 import { formatChatTime } from "../shared/time";
 import { AvatarFace } from "./AvatarFace";
 import { ReactionBar } from "./ReactionBar";
-import { PopcornArt } from "./SpotArt";
 import type { ReactionEmoji } from "../shared/avatars";
 
 export function Chat({
@@ -30,51 +29,42 @@ export function Chat({
   return (
     <section className="chat" aria-label="Party chat">
       <div className="messages" ref={listRef}>
-        {messages.length === 0 ? (
-          <div className="empty-chat">
-            <div className="storyboard">
-              <PopcornArt />
-            </div>
-            <p>First one to drop a 🍿 sets the vibe.</p>
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const you = Boolean(localPeerId && msg.from === localPeerId);
-            const name = you ? "You" : msg.nickname;
-            const when = formatChatTime(msg.sentAt);
-            if (msg.kind === "playback") {
-              return (
-                <article className="msg is-playback" key={msg.id}>
-                  <AvatarFace avatarId={msg.avatarId} size={22} title={name} />
-                  <p>
-                    <span className="who">{name}</span> {msg.text}
-                    {when ? (
-                      <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
-                        {when}
-                      </time>
-                    ) : null}
-                  </p>
-                </article>
-              );
-            }
+        {messages.map((msg) => {
+          const you = Boolean(localPeerId && msg.from === localPeerId);
+          const name = you ? "You" : msg.nickname;
+          const when = formatChatTime(msg.sentAt);
+          if (msg.kind === "playback") {
             return (
-              <article className={`msg${you ? " is-you" : ""}`} key={msg.id}>
-                  <AvatarFace avatarId={msg.avatarId} size={24} title={name} />
-                <div>
-                  <div className="meta">
-                    <span className="who">{name}</span>
-                    {when ? (
-                      <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
-                        {when}
-                      </time>
-                    ) : null}
-                  </div>
-                  <div className="text">{msg.text}</div>
-                </div>
+              <article className="msg is-playback" key={msg.id}>
+                <AvatarFace avatarId={msg.avatarId} size={22} title={name} />
+                <p>
+                  <span className="who">{name}</span> {msg.text}
+                  {when ? (
+                    <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
+                      {when}
+                    </time>
+                  ) : null}
+                </p>
               </article>
             );
-          })
-        )}
+          }
+          return (
+            <article className={`msg${you ? " is-you" : ""}`} key={msg.id}>
+              <AvatarFace avatarId={msg.avatarId} size={24} title={name} />
+              <div>
+                <div className="meta">
+                  <span className="who">{name}</span>
+                  {when ? (
+                    <time className="when" dateTime={new Date(msg.sentAt).toISOString()}>
+                      {when}
+                    </time>
+                  ) : null}
+                </div>
+                <div className="text">{msg.text}</div>
+              </div>
+            </article>
+          );
+        })}
       </div>
       <ReactionBar disabled={disabled} onReact={onReact} />
       <form

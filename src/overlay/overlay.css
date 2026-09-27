@@ -758,12 +758,6 @@ button.banner:hover {
   animation: lamp-pulse 2.8s ease-in-out infinite;
 }
 
-.spot-art .kernel-pop {
-  transform-box: fill-box;
-  transform-origin: 90px 42px;
-  animation: kernel-pop 2.2s ease-in-out infinite;
-}
-
 @keyframes sparkle-twinkle {
   0%,
   100% {
@@ -796,21 +790,6 @@ button.banner:hover {
   }
 }
 
-@keyframes kernel-pop {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
-.spot-art-sm {
-  max-height: 140px;
-  margin: 0 auto;
-}
-
 .hero strong {
   font-family: var(--font-sans);
   font-size: 28px;
@@ -823,27 +802,6 @@ button.banner:hover {
   color: var(--ink-2);
   font-size: 12px;
   line-height: 1.6;
-}
-
-.empty-chat {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  padding: 8px 0 4px;
-  text-align: center;
-}
-
-.empty-chat .storyboard {
-  width: 100%;
-  max-height: 72px;
-  background: var(--peach);
-}
-
-.empty-chat p {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 12px;
-  line-height: 1.4;
 }
 
 label {
@@ -1260,7 +1218,6 @@ button.chip:focus-visible {
   .spot-art .sparkle,
   .spot-art .buddy-bob,
   .spot-art .lamp-glow,
-  .spot-art .kernel-pop,
   button,
   .primary:active:not(:disabled) {
     animation: none;
