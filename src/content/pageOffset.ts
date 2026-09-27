@@ -13,6 +13,25 @@ let windowSyncTimer = 0;
 let layoutGen = 0;
 let ignoreWindowResize = false;
 let hostGuard: MutationObserver | null = null;
+let primeGuard: MutationObserver | null = null;
+let primeRetryTimer = 0;
+let primeApplying = false;
+
+const PRIME_DOCK_ATTR = "data-chillax-prime-dock";
+const PRIME_SHELL_SELECTORS = [
+  "#dv-web-player",
+  ".webPlayerContainer",
+  ".webPlayerUIContainer",
+  ".atvwebplayersdk-player-container",
+  ".atvwebplayersdk-player-root",
+];
+const PRIME_INNER_SELECTORS = [
+  ".scalingVideoContainer",
+  ".scalingVideoContainerBottom",
+  ".rendererContainer",
+  ".cascadingWindowsParent",
+  ".media-element-container",
+];
 
 function offsetCss(): string {
   const space = `${OVERLAY_RESERVE}px`;
@@ -296,6 +315,121 @@ function windowIsUsable() {
   return !document.hidden && window.innerWidth >= 480 && window.innerHeight >= 240;
 }
 
+function clearPrimeInline(el: HTMLElement) {
+  if (!el.hasAttribute(PRIME_DOCK_ATTR)) return;
+  for (const prop of [
+    "position",
+    "inset",
+    "top",
+    "left",
+    "right",
+    "bottom",
+    "width",
+    "max-width",
+    "height",
+    "max-height",
+    "box-sizing",
+    "object-fit",
+  ]) {
+    el.style.removeProperty(prop);
+  }
+  el.removeAttribute(PRIME_DOCK_ATTR);
+}
+
+function collectPrimeNodes(selectors: string[]): HTMLElement[] {
+  const nodes = new Set<HTMLElement>();
+  for (const sel of selectors) {
+    document.querySelectorAll<HTMLElement>(sel).forEach((el) => nodes.add(el));
+  }
+  return [...nodes];
+}
+
+/**
+ * Prime fights stylesheet overrides with continuous inline sizing against the
+ * viewport. Pin shells with inline !important and re-apply when the player rebuilds.
+ */
+function sizePrimePlayer(docked: boolean) {
+  if (primeApplying) return;
+  primeApplying = true;
+  try {
+    if (!docked) {
+      document
+        .querySelectorAll<HTMLElement>(`[${PRIME_DOCK_ATTR}]`)
+        .forEach((el) => clearPrimeInline(el));
+      return;
+    }
+
+    const widthPx = `${leftoverWidth()}px`;
+    const heightPx = `${Math.max(160, window.innerHeight)}px`;
+
+    for (const el of collectPrimeNodes(PRIME_SHELL_SELECTORS)) {
+      el.setAttribute(PRIME_DOCK_ATTR, "shell");
+      el.style.setProperty("position", "fixed", "important");
+      el.style.setProperty("top", "0px", "important");
+      el.style.setProperty("left", "0px", "important");
+      el.style.setProperty("right", "auto", "important");
+      el.style.setProperty("bottom", "0px", "important");
+      el.style.setProperty("width", widthPx, "important");
+      el.style.setProperty("max-width", widthPx, "important");
+      el.style.setProperty("height", heightPx, "important");
+      el.style.setProperty("max-height", heightPx, "important");
+      el.style.setProperty("box-sizing", "border-box", "important");
+    }
+
+    for (const el of collectPrimeNodes(PRIME_INNER_SELECTORS)) {
+      el.setAttribute(PRIME_DOCK_ATTR, "inner");
+      el.style.setProperty("width", "100%", "important");
+      el.style.setProperty("max-width", "100%", "important");
+      el.style.setProperty("height", "100%", "important");
+      el.style.setProperty("max-height", "100%", "important");
+      el.style.setProperty("left", "0px", "important");
+      el.style.setProperty("right", "0px", "important");
+      el.style.setProperty("box-sizing", "border-box", "important");
+    }
+
+    document
+      .querySelectorAll<HTMLVideoElement>(
+        "#dv-web-player video, .webPlayerContainer video, .atvwebplayersdk-player-container video",
+      )
+      .forEach((video) => {
+        video.setAttribute(PRIME_DOCK_ATTR, "video");
+        video.style.setProperty("width", "100%", "important");
+        video.style.setProperty("height", "100%", "important");
+        video.style.setProperty("max-width", "100%", "important");
+        video.style.setProperty("max-height", "100%", "important");
+        video.style.setProperty("object-fit", "contain", "important");
+      });
+  } finally {
+    primeApplying = false;
+  }
+}
+
+function watchPrimeDock(active: boolean) {
+  primeGuard?.disconnect();
+  primeGuard = null;
+  window.clearTimeout(primeRetryTimer);
+  if (!active) {
+    sizePrimePlayer(false);
+    return;
+  }
+
+  const bump = () => {
+    window.clearTimeout(primeRetryTimer);
+    primeRetryTimer = window.setTimeout(() => sizePrimePlayer(true), 40);
+  };
+
+  sizePrimePlayer(true);
+  primeGuard = new MutationObserver(bump);
+  primeGuard.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+  // Amazon rewrites shell geometry after ads / quality changes without a DOM swap.
+  primeRetryTimer = window.setTimeout(() => sizePrimePlayer(true), 120);
+  window.setTimeout(() => sizePrimePlayer(true), 400);
+  window.setTimeout(() => sizePrimePlayer(true), 1000);
+}
+
 function windowedPlayerSize() {
   const cap = leftoverWidth();
   const box =
@@ -315,6 +449,10 @@ function sizePlayerToReserve() {
     if (gen !== layoutGen) return;
     placeHost();
     if (document.fullscreenElement || !windowIsUsable()) return;
+    // Keep Prime pinned before the synthetic resize so Amazon measures the docked shell.
+    if (document.documentElement.classList.contains("chillax-overlay-open")) {
+      sizePrimePlayer(true);
+    }
     ignoreWindowResize = true;
     window.dispatchEvent(new Event("resize"));
     ignoreWindowResize = false;
@@ -374,6 +512,7 @@ export function pushPageOffset(platform: Platform, open: boolean) {
   const party = inSession();
   const docked = isWindowDock(open);
   const lounge = open && !party;
+  const primeDock = platform === "prime" && docked && !fullscreen;
   placeHost();
   watchHostParent();
 
@@ -401,12 +540,14 @@ export function pushPageOffset(platform: Platform, open: boolean) {
     existing?.remove();
     setInjectedStyle(LOUNGE_STYLE_ID, loungeCss());
     if (platform === "youtube") collapseYouTubeGuide();
+    watchPrimeDock(false);
     placeHost();
     return;
   }
   setInjectedStyle(LOUNGE_STYLE_ID, null);
   if (!docked) {
     existing?.remove();
+    watchPrimeDock(false);
     if (fullscreen) {
       fillFullscreenPlayer(false);
       window.setTimeout(() => fillFullscreenPlayer(false), 80);
@@ -421,12 +562,14 @@ export function pushPageOffset(platform: Platform, open: boolean) {
   style.id = STYLE_ID;
   style.textContent = offsetCss();
   if (!existing) (document.head || root).appendChild(style);
+  watchPrimeDock(primeDock);
   if (fullscreen) {
     fillFullscreenPlayer(true);
     window.setTimeout(() => fillFullscreenPlayer(true), 80);
     window.setTimeout(() => fillFullscreenPlayer(true), 280);
   } else {
     sizePlayerToReserve();
+    if (primeDock) sizePrimePlayer(true);
   }
 }
 

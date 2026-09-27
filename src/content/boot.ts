@@ -17,6 +17,7 @@ import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
+import { mountSiteLaunchButton } from "./siteLaunchButton";
 
 const applying = { current: false };
 let mediaWindow: Window | null = null;
@@ -619,6 +620,7 @@ export async function boot(adapter: PlayerAdapter) {
   };
 
   mountOverlay(session);
+  mountSiteLaunchButton(session);
   pushPageOffset(adapter.platform, getState().overlayOpen);
   watchFullscreen(adapter.platform, () => getState().overlayOpen);
 
