@@ -120,7 +120,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               onClick={() => session.setController(person.peerId, !canDrive)}
             >
               <span className={`presence${online ? " is-on" : ""}`} title={statusLabel} aria-label={statusLabel} />
-              <AvatarFace avatarId={person.avatarId} size={22} />
+              <AvatarFace avatarId={person.avatarId} size={20} />
               {person.nickname}
               {canDrive ? " · drive" : ""}
               {awayBit}
@@ -134,7 +134,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             title={titleBits.join(" · ") || undefined}
           >
             <span className={`presence${online ? " is-on" : ""}`} title={statusLabel} aria-label={statusLabel} />
-            <AvatarFace avatarId={person.avatarId} size={22} />
+            <AvatarFace avatarId={person.avatarId} size={20} />
             {isYou ? "You" : person.nickname}
             {roleBit}
             {awayBit}
