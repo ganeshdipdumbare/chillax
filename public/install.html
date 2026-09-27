@@ -65,6 +65,15 @@
           --ink-hover: #fff;
           --shadow-card: 0 20px 76px rgb(0 0 0 / 0.5);
         }
+        body::before {
+          background:
+            radial-gradient(ellipse 70% 55% at 12% 8%, rgb(28 82 93 / 0.45), transparent 62%),
+            radial-gradient(ellipse 55% 45% at 92% 4%, rgb(77 42 31 / 0.4), transparent 58%),
+            radial-gradient(ellipse 50% 40% at 78% 42%, rgb(28 82 93 / 0.22), transparent 65%),
+            radial-gradient(ellipse 45% 35% at 18% 72%, rgb(77 42 31 / 0.2), transparent 60%),
+            radial-gradient(ellipse 40% 30% at 88% 88%, rgb(28 82 93 / 0.25), transparent 55%),
+            var(--canvas);
+        }
       }
       * {
         box-sizing: border-box;
@@ -86,24 +95,25 @@
         line-height: 1.7;
         -webkit-font-smoothing: antialiased;
       }
+      body::before {
+        content: "";
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(ellipse 70% 55% at 12% 8%, rgb(195 211 206 / 0.55), transparent 62%),
+          radial-gradient(ellipse 55% 45% at 92% 4%, rgb(248 219 202 / 0.48), transparent 58%),
+          radial-gradient(ellipse 50% 40% at 78% 42%, rgb(173 180 156 / 0.2), transparent 65%),
+          radial-gradient(ellipse 45% 35% at 18% 72%, rgb(248 219 202 / 0.22), transparent 60%),
+          radial-gradient(ellipse 40% 30% at 88% 88%, rgb(195 211 206 / 0.28), transparent 55%),
+          var(--canvas);
+      }
       .stage {
         position: relative;
         overflow: hidden;
         margin: 0 0 56px;
         padding: 8px 0 12px;
-        border-radius: 0 0 40px 40px;
-      }
-      .stage::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: -20% -10% auto;
-        height: 78%;
-        z-index: 0;
-        background:
-          radial-gradient(ellipse 55% 60% at 18% 20%, rgb(195 211 206 / 0.55), transparent 70%),
-          radial-gradient(ellipse 45% 50% at 88% 8%, rgb(248 219 202 / 0.5), transparent 65%),
-          radial-gradient(ellipse 40% 40% at 70% 70%, rgb(173 180 156 / 0.22), transparent 70%);
       }
       .sky {
         pointer-events: none;
