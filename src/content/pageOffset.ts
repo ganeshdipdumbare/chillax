@@ -44,7 +44,6 @@ html.chillax-overlay-open .content-video-player,
 html.chillax-overlay-open .PlayerCenterWrapper,
 html.chillax-overlay-open .HuluPlayer,
 html.chillax-overlay-open .hulu-player,
-html.chillax-overlay-open [class*="PlayerContainer"],
 html.chillax-overlay-open [data-testid="player"],
 html.chillax-overlay-open [data-testid="player-ui-container"],
 html.chillax-overlay-open [data-testid="video-player"],
@@ -56,7 +55,6 @@ html.chillax-overlay-open .video-player-wrapper,
 html.chillax-overlay-open .video-player,
 html.chillax-overlay-open .video-player-container,
 html.chillax-overlay-open .video-player__container,
-html.chillax-overlay-open .player-container,
 html.chillax-overlay-open .player-view-content,
 html.chillax-overlay-open .layout-player,
 html.chillax-overlay-open .videoContainer,
@@ -132,7 +130,9 @@ ${bleed} {
   max-width: none !important;
   box-sizing: border-box !important;
 }
-html.chillax-overlay-open video {
+/* Cap HTML5 streamers only — never touch YouTube's .html5-main-video
+   (absolute pixel sizing via setSize; max-height:100% blanks the picture). */
+html.chillax-overlay-open:not(:has(ytd-app)) video {
   max-width: 100% !important;
   max-height: 100% !important;
   object-fit: contain !important;
@@ -195,7 +195,10 @@ function exitYouTubeTheater() {
 function scheduleExitTheater() {
   window.clearTimeout(theaterTimer);
   exitYouTubeTheater();
-  theaterTimer = window.setTimeout(exitYouTubeTheater, 280);
+  theaterTimer = window.setTimeout(() => {
+    exitYouTubeTheater();
+    sizePlayerToReserve();
+  }, 280);
 }
 
 function youtubePlayer() {
@@ -264,7 +267,7 @@ function windowedPlayerSize() {
   return { width, height };
 }
 
-function sizePlayerToReserve(restore = false) {
+function sizePlayerToReserve() {
   const gen = ++layoutGen;
   const apply = () => {
     if (gen !== layoutGen) return;
@@ -273,7 +276,7 @@ function sizePlayerToReserve(restore = false) {
     ignoreWindowResize = true;
     window.dispatchEvent(new Event("resize"));
     ignoreWindowResize = false;
-    if (!restore) return;
+    // YouTube paints from explicit setSize; resize alone can leave a blank/blurred frame.
     const { width, height } = windowedPlayerSize();
     youtubePlayer()?.setSize?.(width, height);
   };
@@ -367,7 +370,7 @@ export function pushPageOffset(platform: Platform, open: boolean) {
       window.setTimeout(() => fillFullscreenPlayer(false), 80);
       window.setTimeout(() => fillFullscreenPlayer(false), 280);
     } else {
-      sizePlayerToReserve(true);
+      sizePlayerToReserve();
     }
     return;
   }
@@ -381,7 +384,7 @@ export function pushPageOffset(platform: Platform, open: boolean) {
     window.setTimeout(() => fillFullscreenPlayer(true), 80);
     window.setTimeout(() => fillFullscreenPlayer(true), 280);
   } else {
-    sizePlayerToReserve(false);
+    sizePlayerToReserve();
   }
 }
 
