@@ -41,18 +41,16 @@ export type Participant = {
 export type ReactionBurst = {
   id: string;
   emoji: string;
+  /** Horizontal position (%). */
   x: number;
+  /** Vertical position (%). */
+  y: number;
   spin: number;
-  /** Stagger before the float starts (ms). */
+  /** Stagger before the pop starts (ms). */
   delay: number;
   size: number;
-  drift: number;
-  /** Sideways sway at mid-flight (px). */
-  sway: number;
-  /** Total float duration (ms). */
+  /** Total pop duration (ms). */
   duration: number;
-  /** Extra rotation over the flight (deg). */
-  spinEnd: number;
 };
 
 export type ContentState = {

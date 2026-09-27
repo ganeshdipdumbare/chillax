@@ -9,16 +9,14 @@ export function ReactionSky({ bursts }: { bursts: ReactionBurst[] }) {
           className="floatie"
           style={{
             left: `${burst.x}%`,
+            top: `${burst.y}%`,
             animationDelay: `${burst.delay}ms`,
             animationDuration: `${burst.duration}ms`,
             ["--spin" as string]: `${burst.spin}deg`,
-            ["--spin-end" as string]: `${burst.spinEnd}deg`,
-            ["--drift" as string]: `${burst.drift}px`,
-            ["--sway" as string]: `${burst.sway}px`,
             ["--float-size" as string]: `${burst.size}px`,
           }}
         >
-          <span className="floatie-face">{burst.emoji}</span>
+          {burst.emoji}
         </span>
       ))}
     </div>

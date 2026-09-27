@@ -243,74 +243,47 @@ button {
 
 .floatie {
   position: absolute;
-  bottom: 8%;
-  left: 0;
   display: grid;
   place-items: center;
   width: var(--float-size, 44px);
   height: var(--float-size, 44px);
+  margin: 0;
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
   font-size: var(--float-size, 44px);
   line-height: 1;
   font-style: normal;
   font-variant-emoji: emoji;
-  filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.2));
-  animation-name: float-live;
-  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.28));
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  animation-name: react-pop;
+  animation-timing-function: cubic-bezier(0.22, 1.2, 0.36, 1);
   animation-fill-mode: both;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
-.floatie-face {
-  display: block;
-  transform-origin: center;
-  animation: emoji-live 1.6s ease-in-out infinite alternate;
-}
-
-@keyframes float-live {
+/* Instagram-style: pop in place, hold, fade out (no long float). */
+@keyframes react-pop {
   0% {
     opacity: 0;
-    transform: translate3d(0, 6vh, 0) scale(0.45)
-      rotate(calc(var(--spin, 0deg) * 0.35));
+    transform: translate(-50%, -50%) scale(0.35) rotate(var(--spin, 0deg));
   }
-  8% {
+  16% {
     opacity: 1;
-    transform: translate3d(calc(var(--drift, 0px) * 0.15), 0, 0) scale(1.05)
-      rotate(var(--spin, 0deg));
+    transform: translate(-50%, -50%) scale(1.2) rotate(var(--spin, 0deg));
   }
-  42% {
-    transform: translate3d(
-        calc(var(--drift, 0px) * 0.45 + var(--sway, 0px)),
-        -38vh,
-        0
-      )
-      scale(1)
-      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg) * 0.45));
-  }
-  72% {
+  28% {
     opacity: 1;
-    transform: translate3d(
-        calc(var(--drift, 0px) * 0.78 - var(--sway, 0px) * 0.35),
-        -64vh,
-        0
-      )
-      scale(1.04)
-      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg) * 0.75));
+    transform: translate(-50%, -50%) scale(1) rotate(var(--spin, 0deg));
+  }
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -54%) scale(1) rotate(var(--spin, 0deg));
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--drift, 0px), -90vh, 0) scale(0.88)
-      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg)));
-  }
-}
-
-@keyframes emoji-live {
-  from {
-    transform: rotate(-10deg) translateX(-2px);
-  }
-  to {
-    transform: rotate(11deg) translateX(2px);
+    transform: translate(-50%, -58%) scale(0.92) rotate(var(--spin, 0deg));
   }
 }
 
@@ -1212,7 +1185,6 @@ button.chip:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .floatie,
-  .floatie-face,
   .react-btn:hover:not(:disabled),
   .switch::after,
   .spot-art .sparkle,
