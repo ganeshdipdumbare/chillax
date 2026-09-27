@@ -43,9 +43,16 @@ export type ReactionBurst = {
   emoji: string;
   x: number;
   spin: number;
-  wobble: number;
+  /** Stagger before the float starts (ms). */
+  delay: number;
   size: number;
   drift: number;
+  /** Sideways sway at mid-flight (px). */
+  sway: number;
+  /** Total float duration (ms). */
+  duration: number;
+  /** Extra rotation over the flight (deg). */
+  spinEnd: number;
 };
 
 export type ContentState = {

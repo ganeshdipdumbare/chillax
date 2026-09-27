@@ -1,22 +1,34 @@
 import type { ReactionBurst } from "./types";
 
-export function makeBurst(emoji: string, stagger = 0): ReactionBurst {
+function rand(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
+function randInt(min: number, max: number) {
+  return Math.round(rand(min, max));
+}
+
+export function makeBurst(emoji: string): ReactionBurst {
   return {
     id: crypto.randomUUID(),
     emoji,
-    x: 10 + Math.random() * 72,
-    spin: Math.round(-16 + Math.random() * 32),
-    wobble: stagger + Math.round(Math.random() * 80),
-    size: 30 + Math.round(Math.random() * 22),
-    drift: Math.round(-64 + Math.random() * 128),
+    x: rand(4, 88),
+    spin: randInt(-48, 48),
+    delay: randInt(0, 520),
+    size: randInt(24, 54),
+    drift: randInt(-140, 140),
+    sway: randInt(-56, 56),
+    duration: randInt(2200, 4200),
+    spinEnd: randInt(8, 42) * (Math.random() < 0.5 ? -1 : 1),
   };
 }
 
+/** Handful of the same emoji with independent timing and paths. */
 export function sprayBursts(emoji: string): ReactionBurst[] {
-  const count = 8 + Math.floor(Math.random() * 3);
-  return Array.from({ length: count }, (_, index) => makeBurst(emoji, index * 42));
+  const count = randInt(5, 9);
+  return Array.from({ length: count }, () => makeBurst(emoji));
 }
 
 export function burstTtlMs(burst: ReactionBurst) {
-  return 3400 + burst.wobble;
+  return burst.delay + burst.duration + 80;
 }

@@ -24,7 +24,27 @@ export const AVATARS: Avatar[] = [
   { id: "disco", emoji: "🪩", name: "Disco", fill: "#181e1d" },
 ];
 
-export const REACTIONS = ["😂", "❤️", "🔥", "👏", "😮", "😭", "🎉", "💀", "👀", "🍿"] as const;
+/** Two rows of watch-party reactions (feelings + movie night). */
+export const REACTIONS = [
+  "😂",
+  "❤️",
+  "🔥",
+  "👏",
+  "😮",
+  "😭",
+  "😱",
+  "🤯",
+  "💀",
+  "👀",
+  "🍿",
+  "🎬",
+  "🎭",
+  "✨",
+  "😴",
+  "🤮",
+  "🥹",
+  "💯",
+] as const;
 export type ReactionEmoji = (typeof REACTIONS)[number];
 
 export function getAvatar(id?: string | null): Avatar {

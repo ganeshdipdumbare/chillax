@@ -243,7 +243,7 @@ button {
 
 .floatie {
   position: absolute;
-  bottom: 10%;
+  bottom: 8%;
   left: 0;
   display: grid;
   place-items: center;
@@ -255,42 +255,62 @@ button {
   font-style: normal;
   font-variant-emoji: emoji;
   filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.2));
-  animation: float-live 3.2s linear both;
+  animation-name: float-live;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
   will-change: transform, opacity;
+  pointer-events: none;
 }
 
 .floatie-face {
   display: block;
   transform-origin: center;
-  animation: emoji-live 2.2s ease-in-out infinite alternate;
+  animation: emoji-live 1.6s ease-in-out infinite alternate;
 }
 
 @keyframes float-live {
   0% {
     opacity: 0;
-    transform: translate3d(0, 4vh, 0) scale(0.62) rotate(var(--spin, 0deg));
+    transform: translate3d(0, 6vh, 0) scale(0.45)
+      rotate(calc(var(--spin, 0deg) * 0.35));
   }
-  12% {
+  8% {
     opacity: 1;
-    transform: translate3d(calc(var(--drift, 0px) * 0.12), 0, 0) scale(1)
+    transform: translate3d(calc(var(--drift, 0px) * 0.15), 0, 0) scale(1.05)
       rotate(var(--spin, 0deg));
   }
-  78% {
+  42% {
+    transform: translate3d(
+        calc(var(--drift, 0px) * 0.45 + var(--sway, 0px)),
+        -38vh,
+        0
+      )
+      scale(1)
+      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg) * 0.45));
+  }
+  72% {
     opacity: 1;
+    transform: translate3d(
+        calc(var(--drift, 0px) * 0.78 - var(--sway, 0px) * 0.35),
+        -64vh,
+        0
+      )
+      scale(1.04)
+      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg) * 0.75));
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--drift, 0px), -82vh, 0) scale(1.06)
-      rotate(calc(var(--spin, 0deg) + 8deg));
+    transform: translate3d(var(--drift, 0px), -90vh, 0) scale(0.88)
+      rotate(calc(var(--spin, 0deg) + var(--spin-end, 12deg)));
   }
 }
 
 @keyframes emoji-live {
   from {
-    transform: rotate(-6deg);
+    transform: rotate(-10deg) translateX(-2px);
   }
   to {
-    transform: rotate(7deg);
+    transform: rotate(11deg) translateX(2px);
   }
 }
 
@@ -1131,28 +1151,30 @@ button.chip:focus-visible {
 }
 
 .react-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 4px;
   padding: 10px 18px;
-  overflow: auto;
   border-top: 1px solid var(--line);
 }
 
 .react-btn {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0;
   border: 0;
   border-radius: var(--radius);
   background: var(--sunken);
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1;
   font-variant-emoji: emoji;
   cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
 }
 
 .react-btn:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.12) rotate(-8deg);
+  transform: translateY(-2px) scale(1.14) rotate(-6deg);
   background: var(--inset);
 }
 
