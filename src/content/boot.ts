@@ -82,7 +82,8 @@ function partyInitRole() {
 }
 
 function partyInitRoomId() {
-  return pendingRoomId || getState().party?.roomId || null;
+  // Prefer the live party id so a reminted host code survives iframe reloads.
+  return getState().party?.roomId || pendingRoomId || null;
 }
 
 function sendPartyInit(adapter: PlayerAdapter) {
@@ -752,12 +753,15 @@ export async function boot(adapter: PlayerAdapter) {
     }
     if (data.type === "ready" && data.peerId) {
       const role = pendingRole || getState().party?.role;
-      const roomId = pendingRole
-        ? pendingRole === "host"
+      if (!role) return;
+      // Host peer id is the party code — always take the live one (remint / iframe reload).
+      const roomId =
+        role === "host"
           ? data.peerId
-          : pendingRoomId || data.peerId
-        : getState().party?.roomId || data.peerId;
-      if (!role || !roomId) return;
+          : pendingRoomId || getState().party?.roomId || data.peerId;
+      if (!roomId) return;
+      pendingRoomId = roomId;
+      if (role === "host") rememberHostRoom(roomId);
       const inviteUrl = buildInviteUrl(
         adapter.platform,
         adapter.getContentId() || "",

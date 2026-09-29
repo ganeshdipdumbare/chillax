@@ -103,12 +103,15 @@ export class PeerRoom {
     this.handlers.onReady(this.peer.id);
   }
 
-  private connectToHost(hostId: string) {
+  private connectToHost(hostId: string, attempt = 0) {
     return new Promise<void>((resolve, reject) => {
       const peer = this.peer!;
       const conn = peer.connect(hostId, { reliable: true });
       const networkBlocked = new Error(
         "Found the party, but your networks could not connect directly. Try home Wi‑Fi without a VPN on both sides.",
+      );
+      const partyClosed = new Error(
+        "That party isn’t open right now. Ask the host to keep the party tab open and send a fresh link.",
       );
       let settled = false;
       const timer = window.setTimeout(() => {
@@ -118,7 +121,19 @@ export class PeerRoom {
       const onPeerError = (err: unknown) => {
         if (peerErrorType(err) !== "peer-unavailable") return;
         conn.close();
-        done(new Error("That party isn’t open right now. Ask the host to keep the party tab open and send a fresh link."));
+        // PeerJS cloud can lag right after the host opens; retry before treating as closed.
+        if (attempt < 4 && !this.tearingDown) {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          peer.off("error", onPeerError);
+          conn.peerConnection?.removeEventListener("iceconnectionstatechange", onIceChange);
+          window.setTimeout(() => {
+            this.connectToHost(hostId, attempt + 1).then(resolve, reject);
+          }, 500 * (attempt + 1));
+          return;
+        }
+        done(partyClosed);
       };
       const onIceChange = () => {
         if (conn.peerConnection?.iceConnectionState !== "failed") return;
@@ -412,12 +427,16 @@ export class PeerRoom {
     });
     conn.on("close", () => {
       if (this.tearingDown) return;
+      const wasConnected = this.connections.has(conn.peer);
       this.dropPeer(conn.peer);
       if (this.isHost) {
+        if (!wasConnected) return;
         this.send({ type: "bye", peerId: conn.peer });
         this.broadcastPeerList();
         return;
       }
+      // Ignore closes from failed join attempts (never opened).
+      if (!wasConnected) return;
       window.setTimeout(() => {
         if (this.tearingDown || this.connections.size > 0) return;
         this.handlers.onHostLeft();
