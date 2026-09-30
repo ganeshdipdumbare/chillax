@@ -11,7 +11,7 @@ type RoomHandlers = {
   onProtocol: (message: ProtocolMessage, fromPeerId: string) => void;
   onParticipants: (participants: Participant[]) => void;
   onError: (message: string) => void;
-  onReady: (peerId: string) => void;
+  onReady: (peerId: string, role: "host" | "guest") => void;
   onCallStatus: (connected: boolean, detail?: string) => void;
   onDataOpen: () => void;
   onHostLeft: () => void;
@@ -27,6 +27,22 @@ function peerErrorType(err: unknown): string | undefined {
     return type || undefined;
   }
   return undefined;
+}
+
+const JOIN_DEADLINE_MS = 30_000;
+const ATTEMPT_TIMEOUT_MS = 4_000;
+const ANSWERED_TIMEOUT_MS = 10_000;
+const NETWORK_BLOCKED =
+  "Found the party, but your networks could not connect directly. Try home Wi‑Fi without a VPN on both sides.";
+const PARTY_CLOSED =
+  "That party isn’t open right now. Ask the host to keep the party tab open and send a fresh link.";
+
+type HostAttempt = "unavailable" | "timeout" | "ice-failed";
+
+class HostIdTakenError extends Error {}
+
+function joinRetryDelay(attempt: number) {
+  return Math.min(500 * (attempt + 1), 3000);
 }
 
 function mapPeerError(err: unknown): string {
@@ -70,6 +86,10 @@ export class PeerRoom {
   private silentAudioCtx: AudioContext | null = null;
   private muteOp = 0;
   private tearingDown = false;
+  private hostId: string | null = null;
+  private reconnectingHost = false;
+  private signalRetry = 0;
+  private signalTimer = 0;
   localNickname = "Guest";
   localAvatarId = "fox";
 
@@ -81,78 +101,125 @@ export class PeerRoom {
     return this.peer?.id ?? null;
   }
 
-  async startHost(roomId: string, stream: MediaStream, nickname: string, avatarId: string) {
+  /**
+   * `fresh` marks a newly minted code nobody has seen yet. A known code that is already
+   * live elsewhere (another tab, a duplicated tab) means the party exists, so join it.
+   */
+  async startHost(
+    roomId: string,
+    stream: MediaStream,
+    nickname: string,
+    avatarId: string,
+    fresh = false,
+  ) {
     this.isHost = true;
     this.localStream = stream;
     this.localNickname = nickname;
     this.localAvatarId = avatarId;
     this.nicknames.set(roomId, nickname);
     this.avatars.set(roomId, avatarId);
-    await this.openPeer(roomId);
+    try {
+      await this.openPeer(roomId, 0, fresh);
+    } catch (err) {
+      if (!(err instanceof HostIdTakenError) || this.tearingDown) throw err;
+      this.nicknames.delete(roomId);
+      this.avatars.delete(roomId);
+      await this.join(roomId, stream, nickname, avatarId);
+    }
   }
 
   async join(hostId: string, stream: MediaStream, nickname: string, avatarId: string) {
     this.isHost = false;
+    this.hostId = hostId;
     this.localStream = stream;
     this.localNickname = nickname;
     this.localAvatarId = avatarId;
     const guestId = await loadGuestPeerId();
     await this.openPeer(guestId);
+    if (this.tearingDown) return;
     if (!this.peer) throw new Error("Could not start peer");
     await this.connectToHost(hostId);
-    this.handlers.onReady(this.peer.id);
+    if (this.tearingDown || !this.peer) return;
+    this.handlers.onReady(this.peer.id, "guest");
   }
 
-  private connectToHost(hostId: string, attempt = 0) {
+  private waitForSignaling(peer: Peer) {
+    if (!peer.disconnected) return Promise.resolve();
     return new Promise<void>((resolve, reject) => {
-      const peer = this.peer!;
-      const conn = peer.connect(hostId, { reliable: true });
-      const networkBlocked = new Error(
-        "Found the party, but your networks could not connect directly. Try home Wi‑Fi without a VPN on both sides.",
-      );
-      const partyClosed = new Error(
-        "That party isn’t open right now. Ask the host to keep the party tab open and send a fresh link.",
-      );
-      let settled = false;
       const timer = window.setTimeout(() => {
-        conn.close();
-        done(networkBlocked);
-      }, 15000);
-      const onPeerError = (err: unknown) => {
-        if (peerErrorType(err) !== "peer-unavailable") return;
-        conn.close();
-        // PeerJS cloud can lag right after the host opens; retry before treating as closed.
-        if (attempt < 4 && !this.tearingDown) {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timer);
-          peer.off("error", onPeerError);
-          conn.peerConnection?.removeEventListener("iceconnectionstatechange", onIceChange);
-          window.setTimeout(() => {
-            this.connectToHost(hostId, attempt + 1).then(resolve, reject);
-          }, 500 * (attempt + 1));
-          return;
-        }
-        done(partyClosed);
+        peer.off("open", onOpen);
+        reject(new Error(mapPeerError({ type: "network" })));
+      }, 20000);
+      const onOpen = () => {
+        window.clearTimeout(timer);
+        resolve();
       };
-      const onIceChange = () => {
-        if (conn.peerConnection?.iceConnectionState !== "failed") return;
-        conn.close();
-        done(networkBlocked);
-      };
-      const done = (error?: Error) => {
+      peer.once("open", onOpen);
+    });
+  }
+
+  /**
+   * The broker holds an offer for a missing peer for a few seconds, so an attempt made while the
+   * host is reloading can hang instead of failing. Retry on both "unavailable" and silence until
+   * the deadline; only an ICE failure means the networks truly can't reach each other.
+   */
+  private async connectToHost(hostId: string): Promise<void> {
+    const deadline = Date.now() + JOIN_DEADLINE_MS;
+    let lastFailure: HostAttempt = "unavailable";
+    for (let attempt = 0; ; attempt += 1) {
+      const peer = this.peer;
+      if (!peer || this.tearingDown) return;
+      await this.waitForSignaling(peer);
+      if (this.tearingDown || this.peer !== peer) return;
+      const result = await this.attemptHost(peer, hostId);
+      if (result === "open" || this.tearingDown) return;
+      if (result === "ice-failed") throw new Error(NETWORK_BLOCKED);
+      lastFailure = result;
+      if (Date.now() + joinRetryDelay(attempt) >= deadline) break;
+      this.handlers.onCallStatus(false, "Waiting for the host to open the party…");
+      await new Promise((resolve) => window.setTimeout(resolve, joinRetryDelay(attempt)));
+    }
+    throw new Error(lastFailure === "timeout" ? NETWORK_BLOCKED : PARTY_CLOSED);
+  }
+
+  private attemptHost(peer: Peer, hostId: string) {
+    return new Promise<HostAttempt | "open">((resolve) => {
+      const conn = peer.connect(hostId, { reliable: true });
+      if (!conn) {
+        resolve("timeout");
+        return;
+      }
+      let settled = false;
+      const done = (result: HostAttempt | "open") => {
         if (settled) return;
         settled = true;
         window.clearTimeout(timer);
         peer.off("error", onPeerError);
         conn.peerConnection?.removeEventListener("iceconnectionstatechange", onIceChange);
-        if (error) reject(error);
-        else resolve();
+        if (result !== "open") conn.close();
+        resolve(result);
+      };
+      let timer = window.setTimeout(() => {
+        // Host answered, so ICE is just slow (relay); give it longer before starting over.
+        if (conn.peerConnection?.remoteDescription) {
+          timer = window.setTimeout(() => done("timeout"), ANSWERED_TIMEOUT_MS);
+          return;
+        }
+        done("timeout");
+      }, ATTEMPT_TIMEOUT_MS);
+      const onPeerError = (err: unknown) => {
+        if (peerErrorType(err) !== "peer-unavailable") return;
+        const message = err instanceof Error ? err.message : "";
+        if (message && !message.includes(hostId)) return;
+        done("unavailable");
+      };
+      const onIceChange = () => {
+        if (conn.peerConnection?.iceConnectionState === "failed") done("ice-failed");
       };
       peer.on("error", onPeerError);
       conn.peerConnection?.addEventListener("iceconnectionstatechange", onIceChange);
-      conn.once("open", () => done());
-      conn.once("error", (err) => done(new Error(mapPeerError(err))));
+      conn.once("open", () => done("open"));
+      conn.once("error", () => done("timeout"));
       this.attachData(conn);
     });
   }
@@ -271,12 +338,16 @@ export class PeerRoom {
     return this.remoteStreams.get(peerId);
   }
 
-  destroy() {
+  /** `sayBye` is for a deliberate leave; a reloading iframe stays quiet so guests reconnect. */
+  destroy(sayBye = true) {
     if (this.tearingDown) return;
     this.tearingDown = true;
     window.clearTimeout(this.disconnectSweep);
+    window.clearTimeout(this.signalTimer);
+    window.removeEventListener("online", this.onWake);
+    document.removeEventListener("visibilitychange", this.onWake);
     const peerId = this.peer?.id;
-    if (peerId) {
+    if (peerId && sayBye) {
       try {
         this.send({ type: "bye", peerId });
       } catch {
@@ -318,6 +389,10 @@ export class PeerRoom {
     }
     if (message.type === "bye") {
       this.dropPeer(message.peerId);
+      if (!this.isHost && message.peerId === this.hostId) {
+        this.handlers.onHostLeft();
+        return;
+      }
     }
     if (
       this.isHost &&
@@ -340,7 +415,25 @@ export class PeerRoom {
     return false;
   }
 
-  private async openPeer(id?: string, attempt = 0): Promise<void> {
+  private onWake = () => {
+    if (document.visibilityState === "hidden") return;
+    const peer = this.peer;
+    if (!peer || this.tearingDown || peer.destroyed || !peer.disconnected) return;
+    this.signalRetry = 0;
+    this.scheduleSignalReconnect(peer);
+  };
+
+  private scheduleSignalReconnect(peer: Peer) {
+    window.clearTimeout(this.signalTimer);
+    const wait = this.signalRetry === 0 ? 0 : Math.min(1000 * 2 ** (this.signalRetry - 1), 15000);
+    this.signalRetry += 1;
+    this.signalTimer = window.setTimeout(() => {
+      if (this.tearingDown || this.peer !== peer || peer.destroyed || !peer.disconnected) return;
+      peer.reconnect();
+    }, wait);
+  }
+
+  private async openPeer(id?: string, attempt = 0, fresh = false): Promise<void> {
     if (this.tearingDown) return;
     this.peer?.destroy();
     const iceServers = await loadIceServers();
@@ -348,10 +441,16 @@ export class PeerRoom {
     const options = { ...PEER_CONFIG, config: { ...PEER_CONFIG.config, iceServers } };
     const peer = id ? new Peer(id, options) : new Peer(options);
     this.peer = peer;
+    let opened = false;
     peer.on("disconnected", () => {
-      if (this.tearingDown || this.peer !== peer) return;
+      if (this.tearingDown || this.peer !== peer || !opened) return;
       this.handlers.onCallStatus(false, "Disconnected from signaling. Reconnecting…");
-      peer.reconnect();
+      this.scheduleSignalReconnect(peer);
+    });
+    peer.on("open", () => {
+      if (!opened || this.tearingDown || this.peer !== peer) return;
+      this.signalRetry = 0;
+      this.handlers.onCallStatus(true);
     });
     peer.on("connection", (conn) => this.attachData(conn));
     peer.on("call", (call) => this.answerCall(call));
@@ -363,11 +462,12 @@ export class PeerRoom {
         );
         peer.once("open", (peerId) => {
           window.clearTimeout(timer);
+          opened = true;
           this.nicknames.set(peerId, this.localNickname);
           this.avatars.set(peerId, this.localAvatarId);
           if (this.isHost) {
             this.controllerIds = [peerId];
-            this.handlers.onReady(peerId);
+            this.handlers.onReady(peerId, "host");
           }
           resolve();
         });
@@ -382,12 +482,14 @@ export class PeerRoom {
       if (id && peerErrorType(err) === "unavailable-id" && attempt < 6 && !this.tearingDown) {
         if (attempt < 4) {
           await new Promise((resolve) => window.setTimeout(resolve, 400 * (attempt + 1)));
-          return this.openPeer(id, attempt + 1);
+          return this.openPeer(id, attempt + 1, fresh);
         }
-        // Host: mint a new party code. Guest: rotate the stored peer id so this browser keeps one identity.
         if (this.isHost) {
-          return this.openPeer(randomRoomId(), attempt + 1);
+          // Someone already holds a code guests know about, so the party is live: join it instead.
+          if (!fresh) throw new HostIdTakenError(mapPeerError(err));
+          return this.openPeer(randomRoomId(), attempt + 1, true);
         }
+        // Rotate the stored guest id so this browser keeps one identity.
         const nextGuestId = await saveGuestPeerId(randomGuestPeerId());
         return this.openPeer(nextGuestId, attempt + 1);
       }
@@ -397,20 +499,36 @@ export class PeerRoom {
       peer.destroy();
       return;
     }
+    window.addEventListener("online", this.onWake);
+    document.addEventListener("visibilitychange", this.onWake);
     peer.on("error", (err) => {
       if (this.tearingDown || this.peer !== peer) return;
+      // Join attempts and mesh calls handle a missing peer themselves.
+      if (peerErrorType(err) === "peer-unavailable") return;
       this.handlers.onCallStatus(false, mapPeerError(err));
     });
   }
 
   private attachData(conn: DataConnection) {
     conn.on("open", () => {
-      if (this.isHost && partyFull(this.connections.size + 1)) {
+      if (this.tearingDown) {
+        conn.close();
+        return;
+      }
+      const previous = this.connections.get(conn.peer);
+      if (this.isHost && !previous && partyFull(this.connections.size + 1)) {
         conn.send(encodeMessage({ type: "room-full" }));
         conn.close();
         return;
       }
       this.connections.set(conn.peer, conn);
+      if (previous && previous !== conn) {
+        // Same peer rejoined (reload, followed the host); its old call is dead too.
+        previous.close();
+        this.calls.get(conn.peer)?.close();
+        this.calls.delete(conn.peer);
+        this.remoteStreams.delete(conn.peer);
+      }
       this.emitParticipants();
       if (this.isHost) this.broadcastPeerList();
       this.broadcastMediaState();
@@ -427,24 +545,34 @@ export class PeerRoom {
     });
     conn.on("close", () => {
       if (this.tearingDown) return;
-      const wasConnected = this.connections.has(conn.peer);
+      // Ignore failed join attempts and connections already replaced by a rejoin.
+      if (this.connections.get(conn.peer) !== conn) return;
       this.dropPeer(conn.peer);
       if (this.isHost) {
-        if (!wasConnected) return;
         this.send({ type: "bye", peerId: conn.peer });
         this.broadcastPeerList();
         return;
       }
-      // Ignore closes from failed join attempts (never opened).
-      if (!wasConnected) return;
-      window.setTimeout(() => {
-        if (this.tearingDown || this.connections.size > 0) return;
-        this.handlers.onHostLeft();
-      }, 4000);
+      if (conn.peer === this.hostId) void this.reconnectToHost();
     });
     conn.on("error", () => {
       this.handlers.onCallStatus(false, "A chat connection failed. Try another network if this keeps happening.");
     });
+  }
+
+  private async reconnectToHost() {
+    const hostId = this.hostId;
+    if (this.reconnectingHost || this.tearingDown || !hostId) return;
+    this.reconnectingHost = true;
+    this.handlers.onCallStatus(false, "Lost the host. Reconnecting…");
+    try {
+      await this.connectToHost(hostId);
+      if (!this.tearingDown) this.handlers.onCallStatus(true);
+    } catch {
+      if (!this.tearingDown && !this.connections.get(hostId)?.open) this.handlers.onHostLeft();
+    } finally {
+      this.reconnectingHost = false;
+    }
   }
 
   private answerCall(call: MediaConnection) {
@@ -465,8 +593,11 @@ export class PeerRoom {
   }
 
   private bindCall(call: MediaConnection) {
+    const previous = this.calls.get(call.peer);
     this.calls.set(call.peer, call);
+    if (previous && previous !== call) previous.close();
     call.on("stream", (stream) => {
+      if (this.calls.get(call.peer) !== call) return;
       this.remoteStreams.set(call.peer, stream);
       this.handlers.onCallStatus(true);
       this.emitParticipants();
@@ -483,6 +614,7 @@ export class PeerRoom {
       );
     });
     call.on("close", () => {
+      if (this.calls.get(call.peer) !== call) return;
       this.calls.delete(call.peer);
       this.remoteStreams.delete(call.peer);
       this.emitParticipants();
@@ -522,10 +654,13 @@ export class PeerRoom {
     const nickname = this.nicknames.get(peerId);
     const avatarId = this.avatars.get(peerId);
     const media = this.mediaState.get(peerId);
-    this.connections.get(peerId)?.close();
+    // Delete before closing: close events fire synchronously and would treat these as live.
+    const conn = this.connections.get(peerId);
+    const call = this.calls.get(peerId);
     this.connections.delete(peerId);
-    this.calls.get(peerId)?.close();
     this.calls.delete(peerId);
+    conn?.close();
+    call?.close();
     this.remoteStreams.delete(peerId);
     this.nicknames.delete(peerId);
     this.avatars.delete(peerId);

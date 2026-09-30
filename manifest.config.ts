@@ -32,6 +32,11 @@ export default defineManifest({
   permissions: ["storage", "scripting"],
   host_permissions: hosts,
   content_scripts: [
+    {
+      matches: hosts,
+      js: ["src/content/inviteCapture.ts"],
+      run_at: "document_start",
+    },
     ...PLATFORMS.map((platform) => ({
       matches: platform.matches,
       js: [platform.contentScript],

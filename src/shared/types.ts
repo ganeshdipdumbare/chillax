@@ -145,7 +145,7 @@ export type PopupRequest =
   | { type: "CHILLAX_TOGGLE_OVERLAY" };
 
 export type MediaToContent =
-  | { source: "chillax-media"; type: "ready"; peerId: string }
+  | { source: "chillax-media"; type: "ready"; peerId: string; role?: PartyRole }
   | { source: "chillax-media"; type: "protocol"; message: ProtocolMessage }
   | {
       source: "chillax-media";

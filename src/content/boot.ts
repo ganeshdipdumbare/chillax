@@ -3,9 +3,12 @@ import {
   buildInviteUrl,
   clearTokenFromLocation,
   extensionOrigin,
+  forgetInviteToken,
   normalizeRoomCode,
   parseRoomToken,
+  pendingInviteToken,
   randomRoomId,
+  rememberInviteToken,
   writeTokenToLocation,
 } from "../shared/ids";
 import { loadAvatarId, loadNickname, saveAvatarId, saveNickname } from "../shared/storage";
@@ -31,12 +34,16 @@ let lastSync: { paused: boolean; time: number; sentAt?: number } | null = null;
 let lastControlPlayer: { paused: boolean; time: number } | null = null;
 let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
+let pendingFreshHost = false;
 let booted = false;
 let followingHost = false;
+let unloading = false;
 let initTimer = 0;
 const HOST_ROOM_KEY = "chillax-host-room";
 const AUTOSTART_KEY = "chillax-autostart";
 const AUTOSTART_TTL_MS = 60_000;
+const FOLLOW_KEY = "chillax-follow";
+const FOLLOW_COOLDOWN_MS = 30_000;
 let autostartTimer = 0;
 
 function armAutostart() {
@@ -96,6 +103,7 @@ function sendPartyInit(adapter: PlayerAdapter) {
     type: "init",
     role,
     roomId,
+    fresh: role === "host" && pendingFreshHost && !state.party,
     nickname: state.nickname,
     avatarId: state.avatarId,
     platform: adapter.platform,
@@ -151,11 +159,32 @@ function rememberHostRoom(roomId: string | null) {
   }
 }
 
+function recentlyFollowed(hostContentId: string) {
+  try {
+    const raw = sessionStorage.getItem(FOLLOW_KEY);
+    if (!raw) return false;
+    const { contentId, at } = JSON.parse(raw) as { contentId?: string; at?: number };
+    return contentId === hostContentId && Boolean(at) && Date.now() - (at || 0) < FOLLOW_COOLDOWN_MS;
+  } catch {
+    return false;
+  }
+}
+
+function noteFollow(hostContentId: string) {
+  try {
+    sessionStorage.setItem(FOLLOW_KEY, JSON.stringify({ contentId: hostContentId, at: Date.now() }));
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
 function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId: string): boolean {
   if (!watchUrl && !hostContentId) return false;
   const mine = adapter.getContentId();
   if (mine && hostContentId && mine === hostContentId) return false;
-  const roomId = pendingRoomId || parseRoomToken() || parseRoomToken(watchUrl);
+  // The site may land us on a different id for the same title; don't reload in a loop.
+  if (recentlyFollowed(hostContentId)) return false;
+  const roomId = pendingRoomId || getState().party?.roomId || parseRoomToken() || parseRoomToken(watchUrl);
   try {
     const dest = roomId
       ? buildInviteUrl(
@@ -167,6 +196,8 @@ function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId
       : new URL(watchUrl, location.href).toString();
     if (dest === location.href) return false;
     followingHost = true;
+    noteFollow(hostContentId);
+    if (roomId) rememberInviteToken(roomId);
     location.replace(dest);
     return true;
   } catch {
@@ -176,7 +207,7 @@ function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId
 
 function maybeAutoJoin(session: SessionController) {
   if (getState().status !== "idle") return;
-  const token = parseRoomToken();
+  const token = normalizeRoomCode(parseRoomToken() || pendingInviteToken() || "");
   if (!token) return;
   if (hostRoomFromSession() === token) session.startParty(token);
   else session.joinParty(token);
@@ -525,7 +556,9 @@ export async function boot(adapter: PlayerAdapter) {
         return;
       }
       pendingRole = "host";
-      pendingRoomId = normalizeRoomCode(roomId || "") || randomRoomId();
+      const known = normalizeRoomCode(roomId || "");
+      pendingFreshHost = !known;
+      pendingRoomId = known || randomRoomId();
       rememberHostRoom(pendingRoomId);
       setState({
         status: "connecting",
@@ -599,7 +632,9 @@ export async function boot(adapter: PlayerAdapter) {
       stopInitRetries();
       pendingRole = null;
       pendingRoomId = null;
+      pendingFreshHost = false;
       rememberHostRoom(null);
+      if (!unloading) forgetInviteToken();
       clearTokenFromLocation(adapter.platform);
       setState({
         party: null,
@@ -752,7 +787,8 @@ export async function boot(adapter: PlayerAdapter) {
       sendPartyInit(adapter);
     }
     if (data.type === "ready" && data.peerId) {
-      const role = pendingRole || getState().party?.role;
+      // The media frame reports "guest" when a known host code was already live and it joined instead.
+      const role = data.role || pendingRole || getState().party?.role;
       if (!role) return;
       // Host peer id is the party code — always take the live one (remint / iframe reload).
       const roomId =
@@ -761,7 +797,9 @@ export async function boot(adapter: PlayerAdapter) {
           : pendingRoomId || getState().party?.roomId || data.peerId;
       if (!roomId) return;
       pendingRoomId = roomId;
-      if (role === "host") rememberHostRoom(roomId);
+      pendingFreshHost = false;
+      rememberHostRoom(role === "host" ? roomId : null);
+      forgetInviteToken();
       const inviteUrl = buildInviteUrl(
         adapter.platform,
         adapter.getContentId() || "",
@@ -873,6 +911,7 @@ export async function boot(adapter: PlayerAdapter) {
   window.addEventListener("pagehide", (event) => {
     if (event.persisted) return;
     if (followingHost) return;
+    unloading = true;
     session.leaveParty();
   });
   maybeAutoJoin(session);

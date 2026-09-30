@@ -42,6 +42,39 @@ export function parseRoomToken(href = location.href): string | null {
   }
 }
 
+const PENDING_INVITE_KEY = "chillax-invite";
+const PENDING_INVITE_TTL_MS = 120_000;
+
+/** Sites can rewrite the URL (dropping our token) before the overlay boots; keep a short-lived copy. */
+export function rememberInviteToken(token: string | null = parseRoomToken()) {
+  if (!token) return;
+  try {
+    sessionStorage.setItem(PENDING_INVITE_KEY, JSON.stringify({ token, at: Date.now() }));
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
+export function pendingInviteToken(): string | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_INVITE_KEY);
+    if (!raw) return null;
+    const { token, at } = JSON.parse(raw) as { token?: string; at?: number };
+    if (typeof token !== "string" || !at || Date.now() - at > PENDING_INVITE_TTL_MS) return null;
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export function forgetInviteToken() {
+  try {
+    sessionStorage.removeItem(PENDING_INVITE_KEY);
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
 export function normalizeRoomCode(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;

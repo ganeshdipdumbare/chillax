@@ -11,6 +11,7 @@ type InitPayload = {
   type: "init";
   role: "host" | "guest";
   roomId: string;
+  fresh?: boolean;
   nickname: string;
   avatarId: string;
   platform: Platform;
@@ -36,10 +37,10 @@ export function MediaApp() {
   const [status, setStatus] = useState("Connecting…");
   const [tick, setTick] = useState(0);
 
-  function hangup() {
+  function hangup(sayBye = true) {
     generationRef.current += 1;
     startingRef.current = false;
-    roomRef.current?.destroy();
+    roomRef.current?.destroy(sayBye);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     roomRef.current = null;
     streamRef.current = null;
@@ -71,7 +72,7 @@ export function MediaApp() {
     };
     const onPageExit = (event: PageTransitionEvent) => {
       if (event.persisted) return;
-      hangup();
+      hangup(false);
     };
     window.addEventListener("message", onMessage);
     window.addEventListener("pagehide", onPageExit);
@@ -90,7 +91,7 @@ export function MediaApp() {
       window.clearInterval(timer);
       window.removeEventListener("message", onMessage);
       window.removeEventListener("pagehide", onPageExit);
-      hangup();
+      hangup(false);
     };
   }, []);
 
@@ -115,8 +116,8 @@ export function MediaApp() {
     setCameraOn(false);
     postToParent({ type: "local-media", muted: true, cameraOn: false });
     const room = new PeerRoom({
-      onReady: (peerId) => {
-        postToParent({ type: "ready", peerId });
+      onReady: (peerId, role) => {
+        postToParent({ type: "ready", peerId, role });
         setStatus("Mic and camera start off");
       },
       onDataOpen: () => {
@@ -161,7 +162,13 @@ export function MediaApp() {
     try {
       if (init.role === "host") {
         setStatus("Opening your party…");
-        await room.startHost(init.roomId, placeholder.stream, init.nickname, init.avatarId || "fox");
+        await room.startHost(
+          init.roomId,
+          placeholder.stream,
+          init.nickname,
+          init.avatarId || "fox",
+          Boolean(init.fresh),
+        );
       } else {
         setStatus("Looking for that party…");
         await room.join(init.roomId, placeholder.stream, init.nickname, init.avatarId || "fox");
