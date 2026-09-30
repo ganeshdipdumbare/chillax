@@ -37,6 +37,11 @@ export default defineManifest({
       js: ["src/content/inviteCapture.ts"],
       run_at: "document_start",
     },
+    {
+      matches: PLATFORMS.flatMap((platform) => platform.matches),
+      js: ["src/content/keyShield.ts"],
+      run_at: "document_start",
+    },
     ...PLATFORMS.map((platform) => ({
       matches: platform.matches,
       js: [platform.contentScript],

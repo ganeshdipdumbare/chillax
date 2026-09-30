@@ -4,6 +4,7 @@ import overlayCss from "../overlay/overlay.css?inline";
 import fontsCss from "../shared/fonts.css?inline";
 import { OVERLAY_RESERVE } from "../shared/constants";
 import { watchTheme } from "../shared/theme";
+import { installKeyShield } from "./keyShield";
 import type { SessionController } from "./session";
 
 // @font-face is ignored inside shadow roots, so the faces live in the page document.
@@ -41,9 +42,7 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
     }
     event.stopImmediatePropagation();
   };
-  for (const type of ["keydown", "keyup", "keypress"] as const) {
-    window.addEventListener(type, onKey, true);
-  }
+  installKeyShield().handler = onKey;
   document.addEventListener(
     "pointerdown",
     (event) => {
