@@ -17,19 +17,13 @@ function installFonts() {
 }
 
 function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
-  const typingInOverlay = () => {
-    const active = shadow.activeElement;
-    if (!(active instanceof HTMLElement)) return false;
-    return active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable;
-  };
   const onKey = (event: KeyboardEvent) => {
-    if (!typingInOverlay()) return;
     const active = shadow.activeElement;
+    if (!(active instanceof HTMLElement)) return;
     if (
       (event.key === "Enter" || event.key === "NumpadEnter") &&
       !event.repeat &&
       !event.isComposing &&
-      active instanceof HTMLElement &&
       active.tagName === "INPUT"
     ) {
       const form = active.closest("form");
@@ -43,6 +37,8 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
     event.stopImmediatePropagation();
   };
   installKeyShield().handler = onKey;
+  // Players like ororo bind document wheel to volume and cancel the scroll.
+  host.addEventListener("wheel", (event) => event.stopPropagation(), { passive: true });
   document.addEventListener(
     "pointerdown",
     (event) => {
