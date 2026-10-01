@@ -103,6 +103,10 @@ html.chillax-overlay-open.chillax-fs #player-container,
 html.chillax-overlay-open.chillax-fs #player-full-bleed-container,
 html.chillax-overlay-open.chillax-fs #full-bleed-container`;
 
+  /** ororo’s player is a fixed full-window overlay; shrink it so chat sits beside the picture. */
+  const ororo = `
+html.chillax-overlay-open:not(.chillax-fs) #overlay.fullwindow`;
+
   return `
 html.chillax-overlay-open:not(.chillax-fs) {
   box-sizing: border-box !important;
@@ -197,6 +201,35 @@ ${bleed} {
   width: auto !important;
   max-width: none !important;
   box-sizing: border-box !important;
+}
+${ororo} {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  width: ${leftover} !important;
+  max-width: ${leftover} !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  box-sizing: border-box !important;
+}
+html.chillax-overlay-open:not(.chillax-fs) #video-wrapper,
+html.chillax-overlay-open:not(.chillax-fs) #ororo-video {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  box-sizing: border-box !important;
+}
+html.chillax-overlay-open:not(.chillax-fs) #ororo-video video {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
 }
 `;
 }

@@ -6,7 +6,7 @@
 
 <p align="center"><strong>Make the couch bigger.</strong></p>
 
-Free Chrome watch party for **YouTube**, **Netflix**, **Disney+**, **Hulu**, **Prime Video**, **Max**, **Paramount+**, **Apple TV+**, **Twitch**, and **Crunchyroll**: synced playback, group chat, voice/video, avatars, and emoji that float up the screen.
+Free Chrome watch party for **YouTube**, **Netflix**, **Disney+**, **Hulu**, **Prime Video**, **Max**, **Paramount+**, **Apple TV+**, **Twitch**, **Crunchyroll**, and **ororo**: synced playback, group chat, voice/video, avatars, and emoji that float up the screen.
 
 Everyone uses their own streaming account. Chillax does not skip, hide, or block platform ads, and it does not re-stream or decrypt video.
 
@@ -87,7 +87,7 @@ Open [http://localhost:6006](http://localhost:6006). Static export: `npm run bui
 1. Host opens the same video everyone will watch.
 2. Click the **Cx** icon. Pick an avatar in the **left** lounge card, then **Start the night** (or join with a code). If you are not on a video yet, start stays off until you open one — join still works.
 3. Chat **docks on the right**. The movie stays on the left. **Hide chat** tucks the panel without leaving; **Leave party** is the pink control.
-4. Copy the invite link (YouTube uses query `?chillax=`; other sites use hash `#chillax=`).
+4. Copy the invite link (YouTube and ororo use query `?chillax=`; other sites use hash `#chillax=`).
 5. Guests install Chillax and open the invite link — they join automatically. Mic and camera stay **off** until someone turns them on.
 6. Mute and camera are one click. Use the reaction bar under chat. Parties cap at **8** people.
 7. The host always has playback. **Tap people** in the party to share play/pause/seek with as many friends as you want; tap again to take it back.
@@ -216,6 +216,6 @@ Use two Chrome profiles with the unpacked extension.
 - YouTube: same video; host always has play/pause/seek; tap people to share control; chat and reactions appear in the right dock; SPA navigation still finds the player.
 - Voice/video: mic and camera start off; tiles only in the Chillax panel; movie audio still plays.
 - Netflix: logged-in profiles that can play the same title; hash invite or join-with-code; wrong-title prompt if IDs differ.
-- Other HTML5 sites (Disney+, Hulu, Prime, Max, Paramount+, Apple TV+, Twitch, Crunchyroll): same-title party; hash invite; play/pause/seek when the page’s `<video>` allows it. Twitch live seeks are skipped; VODs seek normally.
+- Other HTML5 sites (Disney+, Hulu, Prime, Max, Paramount+, Apple TV+, Twitch, Crunchyroll, ororo): same-title party; play/pause/seek when the page’s `<video>` allows it. Twitch live seeks are skipped; VODs seek normally. ororo puts the party code in the query string so movie (`#video`) and episode (`#1-1`) hashes still open the player. YouTube-backed ororo channel clips do not sync.
 
 Netflix and most paid services cannot be verified without a logged-in session.

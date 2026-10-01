@@ -27,6 +27,9 @@ const PLAYER_CHROME = [
   ".btm-media-player",
   '[data-testid="player-ui-container"]',
   ".vjs-control-bar",
+  "#ororo-video",
+  "#video-wrapper",
+  "#overlay.fullwindow",
   "#chillax-root",
 ].join(",");
 

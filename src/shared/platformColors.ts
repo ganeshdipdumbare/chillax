@@ -12,4 +12,5 @@ export const PLATFORM_COLOR: Record<Platform, string> = {
   appletv: "#6E6E73",
   twitch: "#9146FF",
   crunchyroll: "#F47521",
+  ororo: "#FF6F2B",
 };

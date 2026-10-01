@@ -8,7 +8,8 @@ export type Platform =
   | "paramount"
   | "appletv"
   | "twitch"
-  | "crunchyroll";
+  | "crunchyroll"
+  | "ororo";
 export type PartyRole = "host" | "guest";
 
 export type PlayerState = {

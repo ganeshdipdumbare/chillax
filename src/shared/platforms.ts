@@ -147,6 +147,15 @@ export const PLATFORMS: PlatformDef[] = [
     inviteToken: "hash",
     matchHost: (h) => hostIs(h, "crunchyroll.com"),
   },
+  {
+    id: "ororo",
+    label: "ororo",
+    matches: ["*://*.ororo.tv/*", "*://ororo.tv/*"],
+    contentScript: "src/content/ororo.ts",
+    // Episode and movie playback live in the hash (#1-1, #video). Keep the party code in the query.
+    inviteToken: "query",
+    matchHost: (h) => hostIs(h, "ororo.tv"),
+  },
 ];
 
 const BY_ID = Object.fromEntries(PLATFORMS.map((p) => [p.id, p])) as Record<Platform, PlatformDef>;

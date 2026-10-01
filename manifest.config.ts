@@ -10,7 +10,7 @@ export default defineManifest({
   name: "Chillax",
   version,
   description:
-    "Watch together on YouTube, Netflix, Disney+, Hulu, Prime Video, Max, Paramount+, Apple TV+, Twitch, and Crunchyroll — synced playback, chat, and free voice/video.",
+    "Watch together on YouTube, Netflix, Disney+, Hulu, Prime Video, Max, Paramount+, Apple TV+, Twitch, Crunchyroll, and ororo — synced playback, chat, and free voice/video.",
   icons: {
     16: "icons/icon16.png",
     32: "icons/icon32.png",
