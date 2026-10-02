@@ -6,18 +6,18 @@
 .spot-art .lounge-kernel { offset-path: path("M505 236 Q380 40 206 186"); offset-rotate: 0deg; animation: lounge-fling 2.6s cubic-bezier(0.3, 0.1, 0.6, 1) infinite; }
 .spot-art .lounge-kernel-b { animation-delay: 0.9s; }
 .spot-art .lounge-kernel-c { animation-delay: 1.75s; }
-.spot-art .lounge-cat-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: lounge-tail 2.4s ease-in-out infinite; }
+.spot-art .lounge-dog-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: lounge-tail 2.2s ease-in-out infinite; }
 .spot-art .lounge-twinkle { transform-box: fill-box; transform-origin: center; animation: lounge-twinkle 2.2s ease-in-out infinite; }
 .spot-art .lounge-snore { animation: lounge-snore 3s ease-in-out infinite; }
 @keyframes lounge-sob { from { transform: translateY(0) scaleY(1); } to { transform: translateY(1.5px) scaleY(0.97); } }
 @keyframes lounge-howl { from { transform: rotate(-7deg); } to { transform: rotate(-3deg) translateY(-2px); } }
 @keyframes lounge-tear { 0% { transform: translateY(-4px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
 @keyframes lounge-fling { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
-@keyframes lounge-tail { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
+@keyframes lounge-tail { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(18deg); } }
 @keyframes lounge-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
 @keyframes lounge-snore { 0%, 100% { opacity: 0.2; transform: translate(0, 0); } 50% { opacity: 1; transform: translate(4px, -5px); } }
 @media (prefers-reduced-motion: reduce) {
-  .spot-art .lounge-sob, .spot-art .lounge-howl, .spot-art .lounge-tear, .spot-art .lounge-kernel, .spot-art .lounge-cat-tail, .spot-art .lounge-twinkle, .spot-art .lounge-snore { animation: none; }
+  .spot-art .lounge-sob, .spot-art .lounge-howl, .spot-art .lounge-tear, .spot-art .lounge-kernel, .spot-art .lounge-dog-tail, .spot-art .lounge-twinkle, .spot-art .lounge-snore { animation: none; }
   .spot-art .lounge-kernel { offset-distance: 55%; }
 }
 
@@ -86,10 +86,12 @@
 .spot-art .still-watching-z-c { animation-delay: 2.1s; }
 .spot-art .still-watching-drool { transform-box: fill-box; transform-origin: 50% 0%; animation: still-watching-drool 3.2s ease-in-out infinite; }
 .spot-art .still-watching-blink { animation: still-watching-blink 1.4s steps(1) infinite; }
+.spot-art .still-watching-dog-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: still-watching-tail 2.2s ease-in-out infinite; }
 @keyframes still-watching-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 1.06); } }
 @keyframes still-watching-z { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(10px, -26px); opacity: 0; } }
 @keyframes still-watching-drool { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(1.2); } }
 @keyframes still-watching-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes still-watching-tail { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(16deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .spot-art .still-watching-breathe, .spot-art .still-watching-z, .spot-art .still-watching-drool, .spot-art .still-watching-blink { animation: none; }
+  .spot-art .still-watching-breathe, .spot-art .still-watching-z, .spot-art .still-watching-drool, .spot-art .still-watching-blink, .spot-art .still-watching-dog-tail { animation: none; }
 }

@@ -1,7 +1,7 @@
 # Chillax
 
 <p align="center">
-  <img src="public/art/hero.svg" width="560" alt="One couch split across two homes: a friend sobbing at 3pm, a friend howling with laughter at 2am, and an unimpressed cat" />
+  <img src="public/art/hero.svg" width="560" alt="One couch split across two homes: a friend sobbing at 3pm, a friend howling with laughter at 2am, and a sleepy puppy" />
 </p>
 
 <p align="center"><strong>Make the couch bigger.</strong></p>

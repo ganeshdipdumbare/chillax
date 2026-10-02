@@ -1,9 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="still-title">
-  <title id="still-title">A blob asleep on the couch with a cat on its back while the TV asks if anyone is still watching</title>
+  <title id="still-title">A blob asleep on the couch with a puppy on its back while the TV asks if anyone is still watching</title>
   <defs>
     <pattern id="still-dots" width="14" height="14" patternUnits="userSpaceOnUse">
       <circle cx="7" cy="7" r="1.05" fill="#e6c9b8" />
     </pattern>
+    <clipPath id="still-dog-head">
+      <circle cx="228" cy="112" r="18" />
+    </clipPath>
+    <clipPath id="still-dog-body">
+      <ellipse cx="258" cy="126" rx="24" ry="13" />
+    </clipPath>
     <style>
       .ink { stroke: #0e1113; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
       .thin { stroke: #0e1113; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -13,12 +19,14 @@
       .z-c { animation-delay: 2.1s; }
       .drool { transform-box: fill-box; transform-origin: 50% 0%; animation: drool 3.2s ease-in-out infinite; }
       .blink { animation: blink 1.4s steps(1) infinite; }
+      .dog-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: tail 2.2s ease-in-out infinite; }
       @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 1.06); } }
       @keyframes z { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(10px, -26px); opacity: 0; } }
       @keyframes drool { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(1.2); } }
       @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      @keyframes tail { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(16deg); } }
       @media (prefers-reduced-motion: reduce) {
-        .breathe, .z, .drool, .blink { animation: none; }
+        .breathe, .z, .drool, .blink, .dog-tail { animation: none; }
       }
     </style>
   </defs>
@@ -58,14 +66,37 @@
     <text class="z z-c" x="172" y="106" font-size="20">Z</text>
   </g>
 
-  <!-- The cat has claimed the warm spot -->
-  <path d="M276 116c16 4 14 16 0 14" stroke="#0e1113" stroke-width="9" stroke-linecap="round" fill="none" />
-  <path d="M276 116c16 4 14 16 0 14" stroke="#d6d0c3" stroke-width="4" stroke-linecap="round" fill="none" />
-  <ellipse cx="256" cy="116" rx="24" ry="12" fill="#d6d0c3" class="ink" />
-  <path d="M226 106l1-12 8 6M246 106l-1-12-8 6" fill="#d6d0c3" class="thin" />
-  <circle cx="236" cy="112" r="11" fill="#d6d0c3" class="ink" />
-  <path d="M229 112q3 3 6 0M238 112q3 3 6 0" class="thin" fill="none" />
-  <path d="M235 118l1.5 1.5 1.5-1.5" class="thin" fill="none" />
+  <!-- The puppy has claimed the warm spot -->
+  <ellipse cx="246" cy="140" rx="40" ry="5" fill="#0e1113" opacity="0.1" />
+  <path class="dog-tail" d="M278 120c10-4 12-14 4-16" stroke="#0e1113" stroke-width="8" stroke-linecap="round" fill="none" />
+  <path class="dog-tail" d="M278 120c10-4 12-14 4-16" stroke="#c99a5a" stroke-width="4" stroke-linecap="round" fill="none" />
+  <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill="#c99a5a" class="thin" />
+  <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill="#f8dbca" />
+  <ellipse cx="258" cy="126" rx="24" ry="13" fill="#fbfaf4" class="ink" />
+  <g clip-path="url(#still-dog-body)">
+    <ellipse cx="272" cy="120" rx="11" ry="9" fill="#c99a5a" />
+  </g>
+  <ellipse cx="274" cy="136" rx="8" ry="5" fill="#fbfaf4" class="thin" />
+  <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill="#c99a5a" class="thin" />
+  <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill="#f8dbca" />
+  <circle cx="228" cy="112" r="18" fill="#fbfaf4" class="ink" />
+  <g clip-path="url(#still-dog-head)">
+    <ellipse cx="218" cy="102" rx="5.5" ry="6" fill="#c99a5a" />
+    <ellipse cx="238" cy="104" rx="10" ry="11" fill="#c99a5a" />
+  </g>
+  <path d="M218 108q4.5-5 9 0" class="thin" fill="none" />
+  <path d="M231 108q4.5-5 9 0" class="thin" fill="none" />
+  <ellipse cx="214" cy="116" rx="3.5" ry="2.2" fill="#db704c" opacity="0.4" />
+  <ellipse cx="242" cy="116" rx="3.5" ry="2.2" fill="#db704c" opacity="0.4" />
+  <ellipse cx="228" cy="118" rx="3" ry="2.4" fill="#0e1113" />
+  <circle cx="227" cy="117" r="0.8" fill="#fbfaf4" />
+  <ellipse cx="218" cy="132" rx="7" ry="4.5" fill="#fbfaf4" class="thin" />
+  <ellipse cx="236" cy="134" rx="8" ry="5" fill="#fbfaf4" class="thin" />
+  <g fill="#0e1113" opacity="0.65">
+    <circle cx="286" cy="106" r="1.6" />
+    <circle cx="290.5" cy="110" r="1.2" />
+    <circle cx="281.5" cy="110" r="1.2" />
+  </g>
 
   <!-- Casualties on the floor -->
   <g transform="rotate(70 92 172)">

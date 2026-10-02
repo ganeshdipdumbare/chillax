@@ -7,6 +7,7 @@ const SAGE = "#adb49c";
 const DARK_TEAL = "#1c525d";
 const MIST = "#c3d3ce";
 const SAND = "#d6d0c3";
+const TAN = "#c99a5a";
 const BUTTER = "#f6c453";
 const TEAR = "#9fd0de";
 const TEAR_DEEP = "#7fb6c6";
@@ -36,6 +37,12 @@ export function LoungeArt() {
         </clipPath>
         <clipPath id="hero-sky-day">
           <rect x="40" y="40" width="112" height="92" rx="14" />
+        </clipPath>
+        <clipPath id="hero-dog-head">
+          <circle cx="554" cy="166" r="24" />
+        </clipPath>
+        <clipPath id="hero-dog-body">
+          <ellipse cx="594" cy="188" rx="30" ry="16" />
         </clipPath>
       </defs>
 
@@ -162,20 +169,36 @@ export function LoungeArt() {
       </g>
       <g fontFamily="Helvetica Neue, Arial, sans-serif" fontWeight="800" fill={BUTTER}>
         <text x="372" y="184" fontSize="20" transform="rotate(-14 372 184)">HA</text>
-        <text x="464" y="164" fontSize="26" transform="rotate(10 464 164)">HA!</text>
+        <text x="448" y="158" fontSize="26" transform="rotate(8 448 158)">HA!</text>
       </g>
 
-      {/* The cat, who has seen this movie and is not impressed */}
+      {/* The puppy, who has seen this movie and is napping through it */}
+      <ellipse cx="578" cy="204" rx="48" ry="6" fill={INK} opacity="0.18" />
       <g>
-        <path className="lounge-cat-tail" d="M566 190c20 0 28-12 22-26" stroke={INK} strokeWidth="10" strokeLinecap="round" fill="none" />
-        <path className="lounge-cat-tail" d="M566 190c20 0 28-12 22-26" stroke={SAND} strokeWidth="4.5" strokeLinecap="round" fill="none" />
-        <path d="M528 200c-4-24 6-38 22-38s26 14 22 38z" fill={SAND} {...outline(3.5)} />
-        <path d="M534 150l2-18 12 12M566 150l-2-18-12 12" fill={SAND} {...outline(3.5)} />
-        <circle cx="550" cy="156" r="16" fill={SAND} {...outline(3.5)} />
-        <path d="M540 154h7M553 154h7" {...outline(3.5)} fill="none" />
-        <path d="M541 156a3 2.4 0 0 0 6 0M554 156a3 2.4 0 0 0 6 0" fill={BUTTER} />
-        <path d="M547 164h6" {...outline(2.5)} fill="none" />
-        <path d="M530 162l-8-1M530 166l-8 2M570 162l8-1M570 166l8 2" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+        <path className="lounge-dog-tail" d="M608 186c14-2 18-16 8-24" stroke={INK} strokeWidth="10" strokeLinecap="round" fill="none" />
+        <path className="lounge-dog-tail" d="M608 186c14-2 18-16 8-24" stroke={TAN} strokeWidth="5" strokeLinecap="round" fill="none" />
+        <path d="M542 156c-8 4-24 12-26 26-2 12 10 18 20 12 8-5 16-18 16-28 0-6-4-10-10-10z" fill={TAN} {...outline(3.5)} />
+        <ellipse cx="522" cy="178" rx="5" ry="9" transform="rotate(-16 522 178)" fill={PEACH} />
+        <ellipse cx="594" cy="188" rx="30" ry="16" fill={CREAM} {...outline(3.5)} />
+        <g clipPath="url(#hero-dog-body)">
+          <ellipse cx="610" cy="182" rx="13" ry="11" fill={TAN} />
+        </g>
+        <ellipse cx="612" cy="200" rx="10" ry="6" fill={CREAM} {...outline(3.5)} />
+        <path d="M566 156c8 4 24 12 26 26 2 12-10 18-20 12-8-5-16-18-16-28 0-6 4-10 10-10z" fill={TAN} {...outline(3.5)} />
+        <ellipse cx="586" cy="178" rx="5" ry="9" transform="rotate(16 586 178)" fill={PEACH} />
+        <circle cx="554" cy="166" r="24" fill={CREAM} {...outline(3.5)} />
+        <g clipPath="url(#hero-dog-head)">
+          <ellipse cx="540" cy="154" rx="7" ry="8" fill={TAN} />
+          <ellipse cx="568" cy="156" rx="13" ry="14" fill={TAN} />
+        </g>
+        <path d="M540 162q6-7 12 0" {...outline(3.5)} fill="none" />
+        <path d="M558 162q6-7 12 0" {...outline(3.5)} fill="none" />
+        <ellipse cx="536" cy="172" rx="5" ry="3.2" fill={TERRACOTTA} opacity="0.4" />
+        <ellipse cx="572" cy="172" rx="5" ry="3.2" fill={TERRACOTTA} opacity="0.4" />
+        <ellipse cx="554" cy="174" rx="4.2" ry="3.4" fill={INK} />
+        <circle cx="552.6" cy="172.8" r="1.1" fill={CREAM} />
+        <ellipse cx="540" cy="198" rx="9" ry="6" fill={CREAM} {...outline(3.5)} />
+        <ellipse cx="562" cy="200" rx="10" ry="6.5" fill={CREAM} {...outline(3.5)} />
       </g>
 
       {/* The seam between two living rooms */}
@@ -201,6 +224,7 @@ export function DisguiseArt() {
       {/* The lounge card */}
       <rect x="20" y="30" width="124" height="148" rx="18" fill={CREAM} {...outline(3)} />
       <text x="34" y="54" fontFamily="Helvetica Neue, Arial, sans-serif" fontSize="11" fontWeight="800" fill={INK}>Pick a face</text>
+      <path d="M39 69c-6 2-8 11-3 13 4 2 8-3 8-8 0-3-2-5-5-5zM57 69c6 2 8 11 3 13-4 2-8-3-8-8 0-3 2-5 5-5z" fill={PEACH} {...outline(2)} />
       <g {...outline(2)}>
         <circle cx="48" cy="80" r="13" fill={PEACH} />
         <circle cx="82" cy="80" r="13" fill={SAGE} />
@@ -218,7 +242,6 @@ export function DisguiseArt() {
       <path d="M44 84q4 3 8 0M78 84q4 3 8 0M112 84q4 4 8 0" {...outline(2)} fill="none" />
       <path d="M44 118q4 3 8 0" stroke={CREAM} strokeWidth="2" strokeLinecap="round" fill="none" />
       <path d="M78 118h8" {...outline(2)} fill="none" />
-      <path d="M38 69l3-7 5 5M58 69l-3-7-5 5" fill={PEACH} {...outline(2)} />
       <path d="M107 68l3-8 6 5 6-5 3 8z" fill={TERRACOTTA} {...outline(2)} />
       <g className="disguise-pick">
         <circle cx="116" cy="114" r="13" fill={PEACH} {...outline(2)} />
@@ -495,6 +518,12 @@ export function StillWatchingArt() {
         <pattern id="still-dots" width="14" height="14" patternUnits="userSpaceOnUse">
           <circle cx="7" cy="7" r="1.05" fill="#e6c9b8" />
         </pattern>
+        <clipPath id="still-dog-head">
+          <circle cx="228" cy="112" r="18" />
+        </clipPath>
+        <clipPath id="still-dog-body">
+          <ellipse cx="258" cy="126" rx="24" ry="13" />
+        </clipPath>
       </defs>
       <rect width="320" height="200" fill={PEACH} />
       <rect width="320" height="200" fill="url(#still-dots)" />
@@ -532,14 +561,37 @@ export function StillWatchingArt() {
         <text className="still-watching-z still-watching-z-c" x="172" y="106" fontSize="20">Z</text>
       </g>
 
-      {/* The cat has claimed the warm spot */}
-      <path d="M276 116c16 4 14 16 0 14" stroke={INK} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M276 116c16 4 14 16 0 14" stroke={SAND} strokeWidth="4" strokeLinecap="round" fill="none" />
-      <ellipse cx="256" cy="116" rx="24" ry="12" fill={SAND} {...outline(3)} />
-      <path d="M226 106l1-12 8 6M246 106l-1-12-8 6" fill={SAND} {...outline(2)} />
-      <circle cx="236" cy="112" r="11" fill={SAND} {...outline(3)} />
-      <path d="M229 112q3 3 6 0M238 112q3 3 6 0" {...outline(2)} fill="none" />
-      <path d="M235 118l1.5 1.5 1.5-1.5" {...outline(2)} fill="none" />
+      {/* The puppy has claimed the warm spot */}
+      <ellipse cx="246" cy="140" rx="40" ry="5" fill={INK} opacity="0.1" />
+      <path className="still-watching-dog-tail" d="M278 120c10-4 12-14 4-16" stroke={INK} strokeWidth="8" strokeLinecap="round" fill="none" />
+      <path className="still-watching-dog-tail" d="M278 120c10-4 12-14 4-16" stroke={TAN} strokeWidth="4" strokeLinecap="round" fill="none" />
+      <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill={TAN} {...outline(2)} />
+      <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill={PEACH} />
+      <ellipse cx="258" cy="126" rx="24" ry="13" fill={CREAM} {...outline(3)} />
+      <g clipPath="url(#still-dog-body)">
+        <ellipse cx="272" cy="120" rx="11" ry="9" fill={TAN} />
+      </g>
+      <ellipse cx="274" cy="136" rx="8" ry="5" fill={CREAM} {...outline(2)} />
+      <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill={TAN} {...outline(2)} />
+      <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill={PEACH} />
+      <circle cx="228" cy="112" r="18" fill={CREAM} {...outline(3)} />
+      <g clipPath="url(#still-dog-head)">
+        <ellipse cx="218" cy="102" rx="5.5" ry="6" fill={TAN} />
+        <ellipse cx="238" cy="104" rx="10" ry="11" fill={TAN} />
+      </g>
+      <path d="M218 108q4.5-5 9 0" {...outline(2)} fill="none" />
+      <path d="M231 108q4.5-5 9 0" {...outline(2)} fill="none" />
+      <ellipse cx="214" cy="116" rx="3.5" ry="2.2" fill={TERRACOTTA} opacity="0.4" />
+      <ellipse cx="242" cy="116" rx="3.5" ry="2.2" fill={TERRACOTTA} opacity="0.4" />
+      <ellipse cx="228" cy="118" rx="3" ry="2.4" fill={INK} />
+      <circle cx="227" cy="117" r="0.8" fill={CREAM} />
+      <ellipse cx="218" cy="132" rx="7" ry="4.5" fill={CREAM} {...outline(2)} />
+      <ellipse cx="236" cy="134" rx="8" ry="5" fill={CREAM} {...outline(2)} />
+      <g fill={INK} opacity="0.65">
+        <circle cx="286" cy="106" r="1.6" />
+        <circle cx="290.5" cy="110" r="1.2" />
+        <circle cx="281.5" cy="110" r="1.2" />
+      </g>
 
       {/* Casualties on the floor */}
       <g transform="rotate(70 92 172)">

@@ -27,6 +27,7 @@
   <!-- The lounge card -->
   <rect x="20" y="30" width="124" height="148" rx="18" fill="#fbfaf4" class="ink" />
   <text x="34" y="54" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="800" fill="#0e1113">Pick a face</text>
+  <path d="M39 69c-6 2-8 11-3 13 4 2 8-3 8-8 0-3-2-5-5-5zM57 69c6 2 8 11 3 13-4 2-8-3-8-8 0-3 2-5 5-5z" fill="#f8dbca" class="thin" />
   <g class="thin">
     <circle cx="48" cy="80" r="13" fill="#f8dbca" />
     <circle cx="82" cy="80" r="13" fill="#adb49c" />
@@ -44,7 +45,6 @@
   <path d="M44 84q4 3 8 0M78 84q4 3 8 0M112 84q4 4 8 0" class="thin" fill="none" />
   <path d="M44 118q4 3 8 0" stroke="#fbfaf4" stroke-width="2" stroke-linecap="round" fill="none" />
   <path d="M78 118h8" class="thin" fill="none" />
-  <path d="M38 69l3-7 5 5M58 69l-3-7-5 5" fill="#f8dbca" class="thin" />
   <path d="M107 68l3-8 6 5 6-5 3 8z" fill="#db704c" class="thin" />
   <g class="pick">
     <circle cx="116" cy="114" r="13" fill="#f8dbca" class="thin" />
