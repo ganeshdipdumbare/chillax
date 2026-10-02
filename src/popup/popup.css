@@ -58,14 +58,16 @@ html.popup-page body {
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: var(--inset);
-  color: var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--canvas);
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: 13px;
   letter-spacing: -0.04em;
   line-height: 1;
+  box-shadow: 2px 2px 0 #db704c;
+  transform: rotate(-4deg);
 }
 
 .popup-root .storyboard {

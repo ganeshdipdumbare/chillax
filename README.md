@@ -169,7 +169,7 @@ In the dashboard, **New item** → upload `chillax-extension.zip`.
 You will need:
 
 - **Icon:** 128×128 Cx mark (already at `public/icons/icon128.png`).
-- **Screenshots:** at least one 1280×800 or 640×400 of the overlay on a streaming site. Crop so Chillax is obviously a separate overlay, not the site’s UI. The cream storyboard and Cx conic mark are the look — not a generic dark drawer.
+- **Screenshots:** at least one 1280×800 or 640×400 of the overlay on a streaming site. Crop so Chillax is obviously a separate overlay, not the site’s UI. The cream storyboard and ink Cx mark (coral offset) are the look — not a generic dark drawer.
 - **Small promo tile** (optional): 440×280. [public/art/hero.svg](public/art/hero.svg) is the same drawing as the overlay setup card (`LoungeArt` in `src/overlay/SpotArt.tsx`).
 - **Name:** Chillax
 - **Summary:** Watch together on major streaming sites with synced playback, chat, and voice/video.
