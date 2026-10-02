@@ -1,7 +1,7 @@
 # Chillax
 
 <p align="center">
-  <img src="public/art/lounge.svg" width="560" alt="Two blob friends on a couch watching a movie" />
+  <img src="public/art/hero.svg" width="560" alt="One couch split across two homes: a friend sobbing at 3pm, a friend howling with laughter at 2am, and an unimpressed cat" />
 </p>
 
 <p align="center"><strong>Make the couch bigger.</strong></p>
@@ -81,7 +81,7 @@ Open [http://localhost:6006](http://localhost:6006). Static export: `npm run bui
 ## How to party
 
 <p align="center">
-  <img src="public/art/dock.svg" width="420" alt="Movie on the left, party chat docked on the right" />
+  <img src="public/art/chat.svg" width="420" alt="A horror movie on the left and the party chat on the right yelling don't open it" />
 </p>
 
 1. Host opens the same video everyone will watch.
@@ -97,7 +97,7 @@ If a site strips the hash, guests can paste the party code (starts with `cx`) un
 Guests must be on the **same platform** as the host (a YouTube host cannot sync a Disney+ guest).
 
 <p align="center">
-  <img src="public/art/popcorn.svg" width="280" alt="A smiling popcorn bucket with a soda" />
+  <img src="public/art/reactions.svg" width="360" alt="A shocked popcorn bucket erupting reactions while the soda next to it has fainted" />
 </p>
 
 ## Voice and video
@@ -170,7 +170,7 @@ You will need:
 
 - **Icon:** 128×128 Cx mark (already at `public/icons/icon128.png`).
 - **Screenshots:** at least one 1280×800 or 640×400 of the overlay on a streaming site. Crop so Chillax is obviously a separate overlay, not the site’s UI. The cream storyboard and Cx conic mark are the look — not a generic dark drawer.
-- **Small promo tile** (optional): 440×280. [public/art/lounge.svg](public/art/lounge.svg) is the same drawing as the overlay.
+- **Small promo tile** (optional): 440×280. [public/art/hero.svg](public/art/hero.svg) is the same drawing as the overlay setup card (`LoungeArt` in `src/overlay/SpotArt.tsx`).
 - **Name:** Chillax
 - **Summary:** Watch together on major streaming sites with synced playback, chat, and voice/video.
 - **Category:** Social or Fun (pick the closest).

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="disguise-title">
+  <title id="disguise-title">A blob in a fake nose and mustache picking an avatar, convinced nobody will recognize it</title>
+  <defs>
+    <pattern id="disguise-dots" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="7" cy="7" r="1.05" fill="#aabbb6" />
+    </pattern>
+    <style>
+      .ink { stroke: #0e1113; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+      .thin { stroke: #0e1113; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+      .smug { transform-box: fill-box; transform-origin: 50% 100%; animation: smug 2.4s ease-in-out infinite; }
+      .brows { animation: brows 1.2s ease-in-out infinite; }
+      .pick { transform-box: fill-box; transform-origin: center; animation: pick 1.6s ease-in-out infinite; }
+      .glint { animation: glint 2.4s ease-in-out infinite; }
+      @keyframes smug { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
+      @keyframes brows { 0%, 60%, 100% { transform: translateY(0); } 70%, 90% { transform: translateY(-4px); } }
+      @keyframes pick { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+      @keyframes glint { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .smug, .brows, .pick, .glint { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="320" height="200" fill="#c3d3ce" />
+  <rect width="320" height="200" fill="url(#disguise-dots)" />
+  <ellipse cx="226" cy="184" rx="66" ry="8" fill="#0e1113" opacity="0.14" />
+
+  <!-- The lounge card -->
+  <rect x="20" y="30" width="124" height="148" rx="18" fill="#fbfaf4" class="ink" />
+  <text x="34" y="54" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="800" fill="#0e1113">Pick a face</text>
+  <g class="thin">
+    <circle cx="48" cy="80" r="13" fill="#f8dbca" />
+    <circle cx="82" cy="80" r="13" fill="#adb49c" />
+    <circle cx="48" cy="114" r="13" fill="#1c525d" />
+    <circle cx="82" cy="114" r="13" fill="#d6d0c3" />
+    <circle cx="116" cy="80" r="13" fill="#f6c453" />
+  </g>
+  <g fill="#0e1113">
+    <circle cx="44" cy="78" r="1.8" /><circle cx="52" cy="78" r="1.8" />
+    <circle cx="78" cy="78" r="1.8" /><circle cx="86" cy="78" r="1.8" />
+    <circle cx="112" cy="78" r="1.8" /><circle cx="120" cy="78" r="1.8" />
+    <circle cx="78" cy="112" r="1.8" /><circle cx="86" cy="112" r="1.8" />
+  </g>
+  <circle cx="44" cy="112" r="1.8" fill="#fbfaf4" /><circle cx="52" cy="112" r="1.8" fill="#fbfaf4" />
+  <path d="M44 84q4 3 8 0M78 84q4 3 8 0M112 84q4 4 8 0" class="thin" fill="none" />
+  <path d="M44 118q4 3 8 0" stroke="#fbfaf4" stroke-width="2" stroke-linecap="round" fill="none" />
+  <path d="M78 118h8" class="thin" fill="none" />
+  <path d="M38 69l3-7 5 5M58 69l-3-7-5 5" fill="#f8dbca" class="thin" />
+  <path d="M107 68l3-8 6 5 6-5 3 8z" fill="#db704c" class="thin" />
+  <g class="pick">
+    <circle cx="116" cy="114" r="13" fill="#f8dbca" class="thin" />
+    <circle cx="116" cy="114" r="18" fill="none" stroke="#db704c" stroke-width="2.5" stroke-dasharray="4 4" />
+    <circle cx="112" cy="110" r="3" fill="#fbfaf4" class="thin" />
+    <circle cx="120" cy="110" r="3" fill="#fbfaf4" class="thin" />
+    <circle cx="116" cy="115" r="3" fill="#e8906f" class="thin" />
+    <path d="M110 120q3-3 6-1 3-2 6 1" stroke="#0e1113" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  </g>
+  <rect x="34" y="144" width="96" height="22" rx="11" fill="#0e1113" />
+  <text x="82" y="159" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#fbfaf4">Join party</text>
+
+  <!-- Speech bubble -->
+  <path d="M164 14h130a12 12 0 0 1 12 12v22a12 12 0 0 1-12 12h-66l-10 10-2-10h-52a12 12 0 0 1-12-12v-22a12 12 0 0 1 12-12z" fill="#fbfaf4" class="thin" />
+  <g font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0e1113" text-anchor="middle">
+    <text x="229" y="33">nobody will ever</text>
+    <text x="229" y="48">know it&#8217;s me.</text>
+  </g>
+
+  <!-- The master of disguise -->
+  <g class="smug">
+    <path d="M182 180c-5-52 14-92 44-92s49 40 44 92z" fill="#f8dbca" class="ink" />
+    <g class="brows">
+      <path d="M200 106q10-7 20-1M232 105q10-6 20 1" stroke="#0e1113" stroke-width="6" stroke-linecap="round" fill="none" />
+    </g>
+    <circle cx="211" cy="120" r="10" fill="#fbfaf4" fill-opacity="0.55" class="ink" />
+    <circle cx="241" cy="120" r="10" fill="#fbfaf4" fill-opacity="0.55" class="ink" />
+    <path d="M221 120h10" class="ink" fill="none" />
+    <circle cx="207" cy="121" r="2.6" fill="#0e1113" />
+    <circle cx="237" cy="121" r="2.6" fill="#0e1113" />
+    <ellipse cx="226" cy="136" rx="10" ry="12" fill="#e8906f" class="ink" />
+    <ellipse cx="222" cy="131" rx="3" ry="2" fill="#fbfaf4" opacity="0.7" />
+    <path d="M202 154c8-10 18-8 24-3 6-5 16-7 24 3-10 6-17 4-24 0-7 4-14 6-24 0z" fill="#0e1113" class="thin" />
+    <ellipse cx="200" cy="146" rx="6" ry="3.5" fill="#db704c" opacity="0.45" />
+    <ellipse cx="254" cy="146" rx="6" ry="3.5" fill="#db704c" opacity="0.45" />
+  </g>
+  <!-- Hand mirror -->
+  <path d="M270 150c10-2 14 6 8 10" fill="#f8dbca" class="ink" />
+  <path d="M282 152l8-20" stroke="#0e1113" stroke-width="6" stroke-linecap="round" />
+  <circle cx="294" cy="116" r="16" fill="#cfe6ea" class="ink" />
+  <path class="glint" d="M286 110l8-8M288 118l12-12" stroke="#fbfaf4" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Rejected costume -->
+  <path d="M160 186l12-26 14 24z" fill="#adb49c" class="thin" />
+  <path d="M166 176l12 2M163 182l18 2" stroke="#fbfaf4" stroke-width="2" stroke-linecap="round" />
+  <circle cx="172" cy="158" r="3.5" fill="#db704c" class="thin" />
+</svg>

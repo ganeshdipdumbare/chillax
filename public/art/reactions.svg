@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="reactions-title">
+  <title id="reactions-title">A shocked popcorn bucket erupting kernels and reactions while the soda next to it has fainted</title>
+  <defs>
+    <pattern id="reactions-dots" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="7" cy="7" r="1.05" fill="#e6c9b8" />
+    </pattern>
+    <style>
+      .ink { stroke: #0e1113; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+      .thin { stroke: #0e1113; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+      .pop { transform-box: fill-box; transform-origin: center; animation: pop 1.8s cubic-bezier(0.2, 0.8, 0.3, 1) infinite; }
+      .float { animation: float 3.6s ease-in-out infinite; }
+      .float-b { animation-delay: 1.2s; }
+      .float-c { animation-delay: 2.4s; }
+      .gasp { transform-box: fill-box; transform-origin: 50% 100%; animation: gasp 1.8s ease-in-out infinite; }
+      .spin { transform-box: fill-box; transform-origin: center; animation: spin 2s linear infinite; }
+      @keyframes pop { 0% { transform: translateY(14px) scale(0.4); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-10px) scale(1); opacity: 0; } }
+      @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+      @keyframes gasp { 0%, 100% { transform: scale(1, 1); } 12% { transform: scale(1.04, 0.94); } 24% { transform: scale(0.97, 1.05); } 40% { transform: scale(1, 1); } }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .pop, .float, .gasp, .spin { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="320" height="200" fill="#f8dbca" />
+  <rect width="320" height="200" fill="url(#reactions-dots)" />
+  <ellipse cx="150" cy="184" rx="64" ry="8" fill="#0e1113" opacity="0.14" />
+
+  <!-- Reactions in flight -->
+  <g class="float">
+    <path d="M52 76c-16-10-22-18-22-26a10 10 0 0 1 22-4 10 10 0 0 1 22 4c0 8-6 16-22 26z" fill="#db704c" class="ink" />
+    <path d="M38 48a5 5 0 0 1 6-4" stroke="#fbfaf4" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  </g>
+  <g class="float float-b">
+    <circle cx="262" cy="52" r="20" fill="#f6c453" class="ink" />
+    <path d="M250 46q4-6 8 0M266 46q4-6 8 0" class="thin" fill="none" />
+    <path d="M250 56h24c0 10-6 14-12 14s-12-4-12-14z" fill="#0e1113" />
+    <path d="M256 64c3-3 9-3 12 0-3 3-9 3-12 0z" fill="#db704c" />
+    <path d="M244 44c-6 2-8 8-6 12M280 44c6 2 8 8 6 12" stroke="#7fb6c6" stroke-width="4" stroke-linecap="round" fill="none" />
+  </g>
+  <g class="float float-c">
+    <path d="M276 112c-10 0-16-8-14-18 2-6 6-8 6-14 6 4 8 8 8 12 2-4 4-6 4-10 8 6 10 14 8 20-2 6-6 10-12 10z" fill="#e8906f" class="ink" />
+    <path d="M276 108c-4 0-6-4-4-8 2-2 4-4 4-6 4 4 6 8 4 12-1 2-2 2-4 2z" fill="#f6c453" />
+  </g>
+  <g class="float float-b">
+    <rect x="22" y="104" width="44" height="22" rx="11" fill="#1c525d" class="thin" transform="rotate(-10 44 115)" />
+    <text x="44" y="120" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="800" fill="#fbfaf4" transform="rotate(-10 44 115)">OMG</text>
+  </g>
+
+  <!-- Kernels popping out mid-gasp -->
+  <g class="thin" fill="#fbfaf4">
+    <circle class="pop" cx="124" cy="46" r="7" />
+    <circle class="pop" style="animation-delay: 0.4s" cx="152" cy="26" r="8" />
+    <circle class="pop" style="animation-delay: 0.8s" cx="182" cy="42" r="7" />
+    <circle class="pop" style="animation-delay: 1.2s" cx="104" cy="68" r="6" fill="#f6c453" />
+    <circle class="pop" style="animation-delay: 0.6s" cx="200" cy="66" r="6" fill="#f6c453" />
+  </g>
+  <path d="M116 62l-6-8M150 50v-10M186 58l6-8" stroke="#0e1113" stroke-width="2.5" stroke-linecap="round" opacity="0.5" />
+
+  <!-- The popcorn bucket, who did not see that coming -->
+  <g class="gasp">
+    <g class="thin" fill="#fbfaf4">
+      <circle cx="122" cy="88" r="11" />
+      <circle cx="140" cy="80" r="12" />
+      <circle cx="160" cy="80" r="12" fill="#f6c453" />
+      <circle cx="178" cy="88" r="11" />
+      <circle cx="150" cy="70" r="9" />
+    </g>
+    <path d="M110 94h80l-12 86h-56z" fill="#fbfaf4" class="ink" />
+    <path d="M128 94h14l-2 86h-12zM158 94h14l-4 86h-12z" fill="#db704c" />
+    <path d="M110 94h80l-12 86h-56z" fill="none" class="ink" />
+    <path d="M108 94h84" class="ink" />
+    <path d="M126 114l10-4M164 110l10 4" stroke="#0e1113" stroke-width="3.5" stroke-linecap="round" />
+    <circle cx="134" cy="126" r="8" fill="#fbfaf4" class="thin" />
+    <circle cx="166" cy="126" r="8" fill="#fbfaf4" class="thin" />
+    <circle cx="134" cy="127" r="3" fill="#0e1113" />
+    <circle cx="166" cy="127" r="3" fill="#0e1113" />
+    <ellipse cx="150" cy="152" rx="8" ry="11" fill="#0e1113" class="thin" />
+    <path d="M126 140c-12-6-18 4-16 10M174 140c12-6 18 4 16 10" fill="none" class="ink" />
+  </g>
+
+  <!-- The soda, who has fainted -->
+  <ellipse cx="248" cy="184" rx="34" ry="5" fill="#7fb6c6" opacity="0.6" />
+  <g transform="rotate(-82 248 168)">
+    <path d="M234 152h28l-3 36h-22z" fill="#adb49c" class="ink" />
+    <rect x="232" y="146" width="32" height="8" rx="3" fill="#fbfaf4" class="thin" />
+    <path d="M252 146l6-22h8" fill="none" stroke="#1c525d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M240 162l6 6M246 162l-6 6M252 162l6 6M258 162l-6 6" class="thin" fill="none" />
+    <path d="M244 178q5-4 10 0" class="thin" fill="none" />
+  </g>
+  <g class="spin">
+    <path d="M214 140l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#f6c453" class="thin" />
+  </g>
+  <path d="M226 132l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#1c525d" />
+</svg>

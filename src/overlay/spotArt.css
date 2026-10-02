@@ -1,0 +1,95 @@
+/* LoungeArt */
+.spot-art .lounge-sob { transform-box: fill-box; transform-origin: 50% 100%; animation: lounge-sob 0.5s ease-in-out infinite alternate; }
+.spot-art .lounge-howl { transform-box: fill-box; transform-origin: 50% 100%; animation: lounge-howl 0.42s ease-in-out infinite alternate; }
+.spot-art .lounge-tear { animation: lounge-tear 1.1s ease-in infinite; }
+.spot-art .lounge-tear-b { animation-delay: 0.55s; }
+.spot-art .lounge-kernel { offset-path: path("M505 236 Q380 40 206 186"); offset-rotate: 0deg; animation: lounge-fling 2.6s cubic-bezier(0.3, 0.1, 0.6, 1) infinite; }
+.spot-art .lounge-kernel-b { animation-delay: 0.9s; }
+.spot-art .lounge-kernel-c { animation-delay: 1.75s; }
+.spot-art .lounge-cat-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: lounge-tail 2.4s ease-in-out infinite; }
+.spot-art .lounge-twinkle { transform-box: fill-box; transform-origin: center; animation: lounge-twinkle 2.2s ease-in-out infinite; }
+.spot-art .lounge-snore { animation: lounge-snore 3s ease-in-out infinite; }
+@keyframes lounge-sob { from { transform: translateY(0) scaleY(1); } to { transform: translateY(1.5px) scaleY(0.97); } }
+@keyframes lounge-howl { from { transform: rotate(-7deg); } to { transform: rotate(-3deg) translateY(-2px); } }
+@keyframes lounge-tear { 0% { transform: translateY(-4px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
+@keyframes lounge-fling { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes lounge-tail { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
+@keyframes lounge-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes lounge-snore { 0%, 100% { opacity: 0.2; transform: translate(0, 0); } 50% { opacity: 1; transform: translate(4px, -5px); } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .lounge-sob, .spot-art .lounge-howl, .spot-art .lounge-tear, .spot-art .lounge-kernel, .spot-art .lounge-cat-tail, .spot-art .lounge-twinkle, .spot-art .lounge-snore { animation: none; }
+  .spot-art .lounge-kernel { offset-distance: 55%; }
+}
+
+/* DisguiseArt */
+.spot-art .disguise-smug { transform-box: fill-box; transform-origin: 50% 100%; animation: disguise-smug 2.4s ease-in-out infinite; }
+.spot-art .disguise-brows { animation: disguise-brows 1.2s ease-in-out infinite; }
+.spot-art .disguise-pick { transform-box: fill-box; transform-origin: center; animation: disguise-pick 1.6s ease-in-out infinite; }
+.spot-art .disguise-glint { animation: disguise-glint 2.4s ease-in-out infinite; }
+@keyframes disguise-smug { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
+@keyframes disguise-brows { 0%, 60%, 100% { transform: translateY(0); } 70%, 90% { transform: translateY(-4px); } }
+@keyframes disguise-pick { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes disguise-glint { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .disguise-smug, .spot-art .disguise-brows, .spot-art .disguise-pick, .spot-art .disguise-glint { animation: none; }
+}
+
+/* ChatArt */
+.spot-art .chat-shiver { animation: chat-shiver 0.16s linear infinite alternate; }
+.spot-art .chat-peek { animation: chat-peek 3.2s ease-in-out infinite; }
+.spot-art .chat-chew { transform-box: fill-box; transform-origin: center; animation: chat-chew 0.5s ease-in-out infinite alternate; }
+.spot-art .chat-dot { animation: chat-dot 1.2s ease-in-out infinite; }
+.spot-art .chat-dot-b { animation-delay: 0.2s; }
+.spot-art .chat-dot-c { animation-delay: 0.4s; }
+@keyframes chat-shiver { from { transform: translateX(-1px); } to { transform: translateX(1px); } }
+@keyframes chat-peek { 0%, 30%, 100% { transform: translateX(0); } 45%, 80% { transform: translateX(-12px); } }
+@keyframes chat-chew { from { transform: scaleY(1); } to { transform: scaleY(0.4); } }
+@keyframes chat-dot { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .chat-shiver, .spot-art .chat-peek, .spot-art .chat-chew, .spot-art .chat-dot { animation: none; }
+}
+
+/* ReactionsArt */
+.spot-art .reactions-pop { transform-box: fill-box; transform-origin: center; animation: reactions-pop 1.8s cubic-bezier(0.2, 0.8, 0.3, 1) infinite; }
+.spot-art .reactions-float { animation: reactions-float 3.6s ease-in-out infinite; }
+.spot-art .reactions-float-b { animation-delay: 1.2s; }
+.spot-art .reactions-float-c { animation-delay: 2.4s; }
+.spot-art .reactions-gasp { transform-box: fill-box; transform-origin: 50% 100%; animation: reactions-gasp 1.8s ease-in-out infinite; }
+.spot-art .reactions-spin { transform-box: fill-box; transform-origin: center; animation: reactions-spin 2s linear infinite; }
+@keyframes reactions-pop { 0% { transform: translateY(14px) scale(0.4); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-10px) scale(1); opacity: 0; } }
+@keyframes reactions-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+@keyframes reactions-gasp { 0%, 100% { transform: scale(1, 1); } 12% { transform: scale(1.04, 0.94); } 24% { transform: scale(0.97, 1.05); } 40% { transform: scale(1, 1); } }
+@keyframes reactions-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .reactions-pop, .spot-art .reactions-float, .spot-art .reactions-gasp, .spot-art .reactions-spin { animation: none; }
+}
+
+/* DevModeArt */
+.spot-art .devmode-cheer { transform-box: fill-box; transform-origin: 50% 100%; animation: devmode-cheer 0.9s cubic-bezier(0.3, 0, 0.3, 1) infinite; }
+.spot-art .devmode-knob { animation: devmode-knob 4s cubic-bezier(0.6, 0, 0.2, 1) infinite; }
+.spot-art .devmode-track { animation: devmode-track 4s cubic-bezier(0.6, 0, 0.2, 1) infinite; }
+.spot-art .devmode-twinkle { transform-box: fill-box; transform-origin: center; animation: devmode-twinkle 1.6s ease-in-out infinite; }
+.spot-art .devmode-sweat { animation: devmode-sweat 0.9s ease-in infinite; }
+@keyframes devmode-cheer { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-8px) scale(0.97, 1.03); } 70% { transform: translateY(0) scale(1.03, 0.97); } }
+@keyframes devmode-knob { 0%, 8% { transform: translateX(-78px); } 22%, 92% { transform: translateX(0); } 100% { transform: translateX(-78px); } }
+@keyframes devmode-track { 0%, 8% { fill: #adb49c; } 22%, 92% { fill: #1c525d; } 100% { fill: #adb49c; } }
+@keyframes devmode-twinkle { 0%, 100% { opacity: 0.3; transform: scale(0.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
+@keyframes devmode-sweat { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(-6px, 14px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .devmode-cheer, .spot-art .devmode-knob, .spot-art .devmode-track, .spot-art .devmode-twinkle, .spot-art .devmode-sweat { animation: none; }
+}
+
+/* StillWatchingArt */
+.spot-art .still-watching-breathe { transform-box: fill-box; transform-origin: 50% 100%; animation: still-watching-breathe 3.2s ease-in-out infinite; }
+.spot-art .still-watching-z { animation: still-watching-z 3.2s ease-out infinite; }
+.spot-art .still-watching-z-b { animation-delay: 1.05s; }
+.spot-art .still-watching-z-c { animation-delay: 2.1s; }
+.spot-art .still-watching-drool { transform-box: fill-box; transform-origin: 50% 0%; animation: still-watching-drool 3.2s ease-in-out infinite; }
+.spot-art .still-watching-blink { animation: still-watching-blink 1.4s steps(1) infinite; }
+@keyframes still-watching-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 1.06); } }
+@keyframes still-watching-z { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(10px, -26px); opacity: 0; } }
+@keyframes still-watching-drool { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(1.2); } }
+@keyframes still-watching-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .spot-art .still-watching-breathe, .spot-art .still-watching-z, .spot-art .still-watching-drool, .spot-art .still-watching-blink { animation: none; }
+}

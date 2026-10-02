@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chillax — make the couch bigger</title>
+    <title>Chillax &mdash; make the couch bigger</title>
     <meta
       name="description"
       content="Free watch party for YouTube, Netflix, Disney+, Hulu, Prime Video, Max, Paramount+, Apple TV+, Twitch, Crunchyroll, and ororo. Synced playback, group chat, voice, and floating reactions."
     />
-    <meta property="og:title" content="Chillax — make the couch bigger" />
+    <meta property="og:title" content="Chillax &mdash; make the couch bigger" />
     <meta
       property="og:description"
-      content="Watch together on the big streaming sites. Synced playback, group chat, voice, and floating reactions — without the Chrome Web Store."
+      content="Watch together on the big streaming sites. Synced playback, group chat, voice, and floating reactions &mdash; without the Chrome Web Store."
     />
+    <meta property="og:image" content="art/hero.svg" />
+    <meta name="theme-color" content="#fbfaf4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e1113" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/png" href="icons/icon32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="icons/icon128.png" />
+    <link rel="preload" href="fonts/inclusive-sans.woff2" as="font" type="font/woff2" crossorigin />
     <style>
       @font-face {
         font-family: "Chillax Sans";
@@ -36,17 +40,25 @@
         --inset: #e9e8e0;
         --ink: #0e1113;
         --ink-2: #2c3134;
-        --mute: rgb(14 17 19 / 0.62);
+        --mute: rgb(14 17 19 / 0.6);
         --line: rgb(14 17 19 / 0.1);
+        --line-strong: rgb(14 17 19 / 0.22);
         --tint: rgb(14 17 19 / 0.05);
         --teal: #c3d3ce;
         --peach: #f8dbca;
+        --coral: #db704c;
+        --sun: #f6c453;
+        --deep: #1c525d;
         --link: #1c525d;
         --ink-hover: #000;
-        --shadow-card: 0 20px 76px rgb(0 0 0 / 0.15);
+        --nav-bg: rgb(251 250 244 / 0.72);
+        --shadow-card: 0 1px 2px rgb(14 17 19 / 0.06), 0 24px 60px -28px rgb(14 17 19 / 0.35);
+        --shadow-art: 0 2px 0 rgb(14 17 19 / 0.9), 0 30px 80px -30px rgb(14 17 19 / 0.45);
+        --shadow-btn: 0 1px 0 rgb(255 255 255 / 0.14) inset, 0 12px 28px -12px rgb(14 17 19 / 0.7);
         --sans: "Chillax Sans", "Inclusive Sans", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
         --mono: "Chillax Mono", "JetBrains Mono", SFMono-Regular, ui-monospace, Menlo, monospace;
-        --ease: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        --ease: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        --bounce: 420ms cubic-bezier(0.3, 1.4, 0.5, 1);
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -56,14 +68,18 @@
           --inset: #262c2f;
           --ink: #fbfaf4;
           --ink-2: rgb(251 250 244 / 0.82);
-          --mute: rgb(251 250 244 / 0.6);
-          --line: rgb(251 250 244 / 0.12);
+          --mute: rgb(251 250 244 / 0.58);
+          --line: rgb(251 250 244 / 0.1);
+          --line-strong: rgb(251 250 244 / 0.24);
           --tint: rgb(251 250 244 / 0.07);
           --teal: #1c525d;
           --peach: #4d2a1f;
           --link: #c3d3ce;
           --ink-hover: #fff;
-          --shadow-card: 0 20px 76px rgb(0 0 0 / 0.5);
+          --nav-bg: rgb(14 17 19 / 0.7);
+          --shadow-card: 0 1px 0 rgb(251 250 244 / 0.04) inset, 0 24px 60px -28px rgb(0 0 0 / 0.8);
+          --shadow-art: 0 2px 0 rgb(0 0 0 / 0.9), 0 30px 80px -30px rgb(0 0 0 / 0.9);
+          --shadow-btn: 0 1px 0 rgb(255 255 255 / 0.5) inset, 0 12px 28px -12px rgb(0 0 0 / 0.9);
         }
         body::before {
           background:
@@ -78,8 +94,12 @@
       * {
         box-sizing: border-box;
       }
+      [hidden] {
+        display: none !important;
+      }
       html {
         scroll-behavior: smooth;
+        scroll-padding-top: 88px;
       }
       ::selection {
         background: #c3d3ce;
@@ -90,10 +110,12 @@
         min-height: 100vh;
         color: var(--ink);
         background: var(--canvas);
-        font-family: var(--mono);
+        font-family: var(--sans);
         font-size: 16px;
-        line-height: 1.7;
+        line-height: 1.6;
         -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overflow-x: clip;
       }
       body::before {
         content: "";
@@ -109,19 +131,262 @@
           radial-gradient(ellipse 40% 30% at 88% 88%, rgb(195 211 206 / 0.28), transparent 55%),
           var(--canvas);
       }
+      a {
+        color: var(--link);
+      }
+      p {
+        margin: 0;
+      }
+      code,
+      kbd {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: var(--tint);
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      body.is-file .web-only {
+        display: none;
+      }
+      body.is-web .file-only {
+        display: none;
+      }
+
+      /* Nav */
+      .nav-wrap {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--nav-bg);
+        -webkit-backdrop-filter: blur(16px) saturate(1.5);
+        backdrop-filter: blur(16px) saturate(1.5);
+        border-bottom: 1px solid transparent;
+        transition: border-color var(--ease), background var(--ease);
+      }
+      .nav-wrap.scrolled {
+        border-bottom-color: var(--line);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 14px 24px;
+      }
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: var(--ink);
+        color: var(--canvas);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        box-shadow: 3px 3px 0 var(--coral);
+        transform: rotate(-4deg);
+        transition: transform var(--bounce);
+      }
+      .brand:hover .logo {
+        transform: rotate(4deg) scale(1.06);
+      }
+      .brand-name {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .ver {
+        flex: 0 0 auto;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: var(--tint);
+        color: var(--mute);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        line-height: 1.4;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        color: var(--ink-2);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        transition: background var(--ease), color var(--ease);
+      }
+      .nav-link:hover {
+        background: var(--tint);
+        color: var(--ink);
+      }
+
+      /* Buttons */
+      .btn-primary,
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 54px;
+        padding: 0 22px;
+        border-radius: 16px;
+        font-family: var(--sans);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background var(--ease), border-color var(--ease), transform var(--ease), box-shadow var(--ease);
+      }
+      .btn-primary {
+        background: var(--ink);
+        color: var(--canvas);
+        box-shadow: var(--shadow-btn);
+      }
+      .btn-primary:hover {
+        background: var(--ink-hover);
+        transform: translateY(-2px);
+      }
+      .btn-primary:active,
+      .btn-ghost:active {
+        transform: translateY(1px);
+      }
+      .btn-primary svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+      .btn-primary .btn-ver {
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: rgb(127 127 127 / 0.22);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+      .btn-ghost {
+        color: var(--ink);
+        background: transparent;
+        box-shadow: inset 0 0 0 1.5px var(--line-strong);
+      }
+      .btn-ghost:hover {
+        background: var(--tint);
+        box-shadow: inset 0 0 0 1.5px var(--ink);
+      }
+      .btn-sm {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 12px;
+        font-size: 15px;
+      }
+      .btn-primary:focus-visible,
+      .btn-ghost:focus-visible,
+      .nav-link:focus-visible,
+      .brand:focus-visible,
+      button.copy:focus-visible {
+        outline: 2px solid var(--coral);
+        outline-offset: 3px;
+      }
+
+      /* Layout */
+      main {
+        position: relative;
+        z-index: 1;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 24px 72px;
+      }
+      section {
+        position: relative;
+      }
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 18px;
+        padding: 5px 12px 5px 10px;
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink-2);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        line-height: 1.6;
+        text-transform: uppercase;
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .kicker .pulse {
+        position: relative;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--coral);
+      }
+      .kicker .pulse::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--coral);
+        animation: pulse 2s ease-out infinite;
+      }
+      .section-head {
+        max-width: 640px;
+        margin: 0 0 28px;
+      }
+      .section-title {
+        margin: 0;
+        font-size: clamp(32px, 4.4vw, 46px);
+        font-weight: 700;
+        letter-spacing: -0.05em;
+        line-height: 1.02;
+      }
+      .section-sub {
+        margin-top: 12px;
+        color: var(--ink-2);
+        font-size: 17px;
+        line-height: 1.55;
+      }
+
+      /* Hero */
       .stage {
         position: relative;
-        overflow: hidden;
-        margin: 0 0 56px;
-        padding: 8px 0 12px;
+        padding: 56px 0 40px;
       }
       .sky {
         pointer-events: none;
         position: absolute;
         top: 0;
-        right: 0;
+        right: -24px;
         bottom: 0;
-        left: 42%;
+        left: 46%;
         overflow: hidden;
         z-index: 0;
       }
@@ -136,165 +401,40 @@
         filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.18));
         animation: float-loop 9s ease-in-out infinite;
       }
-      .spark-dot {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        animation: spark-twinkle 2.6s ease-in-out infinite;
-      }
-      @keyframes float-loop {
-        0% {
-          opacity: 0;
-          transform: translateY(12vh) scale(0.7) rotate(var(--spin, 0deg));
-        }
-        12% {
-          opacity: 1;
-          transform: translateY(0) scale(1.06) rotate(var(--spin, 0deg));
-        }
-        100% {
-          opacity: 0;
-          transform: translateY(-420px) scale(1.12) rotate(calc(var(--spin, 0deg) + 18deg));
-        }
-      }
-      @keyframes spark-twinkle {
-        0%,
-        100% {
-          opacity: 0.25;
-          transform: scale(0.7);
-        }
-        50% {
-          opacity: 0.95;
-          transform: scale(1.15);
-        }
-      }
-      @keyframes board-float {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-6px);
-        }
-      }
-      main {
-        position: relative;
-        z-index: 1;
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 28px 24px 96px;
-      }
-      .top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 56px;
-      }
-      .logo {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        background: var(--inset);
-        color: var(--ink);
-        font-family: var(--sans);
-        font-weight: 700;
-        font-size: 14px;
-        letter-spacing: -0.04em;
-        line-height: 1;
-      }
-      .brand {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
-      .brand h1 {
-        margin: 0;
-        font-family: var(--sans);
-        font-size: 22px;
-        font-weight: 600;
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-      }
-      .brand-title {
-        display: flex;
-        align-items: baseline;
-        gap: 10px;
-      }
-      .ver {
-        flex: 0 0 auto;
-        padding: 3px 9px;
-        border-radius: 999px;
-        background: var(--tint);
-        color: var(--mute);
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        line-height: 1.4;
-      }
-      .brand p {
-        margin: 2px 0 0;
-        color: var(--mute);
-        font-size: 12px;
-        line-height: 1.4;
-      }
-      .nav-ghost {
-        display: inline-flex;
-        align-items: center;
-        min-height: 40px;
-        padding: 0 16px;
-        border-radius: 12px;
-        color: var(--ink);
-        text-decoration: none;
-        font-family: var(--sans);
-        font-size: 17px;
-        font-weight: 600;
-        letter-spacing: -0.03em;
-        transition: background var(--ease);
-      }
-      .nav-ghost:hover {
-        background: var(--tint);
-      }
       .hero {
         display: grid;
-        grid-template-columns: 1.08fr 0.92fr;
-        gap: 44px;
+        grid-template-columns: 1fr 1.02fr;
+        gap: 56px;
         align-items: center;
-        margin-bottom: 8px;
       }
-      .kicker,
-      .section-kicker {
+      .display {
+        margin: 0 0 22px;
+        font-size: clamp(48px, 7.4vw, 88px);
+        font-weight: 700;
+        letter-spacing: -0.065em;
+        line-height: 0.92;
+      }
+      .squiggle {
+        position: relative;
         display: inline-block;
-        margin: 0 0 16px;
-        padding: 4px 12px;
-        border-radius: 40px;
-        background: var(--tint);
-        color: var(--ink-2);
-        font-size: 12px;
-        letter-spacing: 0.06em;
-        line-height: 1.6;
-        text-transform: uppercase;
+        white-space: nowrap;
       }
-      .section-kicker {
-        margin: 0 0 12px;
-      }
-      .hero h2 {
-        margin: 0 0 20px;
-        font-family: var(--sans);
-        font-size: clamp(44px, 7vw, 76px);
-        font-weight: 600;
-        letter-spacing: -0.06em;
-        line-height: 0.9;
+      .squiggle::after {
+        content: "";
+        position: absolute;
+        left: -2%;
+        right: 4%;
+        bottom: -0.16em;
+        height: 0.24em;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M3 11C22 3 36 3 52 9s32 6 50 0 34-6 50 0 30 5 45-2' fill='none' stroke='%23db704c' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E")
+          no-repeat center / 100% 100%;
       }
       .lede {
         margin: 0 0 32px;
         color: var(--ink-2);
-        font-size: 17px;
-        line-height: 1.6;
-        max-width: 34em;
+        font-size: 19px;
+        line-height: 1.55;
+        max-width: 31em;
       }
       .cta-row {
         display: flex;
@@ -302,35 +442,118 @@
         gap: 12px;
         align-items: center;
       }
+      .fine {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 16px;
+        margin-top: 20px;
+        color: var(--mute);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .fine span::before {
+        content: "\2713";
+        margin-right: 6px;
+        color: var(--coral);
+        font-weight: 700;
+      }
+      .hero-art {
+        position: relative;
+        margin: 0;
+      }
+      .art-card {
+        overflow: hidden;
+        border-radius: 28px;
+        border: 2px solid #0e1113;
+        background: var(--teal);
+        box-shadow: var(--shadow-art);
+      }
+      .art-card img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .hero-art .art-card {
+        transform: rotate(1.4deg);
+        animation: board-float 7s ease-in-out infinite;
+      }
+      .sticker {
+        position: absolute;
+        z-index: 2;
+        padding: 8px 14px;
+        border-radius: 14px;
+        border: 2px solid #0e1113;
+        color: #0e1113;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 3px 3px 0 #0e1113;
+      }
+      .sticker-a {
+        top: -18px;
+        left: -14px;
+        background: var(--sun);
+        transform: rotate(-6deg);
+      }
+      .sticker-b {
+        right: -10px;
+        bottom: -18px;
+        background: #fbfaf4;
+        transform: rotate(4deg);
+      }
+
+      /* Platforms */
+      .works {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px 18px;
+        margin: 40px 0 96px;
+        padding: 18px 20px;
+        border-radius: 24px;
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .works-label {
+        flex: 0 0 auto;
+        color: var(--mute);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
       .platforms {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin: 28px 0 0;
-        max-width: 40em;
       }
       .platforms .chip {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         min-height: 36px;
-        padding: 0 12px 0 8px;
+        padding: 0 12px 0 6px;
         border-radius: 999px;
-        background: color-mix(in srgb, var(--accent) 12%, var(--sunken));
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface));
         color: var(--ink-2);
-        font-family: var(--sans);
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 600;
         letter-spacing: -0.02em;
         line-height: 1;
         box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, var(--line));
+        transition: transform var(--bounce);
+      }
+      .platforms .chip:hover {
+        transform: translateY(-2px) rotate(-2deg);
       }
       .platforms .mark {
         display: grid;
         place-items: center;
-        width: 24px;
-        height: 24px;
-        border-radius: 8px;
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
         background: color-mix(in srgb, var(--accent) 16%, var(--surface));
         color: var(--accent);
       }
@@ -339,201 +562,202 @@
         width: 15px;
         height: 15px;
       }
-      .download-hero,
-      .ghost {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 52px;
-        padding: 14px 20px;
-        border: 2px solid var(--ink);
-        border-radius: 16px;
-        font-family: var(--sans);
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: -0.04em;
-        line-height: 1.2;
-        text-decoration: none;
-        transition: background var(--ease), border-color var(--ease), transform var(--ease);
-      }
-      .download-hero {
-        display: none;
-        background: var(--ink);
-        color: var(--canvas);
-        white-space: nowrap;
-        max-width: 100%;
-      }
-      body.is-web .download-hero {
-        display: inline-flex;
-      }
-      .download-hero:hover {
-        background: var(--ink-hover);
-        border-color: var(--ink-hover);
-      }
-      .download-hero:active {
-        transform: translateY(1px);
-      }
-      .ghost {
-        color: var(--ink);
-        background: transparent;
-      }
-      .ghost:hover {
-        background: var(--tint);
-      }
-      .download-hero:focus-visible,
-      .ghost:focus-visible,
-      .nav-ghost:focus-visible,
-      button.copy:focus-visible {
-        outline: 2px solid var(--ink);
-        outline-offset: 3px;
-      }
-      .storyboard {
-        overflow: hidden;
-        border-radius: 32px;
-        background: var(--teal);
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow-card);
-        animation: board-float 6s ease-in-out infinite;
-      }
-      .storyboard img {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-      .moments-head,
-      .steps-head {
-        margin: 0 0 16px;
-      }
+
+      /* Moments */
       .moments {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 20px;
-        margin: 0 0 48px;
+        margin: 0 0 20px;
       }
       .moment {
-        padding: 16px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 12px 26px;
         border-radius: 32px;
-        background: var(--sunken);
-        transition: transform var(--ease);
+        background: var(--surface);
+        box-shadow: var(--shadow-card), inset 0 0 0 1px var(--line);
+        transition: transform var(--bounce);
       }
       .moment:hover {
-        transform: translateY(-3px);
+        transform: translateY(-6px) rotate(-0.6deg);
       }
-      .moment .storyboard {
-        border-radius: 24px;
+      .moment:nth-child(2):hover {
+        transform: translateY(-6px) rotate(0.6deg);
+      }
+      .moment .art-card {
+        border-radius: 22px;
+        border-width: 1.5px;
         box-shadow: none;
-        animation-delay: 0.4s;
       }
-      .moment:nth-child(3) .storyboard {
-        animation-delay: 0.8s;
+      .moment:nth-child(3) .art-card {
+        background: var(--peach);
+      }
+      .moment-tag {
+        margin: 20px 12px 6px;
+        color: var(--coral);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
       .moment h3 {
-        margin: 18px 8px 6px;
-        font-family: var(--sans);
-        font-size: 24px;
-        font-weight: 600;
-        letter-spacing: -0.04em;
+        margin: 0 12px 8px;
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
         line-height: 1.1;
       }
       .moment p {
-        margin: 0 8px;
+        margin: 0 12px;
         color: var(--ink-2);
-        font-family: var(--sans);
         font-size: 16px;
-        line-height: 1.45;
+        line-height: 1.5;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        margin: 0 0 28px;
+        overflow: hidden;
+        border-radius: 24px;
+        background: var(--line);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .fact {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px;
+        background: var(--surface);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+      }
+      .fact-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: var(--sunken);
+        font-size: 19px;
       }
       .warn {
-        margin: 0 0 48px;
-        padding: 18px 22px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        margin: 0 0 104px;
+        padding: 20px 24px;
         border-radius: 24px;
         background: var(--peach);
         color: var(--ink);
-        font-family: var(--sans);
         font-size: 16px;
-        line-height: 1.45;
+        line-height: 1.5;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--coral) 30%, transparent);
       }
-      .steps-title {
+      .warn-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--coral);
+        color: #fbfaf4;
+        font-weight: 700;
+        font-size: 17px;
+      }
+      .warn p {
+        color: var(--ink);
+      }
+      .warn strong {
+        font-weight: 700;
+      }
+
+      /* Install */
+      .install-head {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 40px;
+        align-items: end;
+        margin: 0 0 32px;
+      }
+      .install-head .section-head {
         margin: 0;
-        font-family: var(--sans);
-        font-size: 40px;
-        font-weight: 600;
-        letter-spacing: -0.05em;
-        line-height: 1.05;
+      }
+      .install-head .art-card {
+        max-width: 400px;
+        justify-self: end;
+        transform: rotate(-1.6deg);
       }
       ol {
         margin: 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        counter-reset: step;
       }
       li {
         display: grid;
-        grid-template-columns: 40px 1fr;
+        grid-template-columns: 44px 1fr;
         gap: 18px;
-        min-height: 148px;
-        padding: 22px 24px;
-        border-radius: 24px;
-        background: var(--sunken);
+        padding: 24px;
+        border-radius: 26px;
+        background: var(--surface);
+        box-shadow: var(--shadow-card), inset 0 0 0 1px var(--line);
+        transition: transform var(--ease), box-shadow var(--ease);
+      }
+      li:hover {
+        transform: translateY(-2px);
       }
       .n {
         display: grid;
         place-items: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
         background: var(--ink);
         color: var(--canvas);
-        font-family: var(--sans);
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 19px;
+        font-weight: 700;
+        box-shadow: 3px 3px 0 var(--coral);
+        transform: rotate(-4deg);
+      }
+      li:nth-child(even) .n {
+        transform: rotate(4deg);
+        box-shadow: -3px 3px 0 var(--coral);
       }
       .body {
         display: grid;
-        grid-template-rows: auto auto 42px;
+        grid-template-rows: auto 1fr auto;
         gap: 8px;
         min-width: 0;
       }
       li h3 {
-        margin: 0;
-        font-family: var(--sans);
+        margin: 6px 0 0;
         font-size: 21px;
-        line-height: 1.2;
-        display: flex;
-        align-items: center;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: -0.04em;
-      }
-      p {
-        margin: 0;
-        color: var(--ink-2);
-        font-size: 14px;
-        line-height: 1.6;
+        line-height: 1.2;
       }
       .step-copy {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
-        overflow: hidden;
-      }
-      code,
-      kbd {
-        font-family: var(--mono);
-        font-size: 0.92em;
-        padding: 1px 6px;
-        border-radius: 6px;
-        background: var(--tint);
-        color: var(--ink);
-      }
-      kbd {
-        border: 1px solid var(--line);
+        color: var(--ink-2);
+        font-size: 15px;
+        line-height: 1.55;
       }
       .visual {
-        height: 42px;
+        height: 44px;
+        margin-top: 6px;
         padding: 0 6px 0 14px;
         border-radius: 12px;
-        background: var(--surface);
+        background: var(--sunken);
         color: var(--ink);
+        font-family: var(--mono);
         font-size: 13px;
         display: flex;
         justify-content: space-between;
@@ -548,11 +772,12 @@
         white-space: nowrap;
       }
       .toggle {
-        width: 36px;
-        height: 20px;
+        flex: 0 0 auto;
+        width: 38px;
+        height: 22px;
         margin-right: 6px;
         border-radius: 99px;
-        background: var(--ink);
+        background: var(--deep);
         position: relative;
       }
       .toggle::after {
@@ -560,183 +785,347 @@
         position: absolute;
         top: 3px;
         right: 3px;
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
-        background: var(--canvas);
+        background: #fbfaf4;
+        animation: toggle-nudge 3s ease-in-out infinite;
       }
-      .btn {
+      .fake-btn {
         flex-shrink: 0;
-        padding: 4px 12px;
+        padding: 5px 12px;
         border-radius: 8px;
-        background: var(--inset);
+        background: var(--surface);
         color: var(--ink);
         font-family: var(--sans);
         font-size: 14px;
         font-weight: 600;
         letter-spacing: -0.02em;
+        box-shadow: inset 0 0 0 1px var(--line-strong);
       }
       .copy-row {
-        justify-content: flex-start;
+        justify-content: space-between;
         gap: 8px;
       }
       .copy-row code {
+        background: none;
+        padding: 0;
         font-size: 13px;
-        padding: 4px 8px;
       }
       button.copy {
+        flex: 0 0 auto;
         border: 0;
         cursor: pointer;
-        padding: 6px 14px;
+        padding: 7px 14px;
         border-radius: 8px;
         background: var(--ink);
         color: var(--canvas);
         font-family: var(--sans);
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: -0.02em;
+        transition: background var(--ease), transform var(--ease);
       }
       button.copy:hover {
         background: var(--ink-hover);
       }
-      a {
-        color: var(--link);
+      button.copy:active {
+        transform: scale(0.96);
       }
-      body.is-file .web-only {
-        display: none;
+      button.copy.done {
+        background: var(--deep);
+        color: #fbfaf4;
       }
-      body.is-web .file-only {
-        display: none;
-      }
+
+      /* Footer */
       footer {
-        margin-top: 56px;
-        padding-top: 32px;
-        border-top: 1px solid var(--line);
         display: grid;
-        grid-template-columns: 140px 1fr;
-        gap: 24px;
+        grid-template-columns: 300px 1fr;
+        gap: 36px;
         align-items: center;
+        margin-top: 104px;
+        padding: 16px 32px 16px 16px;
+        border-radius: 32px;
+        background: var(--surface);
+        box-shadow: var(--shadow-card), inset 0 0 0 1px var(--line);
         color: var(--mute);
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.6;
+      }
+      footer .art-card {
+        border-radius: 22px;
+        border-width: 1.5px;
+        background: var(--peach);
+        box-shadow: none;
+      }
+      footer h2 {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        line-height: 1.1;
       }
       footer .meta {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+        font-family: var(--mono);
+        font-size: 12px;
       }
       footer .meta .ver {
         background: var(--sunken);
         color: var(--ink-2);
       }
       footer p {
-        color: var(--mute);
-        font-size: 13px;
-      }
-      footer .storyboard {
-        border-radius: 20px;
-        background: var(--peach);
-        box-shadow: none;
-        animation-delay: 1.1s;
+        color: var(--ink-2);
+        font-size: 15px;
       }
       footer p + p {
-        margin-top: 8px;
+        margin-top: 10px;
+        color: var(--mute);
+        font-size: 14px;
       }
-      @media (max-width: 760px) {
+      .colophon {
+        margin-top: 28px;
+        color: var(--mute);
+        font-family: var(--mono);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      /* Motion */
+      .js .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 600ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .js .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+      .js .moment.reveal.in:hover {
+        transform: translateY(-6px) rotate(-0.6deg);
+      }
+      .js .moment.reveal.in:nth-child(2):hover {
+        transform: translateY(-6px) rotate(0.6deg);
+      }
+      .js li.reveal.in:hover {
+        transform: translateY(-2px);
+      }
+      .js .art-card.reveal.in {
+        transform: rotate(-1.6deg);
+      }
+      @keyframes float-loop {
+        0% {
+          opacity: 0;
+          transform: translateY(12vh) scale(0.7) rotate(var(--spin, 0deg));
+        }
+        12% {
+          opacity: 1;
+          transform: translateY(0) scale(1.06) rotate(var(--spin, 0deg));
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-460px) scale(1.12) rotate(calc(var(--spin, 0deg) + 18deg));
+        }
+      }
+      @keyframes board-float {
+        0%,
+        100% {
+          transform: rotate(1.4deg) translateY(0);
+        }
+        50% {
+          transform: rotate(0.6deg) translateY(-8px);
+        }
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 0.7;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(2.6);
+        }
+      }
+      @keyframes toggle-nudge {
+        0%,
+        70%,
+        100% {
+          transform: translateX(0);
+        }
+        80% {
+          transform: translateX(-3px);
+        }
+      }
+
+      @media (max-width: 900px) {
         .hero,
-        .moments,
-        footer {
+        .install-head {
           grid-template-columns: 1fr;
         }
         .hero {
-          gap: 28px;
+          gap: 48px;
         }
-        .top {
-          margin-bottom: 32px;
+        .hero-art {
+          max-width: 620px;
+          margin: 0 auto;
         }
-        .platforms {
-          margin-top: 22px;
+        .install-head .art-card {
+          justify-self: start;
+          max-width: 360px;
+        }
+        .moments {
+          grid-template-columns: 1fr;
+          max-width: 560px;
+        }
+        .facts {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        ol {
+          grid-template-columns: 1fr;
+        }
+        .sky {
+          left: 0;
+          right: 0;
         }
       }
-      @media (max-width: 560px) {
-        .download-hero {
-          white-space: normal;
-          width: 100%;
+      @media (max-width: 640px) {
+        .nav {
+          padding: 12px 16px;
         }
-        .nav-ghost {
+        .nav-links .nav-link {
           display: none;
         }
+        main {
+          padding: 0 16px 56px;
+        }
+        .stage {
+          padding-top: 36px;
+        }
+        .lede {
+          font-size: 17px;
+        }
+        .cta-row > a {
+          width: 100%;
+        }
+        .btn-primary,
+        .btn-ghost {
+          white-space: normal;
+        }
+        .works {
+          margin-bottom: 72px;
+        }
+        .facts {
+          grid-template-columns: 1fr;
+        }
         li {
-          min-height: 0;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          padding: 20px;
         }
-        .body {
-          grid-template-rows: auto auto 42px;
+        footer {
+          grid-template-columns: 1fr;
+          padding: 12px 12px 24px;
+          gap: 20px;
         }
-        .step-copy {
-          display: block;
-          overflow: visible;
+        footer > div:last-child {
+          padding: 0 8px;
+        }
+        .sticker {
+          font-size: 12px;
         }
       }
       @media (prefers-reduced-motion: reduce) {
         html {
           scroll-behavior: auto;
         }
-        .floatie,
-        .spark-dot,
-        .storyboard,
-        .moment {
-          animation: none;
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        .js .reveal {
+          opacity: 1;
           transform: none;
-          transition: none;
         }
       }
     </style>
   </head>
   <body>
-    <main>
+    <div class="nav-wrap" id="nav">
+      <header class="nav">
+        <a class="brand" href="#top" aria-label="Chillax home">
+          <span class="logo" aria-hidden="true">Cx</span>
+          <h1 class="brand-name">Chillax</h1>
+          <span class="ver">v__CHILLAX_VERSION__</span>
+        </a>
+        <nav class="nav-links" aria-label="Page">
+          <a class="nav-link" href="#how">How it works</a>
+          <a class="nav-link" href="#install">Install</a>
+          <a class="btn-primary btn-sm web-only" href="__CHILLAX_ZIP__" download="__CHILLAX_ZIP__" hidden>Download</a>
+          <a class="btn-primary btn-sm file-only" href="#install">Start setup</a>
+        </nav>
+      </header>
+    </div>
+    <main id="top">
       <div class="stage">
         <div class="sky" aria-hidden="true">
-          <span class="floatie" style="left: 6%; animation-duration: 10s; --spin: -12deg">🍿</span>
-          <span class="floatie" style="left: 18%; animation-delay: 1.4s; animation-duration: 8.5s; --spin: 8deg">✨</span>
-          <span class="floatie" style="left: 34%; animation-delay: 3.1s; animation-duration: 11s; --spin: -6deg">🧡</span>
-          <span class="floatie" style="left: 52%; animation-delay: 0.6s; animation-duration: 9.2s; --spin: 14deg">🎬</span>
-          <span class="floatie" style="left: 71%; animation-delay: 2.2s; animation-duration: 8s; --spin: -18deg">😂</span>
-          <span class="floatie" style="left: 86%; animation-delay: 4s; animation-duration: 10.5s; --spin: 10deg">🥳</span>
-          <span class="spark-dot" style="left: 12%; top: 18%; background: #1c525d"></span>
-          <span class="spark-dot" style="left: 78%; top: 12%; background: #adb49c; animation-delay: 0.6s"></span>
-          <span class="spark-dot" style="left: 42%; top: 8%; background: #db704c; animation-delay: 1.1s"></span>
-          <span class="spark-dot" style="left: 91%; top: 40%; background: #1c525d; animation-delay: 1.8s"></span>
+          <span class="floatie" style="left: 6%; animation-duration: 10s; --spin: -12deg">&#x1F37F;</span>
+          <span class="floatie" style="left: 22%; animation-delay: 1.4s; animation-duration: 8.5s; --spin: 8deg">&#x2728;</span>
+          <span class="floatie" style="left: 38%; animation-delay: 3.1s; animation-duration: 11s; --spin: -6deg">&#x1F9E1;</span>
+          <span class="floatie" style="left: 56%; animation-delay: 0.6s; animation-duration: 9.2s; --spin: 14deg">&#x1F631;</span>
+          <span class="floatie" style="left: 74%; animation-delay: 2.2s; animation-duration: 8s; --spin: -18deg">&#x1F602;</span>
+          <span class="floatie" style="left: 90%; animation-delay: 4s; animation-duration: 10.5s; --spin: 10deg">&#x1F973;</span>
         </div>
-        <header class="top">
-          <div class="brand">
-            <span class="logo">Cx</span>
-            <div>
-              <div class="brand-title">
-                <h1>Chillax</h1>
-                <span class="ver">v__CHILLAX_VERSION__</span>
-              </div>
-              <p>Watch party · chat · call</p>
-            </div>
-          </div>
-          <a class="nav-ghost" href="#install">Six-step install</a>
-        </header>
         <section class="hero">
           <div>
-            <p class="kicker">Handmade night in</p>
-            <h2>Make the couch bigger.</h2>
+            <p class="kicker"><span class="pulse" aria-hidden="true"></span>Free watch parties &middot; up to 8 friends</p>
+            <h2 class="display">Make the couch <span class="squiggle">bigger.</span></h2>
             <p class="lede file-only">
-              Chrome will not install this from a download the way the Web Store does. Load the unzipped folder once — about a minute — then pick a face and start the night on any supported streamer.
+              Chrome won&rsquo;t install this from a download the way the Web Store does. Load the unzipped folder once &mdash; about a minute &mdash; then pick a face and start the night on any supported streamer.
             </p>
             <p class="lede web-only" hidden>
-              Download the zip, load the unzipped folder in Chrome, then open a video. Setup is a small card on the left. Chat docks on the right so the movie stays huge.
+              Same movie, same second, different couches. Download the zip, load it in Chrome, and open a video. Setup is a small card on the left; chat docks on the right so the movie stays huge.
             </p>
             <div class="cta-row">
-              <a class="download-hero" href="__CHILLAX_ZIP__" download="__CHILLAX_ZIP__">Download Chillax v__CHILLAX_VERSION__</a>
-              <a class="ghost" href="#install">Six-step install</a>
+              <a class="btn-primary web-only" href="__CHILLAX_ZIP__" download="__CHILLAX_ZIP__" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" /></svg>
+                Download Chillax
+                <span class="btn-ver">v__CHILLAX_VERSION__</span>
+              </a>
+              <a class="btn-primary file-only" href="#install">Start the six steps</a>
+              <a class="btn-ghost web-only" href="#install" hidden>Six-step install</a>
+              <a class="btn-ghost file-only" href="#how">How a night goes</a>
             </div>
-            <div class="platforms" aria-label="Supported streaming sites">
+            <p class="fine">
+              <span>Chrome</span>
+              <span>About a minute to set up</span>
+              <span>Peer-to-peer</span>
+            </p>
+          </div>
+          <figure class="hero-art">
+            <span class="sticker sticker-a" aria-hidden="true">synced to the second</span>
+            <div class="art-card">
+              <img
+                src="art/hero.svg"
+                width="640"
+                height="400"
+                alt="One couch split across two homes: a friend sobbing at 3pm and another howling with laughter at 2am, popcorn flying between them, and an unimpressed cat"
+              />
+            </div>
+            <span class="sticker sticker-b" aria-hidden="true">cat not included</span>
+          </figure>
+        </section>
+      </div>
+
+      <section class="works" aria-label="Supported streaming sites">
+        <span class="works-label">Works on</span>
+        <div class="platforms">
               <span class="chip" style="--accent:#FF0033">
                 <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg></span>
                 YouTube
@@ -782,132 +1171,158 @@
                 ororo
               </span>
             </div>
-          </div>
-          <div class="storyboard">
-            <img src="art/lounge.svg" width="640" height="400" alt="Two blob friends on a couch watching a movie" />
-          </div>
-        </section>
-      </div>
-      <p class="section-kicker">How a night looks</p>
-      <section class="moments" aria-label="How Chillax looks">
-        <article class="moment">
-          <div class="storyboard">
-            <img src="art/lounge.svg" width="320" height="200" alt="" />
-          </div>
-          <h3>Start on the left</h3>
-          <p>Pick an avatar in the floating lounge card. The video stays full width until someone is in.</p>
-        </article>
-        <article class="moment">
-          <div class="storyboard">
-            <img src="art/dock.svg" width="320" height="200" alt="" />
-          </div>
-          <h3>Chat on the right</h3>
-          <p>Once you are in a party, chat docks beside the player. Hide chat without leaving. Hosts keep playback by default.</p>
-        </article>
-        <article class="moment">
-          <div class="storyboard">
-            <img src="art/popcorn.svg" width="180" height="140" alt="" />
-          </div>
-          <h3>React without pausing</h3>
-          <p>Emoji float up the screen. Mic and camera start off. Parties cap at eight people.</p>
-        </article>
       </section>
-      <p class="warn">
-        Keep this unzipped folder on your computer. If you move or trash it, Chillax turns off. After Chrome restarts, a popup may say “Disable developer mode extensions” — click <strong>Cancel</strong> to keep Chillax.
-      </p>
-      <div class="steps-head">
-        <p class="section-kicker">Once, then you’re in</p>
-        <h2 class="steps-title" id="install">Install unpacked</h2>
-      </div>
-      <ol>
-        <li>
-          <span class="n">1</span>
-          <div class="body">
-            <h3 id="step1-title">Unzip the file you were sent</h3>
-            <p class="step-copy" id="step1-copy">
-              Double-click <code>__CHILLAX_ZIP__</code>. Keep the folder that contains <code>manifest.json</code> and this page (Downloads is fine).
-            </p>
-            <div class="visual" aria-hidden="true">
-              <span>manifest.json · install.html</span>
-              <span class="btn">Folder</span>
+
+      <section id="how" aria-labelledby="how-title">
+        <div class="section-head reveal">
+          <p class="kicker">How a night goes</p>
+          <h2 class="section-title" id="how-title">Everyone on the couch. Nobody on your couch.</h2>
+        </div>
+        <div class="moments">
+          <article class="moment reveal">
+            <div class="art-card">
+              <img src="art/disguise.svg" width="320" height="200" alt="" loading="lazy" />
             </div>
-          </div>
-        </li>
-        <li>
-          <span class="n">2</span>
-          <div class="body">
-            <h3>Open Chrome’s extensions page</h3>
-            <p class="step-copy">Copy this address, paste it in Chrome’s address bar, and press Enter. Chrome blocks the link from this page.</p>
-            <div class="visual copy-row">
-              <code id="ext-url">chrome://extensions</code>
-              <button type="button" class="copy" id="copy-ext" aria-live="polite">Copy</button>
+            <p class="moment-tag">01 &middot; Join</p>
+            <h3>Start on the left</h3>
+            <p>Pick an avatar in the floating lounge card. Disguises optional. The video stays full width until someone is in.</p>
+          </article>
+          <article class="moment reveal">
+            <div class="art-card">
+              <img src="art/chat.svg" width="320" height="200" alt="" loading="lazy" />
             </div>
-          </div>
-        </li>
-        <li>
-          <span class="n">3</span>
-          <div class="body">
-            <h3>Turn on Developer mode</h3>
-            <p class="step-copy">On the extensions page, find the switch at the top-right and flip it on.</p>
-            <div class="visual" aria-hidden="true">
-              <span>Developer mode</span>
-              <span class="toggle"></span>
+            <p class="moment-tag">02 &middot; Yell</p>
+            <h3>Chat on the right</h3>
+            <p>Once you&rsquo;re in a party, chat docks beside the player so everyone can yell at the screen together. Hide chat without leaving. Hosts keep playback by default.</p>
+          </article>
+          <article class="moment reveal">
+            <div class="art-card">
+              <img src="art/reactions.svg" width="320" height="200" alt="" loading="lazy" />
             </div>
+            <p class="moment-tag">03 &middot; React</p>
+            <h3>React without pausing</h3>
+            <p>Emoji float up the screen, so nobody has to pause to type &ldquo;WAIT.&rdquo; Mic and camera start off.</p>
+          </article>
+        </div>
+        <div class="facts reveal">
+          <div class="fact"><span class="fact-icon" aria-hidden="true">&#x1F6CB;&#xFE0F;</span>Parties of up to eight</div>
+          <div class="fact"><span class="fact-icon" aria-hidden="true">&#x1F3A4;</span>Mic and camera start off</div>
+          <div class="fact"><span class="fact-icon" aria-hidden="true">&#x1F579;&#xFE0F;</span>The host holds the remote</div>
+          <div class="fact"><span class="fact-icon" aria-hidden="true">&#x1F91D;</span>Free and peer-to-peer</div>
+        </div>
+        <div class="warn reveal" role="note">
+          <span class="warn-icon" aria-hidden="true">!</span>
+          <p>
+            Keep the unzipped folder on your computer. If you move or trash it, Chillax turns off. After Chrome restarts, a popup may say &ldquo;Disable developer mode extensions&rdquo; &mdash; click <strong>Cancel</strong> to keep Chillax.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="install">
+        <div class="install-head">
+          <div class="section-head reveal">
+            <p class="kicker">Once, then you&rsquo;re in</p>
+            <h2 class="section-title" id="install">Install unpacked</h2>
+            <p class="section-sub">Chillax isn&rsquo;t on the Chrome Web Store, so Chrome needs a little convincing. Six steps, about a minute, and you never have to do it again.</p>
           </div>
-        </li>
-        <li>
-          <span class="n">4</span>
-          <div class="body">
-            <h3>Load unpacked</h3>
-            <p class="step-copy">Click <strong>Load unpacked</strong>, then choose the unzipped folder with <code>manifest.json</code> — not the zip.</p>
-            <div class="visual" aria-hidden="true">
-              <span>Load unpacked</span>
-              <span class="btn">Load unpacked</span>
+          <div class="art-card reveal">
+            <img src="art/devmode.svg" width="320" height="200" alt="A blob in a hard hat celebrating after turning on Developer mode" loading="lazy" />
+          </div>
+        </div>
+        <ol>
+          <li class="reveal">
+            <span class="n">1</span>
+            <div class="body">
+              <h3 id="step1-title">Unzip the file you were sent</h3>
+              <p class="step-copy" id="step1-copy">
+                Double-click <code>__CHILLAX_ZIP__</code>. Keep the folder that contains <code>manifest.json</code> and this page (Downloads is fine).
+              </p>
+              <div class="visual" aria-hidden="true">
+                <span>manifest.json &middot; install.html</span>
+                <span class="fake-btn">Folder</span>
+              </div>
             </div>
-          </div>
-        </li>
-        <li>
-          <span class="n">5</span>
-          <div class="body">
-            <h3>Pin Chillax</h3>
-            <p class="step-copy">Puzzle-piece icon in Chrome’s toolbar → pin Chillax. Click <strong>Cx</strong> on a supported streaming site to open the lounge. Anywhere else, it asks you to open one first.</p>
-            <div class="visual" aria-hidden="true">
-              <span>Chillax</span>
-              <span class="btn">Pin</span>
+          </li>
+          <li class="reveal">
+            <span class="n">2</span>
+            <div class="body">
+              <h3>Open Chrome&rsquo;s extensions page</h3>
+              <p class="step-copy">Copy this address, paste it in Chrome&rsquo;s address bar, and press Enter. Chrome blocks the link from this page.</p>
+              <div class="visual copy-row">
+                <code id="ext-url">chrome://extensions</code>
+                <button type="button" class="copy" id="copy-ext" aria-live="polite">Copy</button>
+              </div>
             </div>
-          </div>
-        </li>
-        <li>
-          <span class="n">6</span>
-          <div class="body">
-            <h3>Open the invite link</h3>
-            <p class="step-copy">Open the invite link with <code>chillax=</code> in it on the same streaming site. Chillax joins the party for you. Mic and camera stay off until you turn them on.</p>
-            <div class="visual" aria-hidden="true">
-              <span>…?chillax=ROOM</span>
-              <span class="btn">Join</span>
+          </li>
+          <li class="reveal">
+            <span class="n">3</span>
+            <div class="body">
+              <h3>Turn on Developer mode</h3>
+              <p class="step-copy">On the extensions page, find the switch at the top-right and flip it on. Hard hat optional.</p>
+              <div class="visual" aria-hidden="true">
+                <span>Developer mode</span>
+                <span class="toggle"></span>
+              </div>
             </div>
-          </div>
-        </li>
-      </ol>
-      <footer>
-        <div class="storyboard">
-          <img src="art/popcorn.svg" width="180" height="140" alt="" />
+          </li>
+          <li class="reveal">
+            <span class="n">4</span>
+            <div class="body">
+              <h3>Load unpacked</h3>
+              <p class="step-copy">Click <strong>Load unpacked</strong>, then choose the unzipped folder with <code>manifest.json</code> &mdash; not the zip.</p>
+              <div class="visual" aria-hidden="true">
+                <span>Load unpacked</span>
+                <span class="fake-btn">Load unpacked</span>
+              </div>
+            </div>
+          </li>
+          <li class="reveal">
+            <span class="n">5</span>
+            <div class="body">
+              <h3>Pin Chillax</h3>
+              <p class="step-copy">Puzzle-piece icon in Chrome&rsquo;s toolbar &rarr; pin Chillax. Click <strong>Cx</strong> on a supported streaming site to open the lounge. Anywhere else, it asks you to open one first.</p>
+              <div class="visual" aria-hidden="true">
+                <span>Chillax</span>
+                <span class="fake-btn">Pin</span>
+              </div>
+            </div>
+          </li>
+          <li class="reveal">
+            <span class="n">6</span>
+            <div class="body">
+              <h3>Open the invite link</h3>
+              <p class="step-copy">Open the invite link with <code>chillax=</code> in it on the same streaming site. Chillax joins the party for you. Mic and camera stay off until you turn them on.</p>
+              <div class="visual" aria-hidden="true">
+                <span>&hellip;?chillax=ROOM</span>
+                <span class="fake-btn">Join</span>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <footer class="reveal">
+        <div class="art-card">
+          <img src="art/still-watching.svg" width="320" height="200" alt="A blob asleep on the couch under a cat while the TV asks if anyone is still watching" loading="lazy" />
         </div>
         <div>
+          <h2>Still watching? Good.</h2>
           <div class="meta">
             <span class="ver">v__CHILLAX_VERSION__</span>
-            <span>Free · peer-to-peer · your own account</span>
+            <span>Free &middot; peer-to-peer &middot; your own account</span>
           </div>
           <p>
-            Need an update later? <span class="file-only">Ask for a new zip, replace the folder contents,</span><span class="web-only">Download the zip again, replace the folder contents,</span> then on <code>chrome://extensions</code> click <strong>Reload</strong> under Chillax.
+            Need an update later? <span class="file-only">Ask for a new zip, replace the folder contents,</span><span class="web-only" hidden>Download the zip again, replace the folder contents,</span> then on <code>chrome://extensions</code> click <strong>Reload</strong> under Chillax.
           </p>
           <p>
-            This is not from the Chrome Web Store. Only install it if you trust <span class="file-only">the person who sent the zip</span><span class="web-only">the person who sent you this page</span>.
+            This is not from the Chrome Web Store. Only install it if you trust <span class="file-only">the person who sent the zip</span><span class="web-only" hidden>the person who sent you this page</span>.
           </p>
         </div>
       </footer>
+      <p class="colophon">Made for long movie nights &middot; Chillax v__CHILLAX_VERSION__</p>
     </main>
     <script>
+      document.documentElement.classList.add("js");
       const copyBtn = document.getElementById("copy-ext");
       const extUrl = "chrome://extensions";
       const onWeb = location.protocol === "http:" || location.protocol === "https:";
@@ -919,6 +1334,35 @@
         document.getElementById("step1-title").textContent = "Download, then unzip";
         document.getElementById("step1-copy").innerHTML =
           "Use the download button above. Double-click the zip. Keep the folder that contains <code>manifest.json</code> (Downloads is fine).";
+      }
+
+      const nav = document.getElementById("nav");
+      const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 8);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+
+      const reveals = document.querySelectorAll(".reveal");
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              const el = entry.target;
+              el.classList.add("in");
+              io.unobserve(el);
+              window.setTimeout(() => {
+                el.style.transitionDelay = "";
+              }, 900);
+            });
+          },
+          { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+        );
+        reveals.forEach((el, i) => {
+          el.style.transitionDelay = `${(i % 3) * 70}ms`;
+          io.observe(el);
+        });
+      } else {
+        reveals.forEach((el) => el.classList.add("in"));
       }
 
       function copyWithFallback(text) {
@@ -942,7 +1386,8 @@
         } catch {
           copied = copyWithFallback(extUrl);
         }
-        copyBtn.textContent = copied ? "Copied" : "Select and copy";
+        copyBtn.textContent = copied ? "Copied!" : "Select and copy";
+        copyBtn.classList.toggle("done", copied);
         if (!copied) {
           const range = document.createRange();
           range.selectNodeContents(document.getElementById("ext-url"));
@@ -952,6 +1397,7 @@
         }
         window.setTimeout(() => {
           copyBtn.textContent = "Copy";
+          copyBtn.classList.remove("done");
         }, 2000);
       });
     </script>

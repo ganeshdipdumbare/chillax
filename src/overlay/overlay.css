@@ -1,3 +1,5 @@
+@import "./spotArt.css";
+
 :host,
 .chillax-scope {
   all: initial;
@@ -202,7 +204,7 @@ button {
 }
 
 .panel.is-lounge .storyboard {
-  max-height: 120px;
+  max-height: 150px;
 }
 
 .panel.is-lounge .hero strong {
@@ -726,64 +728,18 @@ button.banner:hover {
 }
 
 .storyboard {
+  display: grid;
+  align-content: center;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--teal);
-  border: 1px solid var(--line);
+  border: 1.5px solid #0e1113;
 }
 
 .storyboard .spot-art {
   display: block;
-}
-
-.spot-art .sparkle {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: sparkle-twinkle 2.6s ease-in-out infinite;
-}
-
-.spot-art .buddy-bob {
-  animation: buddy-bob 3.4s ease-in-out infinite;
-}
-
-.spot-art .buddy-bob-b {
-  animation-delay: 0.55s;
-}
-
-.spot-art .lamp-glow {
-  animation: lamp-pulse 2.8s ease-in-out infinite;
-}
-
-@keyframes sparkle-twinkle {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.86);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-}
-
-@keyframes buddy-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-@keyframes lamp-pulse {
-  0%,
-  100% {
-    opacity: 0.78;
-  }
-  50% {
-    opacity: 1;
-  }
+  width: 100%;
+  height: auto;
 }
 
 .hero strong {

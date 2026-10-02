@@ -1,3 +1,5 @@
+@import "../overlay/spotArt.css";
+
 html.popup-page {
   --canvas: #fbfaf4;
   --ink: #0e1113;
@@ -64,6 +66,19 @@ html.popup-page body {
   font-size: 13px;
   letter-spacing: -0.04em;
   line-height: 1;
+}
+
+.popup-root .storyboard {
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--peach);
+  border: 1.5px solid #0e1113;
+}
+
+.popup-root .storyboard .spot-art {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .popup-root .kicker {

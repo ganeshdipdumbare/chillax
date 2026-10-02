@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="still-title">
+  <title id="still-title">A blob asleep on the couch with a cat on its back while the TV asks if anyone is still watching</title>
+  <defs>
+    <pattern id="still-dots" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="7" cy="7" r="1.05" fill="#e6c9b8" />
+    </pattern>
+    <style>
+      .ink { stroke: #0e1113; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+      .thin { stroke: #0e1113; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+      .breathe { transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 3.2s ease-in-out infinite; }
+      .z { animation: z 3.2s ease-out infinite; }
+      .z-b { animation-delay: 1.05s; }
+      .z-c { animation-delay: 2.1s; }
+      .drool { transform-box: fill-box; transform-origin: 50% 0%; animation: drool 3.2s ease-in-out infinite; }
+      .blink { animation: blink 1.4s steps(1) infinite; }
+      @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 1.06); } }
+      @keyframes z { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(10px, -26px); opacity: 0; } }
+      @keyframes drool { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(1.2); } }
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      @media (prefers-reduced-motion: reduce) {
+        .breathe, .z, .drool, .blink { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="320" height="200" fill="#f8dbca" />
+  <rect width="320" height="200" fill="url(#still-dots)" />
+
+  <!-- The TV, judging gently -->
+  <rect x="14" y="18" width="146" height="90" rx="14" fill="#0e1113" />
+  <rect x="22" y="26" width="130" height="74" rx="8" fill="#1c525d" />
+  <g font-family="Helvetica Neue, Arial, sans-serif" font-weight="800" fill="#fbfaf4" text-anchor="middle">
+    <text x="87" y="52" font-size="11.5">Are you still</text>
+    <text x="87" y="67" font-size="11.5">watching?</text>
+  </g>
+  <g class="blink">
+    <rect x="58" y="76" width="58" height="16" rx="8" fill="#fbfaf4" />
+    <text x="87" y="88" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#0e1113">Yes&#8230;?</text>
+  </g>
+  <rect x="66" y="110" width="42" height="5" rx="2.5" fill="#0e1113" />
+
+  <!-- Couch -->
+  <ellipse cx="220" cy="190" rx="110" ry="7" fill="#0e1113" opacity="0.14" />
+  <rect x="128" y="104" width="200" height="62" rx="22" fill="#db704c" class="ink" />
+  <rect x="116" y="148" width="214" height="36" rx="14" fill="#e8906f" class="ink" />
+  <rect x="104" y="126" width="36" height="62" rx="16" fill="#db704c" class="ink" />
+
+  <!-- Out cold -->
+  <g class="breathe">
+    <path d="M134 152c0-22 20-36 52-36h68c30 0 52 14 52 36z" fill="#fbfaf4" class="ink" />
+  </g>
+  <path d="M148 132q5 5 10 0M166 130q5 5 10 0" class="ink" fill="none" />
+  <ellipse cx="164" cy="143" rx="4.5" ry="3.5" fill="#0e1113" />
+  <path class="drool thin" d="M160 146c-1 6-3 10-1 14a3 3 0 0 0 5-2c0-4-2-8-4-12z" fill="#9fd0de" />
+  <ellipse cx="180" cy="140" rx="5.5" ry="3" fill="#db704c" opacity="0.45" />
+  <g font-family="Helvetica Neue, Arial, sans-serif" font-weight="800" fill="#1c525d">
+    <text class="z" x="160" y="114" font-size="12">z</text>
+    <text class="z z-b" x="166" y="110" font-size="16">z</text>
+    <text class="z z-c" x="172" y="106" font-size="20">Z</text>
+  </g>
+
+  <!-- The cat has claimed the warm spot -->
+  <path d="M276 116c16 4 14 16 0 14" stroke="#0e1113" stroke-width="9" stroke-linecap="round" fill="none" />
+  <path d="M276 116c16 4 14 16 0 14" stroke="#d6d0c3" stroke-width="4" stroke-linecap="round" fill="none" />
+  <ellipse cx="256" cy="116" rx="24" ry="12" fill="#d6d0c3" class="ink" />
+  <path d="M226 106l1-12 8 6M246 106l-1-12-8 6" fill="#d6d0c3" class="thin" />
+  <circle cx="236" cy="112" r="11" fill="#d6d0c3" class="ink" />
+  <path d="M229 112q3 3 6 0M238 112q3 3 6 0" class="thin" fill="none" />
+  <path d="M235 118l1.5 1.5 1.5-1.5" class="thin" fill="none" />
+
+  <!-- Casualties on the floor -->
+  <g transform="rotate(70 92 172)">
+    <path d="M78 160h28l-4 26h-20z" fill="#fbfaf4" class="thin" />
+    <path d="M86 160l1 26M96 160l-1 26" stroke="#db704c" stroke-width="4" />
+    <path d="M78 160h28l-4 26h-20z" fill="none" class="thin" />
+  </g>
+  <g fill="#fbfaf4" class="thin">
+    <circle cx="66" cy="178" r="5" />
+    <circle cx="52" cy="186" r="4.5" />
+    <circle cx="80" cy="190" r="4" />
+    <circle cx="36" cy="180" r="4" fill="#f6c453" />
+  </g>
+  <rect x="270" y="186" width="30" height="9" rx="4" fill="#0e1113" transform="rotate(-6 285 190)" />
+  <circle cx="294" cy="189" r="2" fill="#db704c" />
+</svg>

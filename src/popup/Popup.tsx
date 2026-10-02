@@ -1,4 +1,5 @@
 import { PlatformLogoRow } from "../overlay/PlatformChip";
+import { StillWatchingArt } from "../overlay/SpotArt";
 import { appVersionLabel } from "../shared/version";
 
 export function PopupHint() {
@@ -16,6 +17,9 @@ export function PopupHint() {
             </div>
             <p>Watch together · chat · call</p>
           </div>
+        </div>
+        <div className="storyboard">
+          <StillWatchingArt />
         </div>
         <p className="kicker">Open a video first</p>
         <p className="error" role="status">
