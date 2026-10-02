@@ -24,6 +24,74 @@ export const AVATARS: Avatar[] = [
   { id: "disco", emoji: "🪩", name: "Disco", fill: "#181e1d" },
 ];
 
+/** Pill fills from the party-chat illustration — readable with ink text. */
+export const POPPY_BUBBLES = [
+  "#adb49c",
+  "#f8dbca",
+  "#db704c",
+  "#c3d3ce",
+  "#b6969d",
+  "#d6d0c3",
+  "#f6c453",
+  "#9fd0de",
+] as const;
+
+const AVATAR_BUBBLE: Record<string, string> = {
+  fox: "#c3d3ce",
+  panda: "#adb49c",
+  ghost: "#b6969d",
+  alien: "#9fd0de",
+  cat: "#d6d0c3",
+  frog: "#f8dbca",
+  moon: "#d6d0c3",
+  fire: "#db704c",
+  peach: "#f8dbca",
+  star: "#f6c453",
+  mushroom: "#adb49c",
+  robot: "#db704c",
+  sunflower: "#f6c453",
+  squid: "#9fd0de",
+  croissant: "#b6969d",
+  disco: "#c3d3ce",
+};
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (Math.imul(31, hash) + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function nextPoppy(seed: string, used: Set<string>, preferred?: string): string {
+  if (preferred && !used.has(preferred)) return preferred;
+  const start = hashSeed(seed) % POPPY_BUBBLES.length;
+  for (let i = 0; i < POPPY_BUBBLES.length; i++) {
+    const color = POPPY_BUBBLES[(start + i) % POPPY_BUBBLES.length];
+    if (!used.has(color)) return color;
+  }
+  return preferred || POPPY_BUBBLES[start];
+}
+
+/** One poppy fill per person. Prefers their avatar color, then a free illustration swatch. */
+export function assignBubbleColors(
+  peers: Array<{ peerId: string; avatarId?: string | null }>,
+): Map<string, string> {
+  const map = new Map<string, string>();
+  const used = new Set<string>();
+  for (const peer of peers) {
+    if (!peer.peerId || map.has(peer.peerId)) continue;
+    const color = nextPoppy(
+      peer.peerId,
+      used,
+      peer.avatarId ? AVATAR_BUBBLE[peer.avatarId] : undefined,
+    );
+    used.add(color);
+    map.set(peer.peerId, color);
+  }
+  return map;
+}
+
 /** Two rows of watch-party reactions (feelings + movie night). */
 export const REACTIONS = [
   "😂",

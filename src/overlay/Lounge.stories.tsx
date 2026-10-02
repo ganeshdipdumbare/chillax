@@ -16,7 +16,7 @@ const seed: ChatMessage[] = [
     from: "host",
     nickname: "Maya",
     avatarId: "fox",
-    text: "headphones on, we start in 10",
+    text: "don't open it",
     sentAt: 1,
   },
   {
@@ -27,6 +27,22 @@ const seed: ChatMessage[] = [
     kind: "playback",
     text: "hit play",
     sentAt: 2,
+  },
+  {
+    id: "3",
+    from: "you",
+    nickname: "You",
+    avatarId: "disco",
+    text: "NOOOOOO",
+    sentAt: 3,
+  },
+  {
+    id: "4",
+    from: "rae",
+    nickname: "Rae",
+    avatarId: "frog",
+    text: "she opened it 💀",
+    sentAt: 4,
   },
 ];
 
@@ -184,6 +200,7 @@ function Lounge() {
       </p>
       <Chat
         messages={messages}
+        localPeerId="you"
         onReact={react}
         onSend={(text) =>
           setMessages((current) => [

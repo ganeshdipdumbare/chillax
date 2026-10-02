@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import type { ChatMessage, TypingPeer } from "../shared/types";
 import { formatChatTime } from "../shared/time";
 import { AvatarFace } from "./AvatarFace";
 import { ReactionBar } from "./ReactionBar";
 import { ChatArt } from "./SpotArt";
-import type { ReactionEmoji } from "../shared/avatars";
+import { assignBubbleColors, type ReactionEmoji } from "../shared/avatars";
 
 export function Chat({
   messages,
@@ -25,6 +25,14 @@ export function Chat({
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const bubbles = useMemo(
+    () =>
+      assignBubbleColors([
+        ...messages.map((msg) => ({ peerId: msg.from, avatarId: msg.avatarId })),
+        ...typing.map((peer) => ({ peerId: peer.peerId, avatarId: peer.avatarId })),
+      ]),
+    [messages, typing],
+  );
 
   useEffect(() => {
     const node = listRef.current;
@@ -62,9 +70,13 @@ export function Chat({
             );
           }
           return (
-            <article className={`msg${you ? " is-you" : ""}`} key={msg.id}>
+            <article
+              className={`msg${you ? " is-you" : ""}`}
+              key={msg.id}
+              style={{ "--bubble": bubbles.get(msg.from) } as CSSProperties}
+            >
               <AvatarFace avatarId={msg.avatarId} size={24} title={name} />
-              <div>
+              <div className="msg-body">
                 <div className="meta">
                   <span className="who">{name}</span>
                   {when ? (
@@ -114,7 +126,7 @@ export function Chat({
           ref={inputRef}
           type="text"
           maxLength={500}
-          placeholder="Say something cozy"
+          placeholder="say something…"
           disabled={disabled}
           onChange={(event) => onTyping?.(event.target.value.trim().length > 0)}
           onBlur={() => onTyping?.(false)}
