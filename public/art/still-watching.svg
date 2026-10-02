@@ -70,15 +70,19 @@
   <ellipse cx="246" cy="140" rx="40" ry="5" fill="#0e1113" opacity="0.1" />
   <path class="dog-tail" d="M278 120c10-4 12-14 4-16" stroke="#0e1113" stroke-width="8" stroke-linecap="round" fill="none" />
   <path class="dog-tail" d="M278 120c10-4 12-14 4-16" stroke="#c99a5a" stroke-width="4" stroke-linecap="round" fill="none" />
-  <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill="#c99a5a" class="thin" />
-  <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill="#f8dbca" />
+  <g transform="translate(228 112) scale(0.85) translate(-228 -112)" stroke="#0e1113" stroke-width="2.35" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill="#c99a5a" />
+    <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill="#f8dbca" stroke="none" />
+  </g>
   <ellipse cx="258" cy="126" rx="24" ry="13" fill="#fbfaf4" class="ink" />
   <g clip-path="url(#still-dog-body)">
     <ellipse cx="272" cy="120" rx="11" ry="9" fill="#c99a5a" />
   </g>
   <ellipse cx="274" cy="136" rx="8" ry="5" fill="#fbfaf4" class="thin" />
-  <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill="#c99a5a" class="thin" />
-  <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill="#f8dbca" />
+  <g transform="translate(228 112) scale(0.85) translate(-228 -112)" stroke="#0e1113" stroke-width="2.35" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill="#c99a5a" />
+    <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill="#f8dbca" stroke="none" />
+  </g>
   <circle cx="228" cy="112" r="18" fill="#fbfaf4" class="ink" />
   <g clip-path="url(#still-dog-head)">
     <ellipse cx="218" cy="102" rx="5.5" ry="6" fill="#c99a5a" />

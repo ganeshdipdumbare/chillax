@@ -25,6 +25,9 @@
     <clipPath id="hero-dog-body">
       <ellipse cx="594" cy="188" rx="30" ry="16" />
     </clipPath>
+    <clipPath id="hero-popcorn">
+      <path d="M490 246h36l-5 42h-26z" />
+    </clipPath>
     <style>
       .ink { stroke: #0e1113; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
       .thin { stroke: #0e1113; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
@@ -73,6 +76,7 @@
     <circle cx="96" cy="86" r="22" fill="#f6c453" class="thin" />
     <path d="M80 80h12l-1 7a5 5 0 0 1-5 4h0a5 5 0 0 1-5-4zM100 80h12l-1 7a5 5 0 0 1-5 4h0a5 5 0 0 1-5-4z" fill="#0e1113" />
     <path d="M92 81h8" class="thin" fill="none" />
+    <path d="M84 82h3.5" stroke="#fbfaf4" stroke-width="1.8" stroke-linecap="round" />
     <path d="M88 97q8 6 16 0" class="thin" fill="none" />
     <path d="M118 120c4-8 18-8 22 0" fill="#fbfaf4" class="thin" />
   </g>
@@ -83,8 +87,8 @@
   <path class="twinkle" d="M512 60l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#f8dbca" />
   <path class="twinkle" style="animation-delay: 0.8s" d="M582 110l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z" fill="#adb49c" />
   <circle cx="545" cy="92" r="21" fill="#fbfaf4" class="thin" />
-  <path d="M528 76c4-20 26-26 42-16l10 -10c4 0 6 4 4 6l-8 8c4 6 0 8-4 6-12-6-30-4-44 6z" fill="#db704c" class="thin" />
-  <circle cx="586" cy="50" r="5" fill="#fbfaf4" class="thin" />
+  <path d="M530 82c4-16 24-22 38-10l8-10c3-2 8 0 6 4l-6 8c4 5 2 10-2 10-10-4-26-2-38 6z" fill="#db704c" class="thin" />
+  <circle cx="574" cy="58" r="5.5" fill="#fbfaf4" class="thin" />
   <path d="M533 92q4 4 8 0M549 92q4 4 8 0" class="thin" fill="none" />
   <ellipse cx="545" cy="103" rx="3.5" ry="2.5" fill="#0e1113" />
   <g class="snore" font-family="Helvetica Neue, Arial, sans-serif" font-weight="700" fill="#c3d3ce">
@@ -95,9 +99,13 @@
 
   <!-- Wall clocks: 3:00 PM here, 2:00 AM there -->
   <circle cx="232" cy="72" r="20" fill="#fbfaf4" class="ink" />
+  <path d="M232 56v3M232 85v3M216 72h3M245 72h3" stroke="#0e1113" stroke-width="1.8" stroke-linecap="round" opacity="0.45" />
   <path d="M232 72v-13M232 72h10" class="thin" fill="none" />
+  <circle cx="232" cy="72" r="2.2" fill="#0e1113" />
   <circle cx="408" cy="72" r="20" fill="#fbfaf4" class="ink" />
+  <path d="M408 56v3M408 85v3M392 72h3M421 72h3" stroke="#0e1113" stroke-width="1.8" stroke-linecap="round" opacity="0.45" />
   <path d="M408 72v-13M408 72l8.5-5" class="thin" fill="none" />
+  <circle cx="408" cy="72" r="2.2" fill="#0e1113" />
   <g font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="0.5">
     <text x="232" y="110" fill="#1c525d">3:00 PM</text>
     <text x="408" y="110" fill="#f8dbca">2:00 AM</text>
@@ -165,7 +173,9 @@
   </g>
   <g transform="rotate(-10 508 270)">
     <path d="M490 246h36l-5 42h-26z" fill="#fbfaf4" class="ink" />
-    <path d="M499 246l2 42M517 246l-2 42" stroke="#db704c" stroke-width="6" />
+    <g clip-path="url(#hero-popcorn)">
+      <path d="M499 246l2 42M517 246l-2 42" stroke="#db704c" stroke-width="7" />
+    </g>
     <path d="M490 246h36l-5 42h-26z" fill="none" class="ink" />
     <g fill="#fbfaf4" class="thin">
       <circle cx="496" cy="242" r="7" />
@@ -183,15 +193,19 @@
   <g>
     <path class="dog-tail" d="M608 186c14-2 18-16 8-24" stroke="#0e1113" stroke-width="10" stroke-linecap="round" fill="none" />
     <path class="dog-tail" d="M608 186c14-2 18-16 8-24" stroke="#c99a5a" stroke-width="5" stroke-linecap="round" fill="none" />
-    <path d="M542 156c-8 4-24 12-26 26-2 12 10 18 20 12 8-5 16-18 16-28 0-6-4-10-10-10z" fill="#c99a5a" class="ink" />
-    <ellipse cx="522" cy="178" rx="5" ry="9" transform="rotate(-16 522 178)" fill="#f8dbca" />
+    <g transform="translate(554 166) scale(1.13) translate(-228 -112)" stroke="#0e1113" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill="#c99a5a" />
+      <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill="#f8dbca" stroke="none" />
+    </g>
     <ellipse cx="594" cy="188" rx="30" ry="16" fill="#fbfaf4" class="ink" />
     <g clip-path="url(#hero-dog-body)">
       <ellipse cx="610" cy="182" rx="13" ry="11" fill="#c99a5a" />
     </g>
     <ellipse cx="612" cy="200" rx="10" ry="6" fill="#fbfaf4" class="ink" />
-    <path d="M566 156c8 4 24 12 26 26 2 12-10 18-20 12-8-5-16-18-16-28 0-6 4-10 10-10z" fill="#c99a5a" class="ink" />
-    <ellipse cx="586" cy="178" rx="5" ry="9" transform="rotate(16 586 178)" fill="#f8dbca" />
+    <g transform="translate(554 166) scale(1.13) translate(-228 -112)" stroke="#0e1113" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill="#c99a5a" />
+      <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill="#f8dbca" stroke="none" />
+    </g>
     <circle cx="554" cy="166" r="24" fill="#fbfaf4" class="ink" />
     <g clip-path="url(#hero-dog-head)">
       <ellipse cx="540" cy="154" rx="7" ry="8" fill="#c99a5a" />

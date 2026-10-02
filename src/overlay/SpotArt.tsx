@@ -177,15 +177,19 @@ export function LoungeArt() {
       <g>
         <path className="lounge-dog-tail" d="M608 186c14-2 18-16 8-24" stroke={INK} strokeWidth="10" strokeLinecap="round" fill="none" />
         <path className="lounge-dog-tail" d="M608 186c14-2 18-16 8-24" stroke={TAN} strokeWidth="5" strokeLinecap="round" fill="none" />
-        <path d="M542 156c-8 4-24 12-26 26-2 12 10 18 20 12 8-5 16-18 16-28 0-6-4-10-10-10z" fill={TAN} {...outline(3.5)} />
-        <ellipse cx="522" cy="178" rx="5" ry="9" transform="rotate(-16 522 178)" fill={PEACH} />
+        <g transform="translate(554 166) scale(1.13) translate(-228 -112)" stroke={INK} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round">
+          <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill={TAN} />
+          <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill={PEACH} stroke="none" />
+        </g>
         <ellipse cx="594" cy="188" rx="30" ry="16" fill={CREAM} {...outline(3.5)} />
         <g clipPath="url(#hero-dog-body)">
           <ellipse cx="610" cy="182" rx="13" ry="11" fill={TAN} />
         </g>
         <ellipse cx="612" cy="200" rx="10" ry="6" fill={CREAM} {...outline(3.5)} />
-        <path d="M566 156c8 4 24 12 26 26 2 12-10 18-20 12-8-5-16-18-16-28 0-6 4-10 10-10z" fill={TAN} {...outline(3.5)} />
-        <ellipse cx="586" cy="178" rx="5" ry="9" transform="rotate(16 586 178)" fill={PEACH} />
+        <g transform="translate(554 166) scale(1.13) translate(-228 -112)" stroke={INK} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round">
+          <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill={TAN} />
+          <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill={PEACH} stroke="none" />
+        </g>
         <circle cx="554" cy="166" r="24" fill={CREAM} {...outline(3.5)} />
         <g clipPath="url(#hero-dog-head)">
           <ellipse cx="540" cy="154" rx="7" ry="8" fill={TAN} />
@@ -565,15 +569,19 @@ export function StillWatchingArt() {
       <ellipse cx="246" cy="140" rx="40" ry="5" fill={INK} opacity="0.1" />
       <path className="still-watching-dog-tail" d="M278 120c10-4 12-14 4-16" stroke={INK} strokeWidth="8" strokeLinecap="round" fill="none" />
       <path className="still-watching-dog-tail" d="M278 120c10-4 12-14 4-16" stroke={TAN} strokeWidth="4" strokeLinecap="round" fill="none" />
-      <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill={TAN} {...outline(2)} />
-      <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill={PEACH} />
+      <g transform="translate(228 112) scale(0.85) translate(-228 -112)" stroke={INK} strokeWidth="2.35" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M218 102c-9-4-21 2-24 15-3 12 4 21 15 18 9-3 16-14 18-24 1-4-2-8-9-9z" fill={TAN} />
+        <ellipse cx="204" cy="120" rx="4" ry="8" transform="rotate(-18 204 120)" fill={PEACH} stroke="none" />
+      </g>
       <ellipse cx="258" cy="126" rx="24" ry="13" fill={CREAM} {...outline(3)} />
       <g clipPath="url(#still-dog-body)">
         <ellipse cx="272" cy="120" rx="11" ry="9" fill={TAN} />
       </g>
       <ellipse cx="274" cy="136" rx="8" ry="5" fill={CREAM} {...outline(2)} />
-      <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill={TAN} {...outline(2)} />
-      <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill={PEACH} />
+      <g transform="translate(228 112) scale(0.85) translate(-228 -112)" stroke={INK} strokeWidth="2.35" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M238 102c9-4 21 2 24 15 3 12-4 21-15 18-9-3-16-14-18-24-1-4 2-8 9-9z" fill={TAN} />
+        <ellipse cx="252" cy="120" rx="4" ry="8" transform="rotate(18 252 120)" fill={PEACH} stroke="none" />
+      </g>
       <circle cx="228" cy="112" r="18" fill={CREAM} {...outline(3)} />
       <g clipPath="url(#still-dog-head)">
         <ellipse cx="218" cy="102" rx="5.5" ry="6" fill={TAN} />
