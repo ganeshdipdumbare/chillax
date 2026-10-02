@@ -107,6 +107,9 @@ html.chillax-overlay-open.chillax-fs #full-bleed-container`;
   const ororo = `
 html.chillax-overlay-open:not(.chillax-fs) #overlay.fullwindow`;
 
+  /** ororo fullscreens the video.js box itself, which the UA pins to the screen, so pull its layers in. */
+  const ororoFs = `html.chillax-overlay-open.chillax-fs #ororo-video.vjs-fullscreen`;
+
   return `
 html.chillax-overlay-open:not(.chillax-fs) {
   box-sizing: border-box !important;
@@ -230,6 +233,28 @@ html.chillax-overlay-open:not(.chillax-fs) #ororo-video video {
   max-width: 100% !important;
   max-height: 100% !important;
   object-fit: contain !important;
+}
+${ororoFs} > .vjs-tech,
+${ororoFs} > .vjs-poster,
+${ororoFs} > .vjs-text-track-display,
+${ororoFs} > .vjs-control-bar {
+  left: 0 !important;
+  right: auto !important;
+  width: calc(100% - ${space}) !important;
+  max-width: none !important;
+}
+${ororoFs} > .vjs-modal-dialog,
+${ororoFs} > #player-flash-message {
+  width: ${leftover} !important;
+}
+${ororoFs} > .vjs-loading-spinner,
+${ororoFs} > .vjs-big-play-button {
+  left: calc((100% - ${space}) / 2) !important;
+}
+${ororoFs} > .overlay-close,
+${ororoFs} > #player-skip-buttons,
+${ororoFs} > #player-info {
+  translate: calc(-1 * ${space}) 0 !important;
 }
 `;
 }
