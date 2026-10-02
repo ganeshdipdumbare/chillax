@@ -1,10 +1,11 @@
 import { detectPlatform } from "./platforms";
-import type { ChatMessage, ContentState, Participant, Platform, ReactionBurst } from "./types";
+import type { ChatMessage, ContentState, Participant, Platform, ReactionBurst, TypingPeer } from "./types";
 
 export type OverlayState = ContentState & {
   messages: ChatMessage[];
   participants: Participant[];
   bursts: ReactionBurst[];
+  typing: TypingPeer[];
   muted: boolean;
   cameraOn: boolean;
   callConnected: boolean;
@@ -32,6 +33,7 @@ let state: OverlayState = {
   messages: [],
   participants: [],
   bursts: [],
+  typing: [],
   muted: true,
   cameraOn: false,
   callConnected: true,

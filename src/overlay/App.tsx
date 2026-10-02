@@ -344,6 +344,8 @@ export function OverlayApp({ session }: { session: SessionController }) {
               messages={state.messages}
               localPeerId={state.localPeerId}
               disabled={state.status !== "in-party"}
+              typing={state.typing}
+              onTyping={(typing) => session.setTyping(typing)}
               onSend={(text) => session.sendChat(text)}
               onReact={(emoji) => session.sendReaction(emoji)}
             />

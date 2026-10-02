@@ -1009,6 +1009,29 @@ button.chip:focus-visible {
   gap: 10px;
 }
 
+.chat-empty {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin: auto 0;
+  padding: 8px 4px;
+  color: var(--mute);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.chat-empty .storyboard {
+  width: 100%;
+  max-width: 240px;
+}
+
+.chat-empty p {
+  margin: 0;
+  max-width: 22em;
+}
+
 .msg {
   display: flex;
   gap: 8px;
@@ -1075,6 +1098,77 @@ button.chip:focus-visible {
 
 .msg.is-playback .when {
   margin-left: 8px;
+}
+
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  animation: typing-in 180ms ease-out both;
+}
+
+.typing-faces {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.typing-faces > * + * {
+  margin-left: -8px;
+}
+
+.typing-bubble {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 9px 11px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--sunken);
+}
+
+.typing-bubble i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mute);
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+.typing-bubble i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-bubble i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.typing-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mute);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes typing-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 
 .react-bar {
@@ -1166,9 +1260,8 @@ button.chip:focus-visible {
   .floatie,
   .react-btn:hover:not(:disabled),
   .switch::after,
-  .spot-art .sparkle,
-  .spot-art .buddy-bob,
-  .spot-art .lamp-glow,
+  .typing,
+  .typing-bubble i,
   button,
   .primary:active:not(:disabled) {
     animation: none;

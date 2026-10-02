@@ -29,6 +29,14 @@ export type ChatMessage = {
 
 export type PlaybackAction = "play" | "pause" | "seek";
 
+export type TypingPeer = {
+  peerId: string;
+  nickname: string;
+  avatarId: string;
+  /** Drop the indicator after this time (ms epoch) unless the peer refreshes it. */
+  until: number;
+};
+
 export type Participant = {
   peerId: string;
   nickname: string;
@@ -130,6 +138,13 @@ export type ProtocolMessage =
       avatarId: string;
       emoji: string;
       sentAt: number;
+    }
+  | {
+      type: "typing";
+      from: string;
+      nickname: string;
+      avatarId: string;
+      typing: boolean;
     }
   | { type: "ping"; sentAt: number }
   | { type: "pong"; sentAt: number }

@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
-import type { ChatMessage } from "../shared/types";
+import type { ChatMessage, TypingPeer } from "../shared/types";
 import { formatChatTime } from "../shared/time";
 import { AvatarFace } from "./AvatarFace";
 import { ReactionBar } from "./ReactionBar";
+import { ChatArt } from "./SpotArt";
 import type { ReactionEmoji } from "../shared/avatars";
 
 export function Chat({
@@ -11,12 +12,16 @@ export function Chat({
   onReact,
   disabled,
   localPeerId,
+  typing = [],
+  onTyping,
 }: {
   messages: ChatMessage[];
   onSend: (text: string) => void;
   onReact: (emoji: ReactionEmoji) => void;
   disabled?: boolean;
   localPeerId?: string | null;
+  typing?: Pick<TypingPeer, "peerId" | "nickname" | "avatarId">[];
+  onTyping?: (typing: boolean) => void;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,11 +29,19 @@ export function Chat({
   useEffect(() => {
     const node = listRef.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [messages]);
+  }, [messages, typing.length]);
 
   return (
     <section className="chat" aria-label="Party chat">
       <div className="messages" ref={listRef}>
+        {messages.length === 0 && typing.length === 0 ? (
+          <div className="chat-empty">
+            <div className="storyboard">
+              <ChatArt />
+            </div>
+            <p>Quiet in here. Say hi, or yell at the screen together.</p>
+          </div>
+        ) : null}
         {messages.map((msg) => {
           const you = Boolean(localPeerId && msg.from === localPeerId);
           const name = you ? "You" : msg.nickname;
@@ -65,6 +78,21 @@ export function Chat({
             </article>
           );
         })}
+        {typing.length ? (
+          <div className="typing" role="status" aria-live="polite">
+            <span className="typing-faces" aria-hidden="true">
+              {typing.slice(0, 3).map((peer) => (
+                <AvatarFace key={peer.peerId} avatarId={peer.avatarId} size={22} title={peer.nickname} />
+              ))}
+            </span>
+            <span className="typing-bubble" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            <span className="typing-label">{typingLabel(typing.map((peer) => peer.nickname))}</span>
+          </div>
+        ) : null}
       </div>
       <ReactionBar disabled={disabled} onReact={onReact} />
       <form
@@ -74,6 +102,7 @@ export function Chat({
           const value = inputRef.current?.value.trim();
           if (!value) return;
           onSend(value);
+          onTyping?.(false);
           if (inputRef.current) inputRef.current.value = "";
         }}
       >
@@ -87,6 +116,8 @@ export function Chat({
           maxLength={500}
           placeholder="Say something cozy"
           disabled={disabled}
+          onChange={(event) => onTyping?.(event.target.value.trim().length > 0)}
+          onBlur={() => onTyping?.(false)}
           onKeyDown={(event) => event.stopPropagation()}
           onKeyUp={(event) => event.stopPropagation()}
         />
@@ -96,4 +127,10 @@ export function Chat({
       </form>
     </section>
   );
+}
+
+function typingLabel(names: string[]) {
+  if (names.length === 1) return `${names[0]} is typing`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
+  return `${names[0]} and ${names.length - 1} others are typing`;
 }

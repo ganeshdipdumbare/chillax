@@ -5,6 +5,7 @@ export type SessionController = {
   joinParty: (roomId: string) => void;
   leaveParty: () => void;
   sendChat: (text: string) => void;
+  setTyping: (typing: boolean) => void;
   sendReaction: (emoji: string) => void;
   setNickname: (name: string) => Promise<void>;
   setAvatar: (avatarId: string) => Promise<void>;

@@ -66,3 +66,31 @@ export const Empty: Story = {
     </div>
   ),
 };
+
+export const Typing: Story = {
+  args: {
+    localPeerId: "you",
+    typing: [{ peerId: "a", nickname: "Maya", avatarId: "fox" }],
+  },
+  render: (args) => (
+    <div className="panel story" style={{ display: "flex", flexDirection: "column" }}>
+      <Chat {...args} />
+    </div>
+  ),
+};
+
+export const SeveralTyping: Story = {
+  args: {
+    localPeerId: "you",
+    typing: [
+      { peerId: "a", nickname: "Maya", avatarId: "fox" },
+      { peerId: "b", nickname: "Jules", avatarId: "ghost" },
+      { peerId: "c", nickname: "Rae", avatarId: "disco" },
+    ],
+  },
+  render: (args) => (
+    <div className="panel story" style={{ display: "flex", flexDirection: "column" }}>
+      <Chat {...args} />
+    </div>
+  ),
+};

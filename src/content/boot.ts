@@ -1,4 +1,10 @@
-import { HEARTBEAT_MS, MSG_SOURCE_CONTENT, MSG_SOURCE_MEDIA } from "../shared/constants";
+import {
+  HEARTBEAT_MS,
+  MSG_SOURCE_CONTENT,
+  MSG_SOURCE_MEDIA,
+  TYPING_REFRESH_MS,
+  TYPING_TTL_MS,
+} from "../shared/constants";
 import {
   buildInviteUrl,
   clearTokenFromLocation,
@@ -14,7 +20,7 @@ import {
 import { loadAvatarId, loadNickname, saveAvatarId, saveNickname } from "../shared/storage";
 import { getState, setState } from "../shared/store";
 import { burstTtlMs, sprayBursts } from "../shared/reactions";
-import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage } from "../shared/types";
+import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage, TypingPeer } from "../shared/types";
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
@@ -454,12 +460,59 @@ function addBurst(emoji: string) {
   }
 }
 
+let typingSentAt = 0;
+let typingSweep = 0;
+
+function pruneTyping() {
+  window.clearTimeout(typingSweep);
+  const now = Date.now();
+  const live = getState().typing.filter((peer) => peer.until > now);
+  if (live.length !== getState().typing.length) setState({ typing: live });
+  if (!live.length) return;
+  const next = Math.min(...live.map((peer) => peer.until));
+  typingSweep = window.setTimeout(pruneTyping, next - now + 50);
+}
+
+function clearTypingFor(match: (peer: TypingPeer) => boolean) {
+  const typing = getState().typing;
+  if (typing.some(match)) setState({ typing: typing.filter((peer) => !match(peer)) });
+}
+
+function resetTyping() {
+  window.clearTimeout(typingSweep);
+  typingSentAt = 0;
+}
+
 async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) {
   const state = getState();
   if (message.type === "chat") {
     if (state.messages.some((item) => item.id === message.id)) return;
     if (message.kind === "playback" && isDuplicatePlayback(message.from, message.text, message.sentAt)) return;
     setState({ messages: [...state.messages, message].slice(-200) });
+    if (!message.kind) {
+      clearTypingFor((peer) => peer.peerId === message.from || peer.nickname === message.nickname);
+    }
+    return;
+  }
+  if (message.type === "typing") {
+    if (!message.from || message.from === myPeerId()) return;
+    const others = state.typing.filter((peer) => peer.peerId !== message.from);
+    if (!message.typing) {
+      clearTypingFor((peer) => peer.peerId === message.from);
+      return;
+    }
+    setState({
+      typing: [
+        ...others,
+        {
+          peerId: message.from,
+          nickname: message.nickname,
+          avatarId: message.avatarId,
+          until: Date.now() + TYPING_TTL_MS,
+        },
+      ],
+    });
+    pruneTyping();
     return;
   }
   if (message.type === "reaction") {
@@ -560,6 +613,7 @@ export async function boot(adapter: PlayerAdapter) {
       pendingFreshHost = !known;
       pendingRoomId = known || randomRoomId();
       rememberHostRoom(pendingRoomId);
+      resetTyping();
       setState({
         status: "connecting",
         error: null,
@@ -569,6 +623,7 @@ export async function boot(adapter: PlayerAdapter) {
         messages: [],
         participants: [],
         bursts: [],
+        typing: [],
       });
       pushPageOffset(adapter.platform, true);
       playIfPaused(adapter);
@@ -613,6 +668,7 @@ export async function boot(adapter: PlayerAdapter) {
       }
       pendingRole = "guest";
       pendingRoomId = code;
+      resetTyping();
       setState({
         status: "connecting",
         error: null,
@@ -622,6 +678,7 @@ export async function boot(adapter: PlayerAdapter) {
         messages: [],
         participants: [],
         bursts: [],
+        typing: [],
       });
       pushPageOffset(adapter.platform, true);
     },
@@ -636,6 +693,7 @@ export async function boot(adapter: PlayerAdapter) {
       rememberHostRoom(null);
       if (!unloading) forgetInviteToken();
       clearTokenFromLocation(adapter.platform);
+      resetTyping();
       setState({
         party: null,
         status: "idle",
@@ -644,6 +702,7 @@ export async function boot(adapter: PlayerAdapter) {
         messages: [],
         participants: [],
         bursts: [],
+        typing: [],
         callDetail: null,
         controllers: [],
         localPeerId: null,
@@ -671,6 +730,20 @@ export async function boot(adapter: PlayerAdapter) {
       };
       setState({ messages: [...state.messages, message].slice(-200) });
       sendToMedia({ type: "send-protocol", message });
+      typingSentAt = 0;
+    },
+    setTyping: (typing: boolean) => {
+      const state = getState();
+      const from = myPeerId();
+      if (!state.party || state.status !== "in-party" || !from) return;
+      const now = Date.now();
+      if (typing && now - typingSentAt < TYPING_REFRESH_MS) return;
+      if (!typing && !typingSentAt) return;
+      typingSentAt = typing ? now : 0;
+      sendToMedia({
+        type: "send-protocol",
+        message: { type: "typing", from, nickname: state.nickname, avatarId: state.avatarId, typing },
+      });
     },
     sendReaction: (emoji: string) => {
       const state = getState();
