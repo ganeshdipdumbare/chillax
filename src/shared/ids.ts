@@ -117,7 +117,10 @@ export function buildInviteUrl(
     url.hash = hashParams.toString();
   } else {
     url.searchParams.set(TOKEN_KEY, roomId);
-    url.hash = hashParams.toString();
+    // Re-serializing a plain hash turns ororo's `#video` into `#video=`, which closes its player.
+    if (new URLSearchParams(url.hash.replace(/^#/, "")).has(TOKEN_KEY)) {
+      url.hash = hashParams.toString();
+    }
   }
   return url.toString();
 }
