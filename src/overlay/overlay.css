@@ -25,12 +25,12 @@
   --tint: rgb(14 17 19 / 0.05);
   --ink-hover: #000;
   --peach-hover: #f4cbb4;
-  --radius-sm: 12px;
-  --radius: 18px;
-  --radius-btn: 999px;
-  --radius-lg: 28px;
-  --radius-xl: 40px;
-  --radius-pill: 999px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-btn: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 40px;
   --shadow-sm: 0 1px 2px rgb(14 17 19 / 0.06), 0 2px 4px rgb(14 17 19 / 0.05);
   --shadow-dock: 0 20px 76px rgb(0 0 0 / 0.15);
   --shadow-lounge: 0 20px 76px rgb(0 0 0 / 0.15);
@@ -170,7 +170,7 @@ button {
   background: var(--canvas);
   border: 0;
   border-left: 1px solid var(--line);
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  border-radius: 0;
   box-shadow: var(--shadow-dock);
 }
 
@@ -335,7 +335,7 @@ button {
   place-items: center;
   width: 28px;
   height: 28px;
-  border-radius: 12px;
+  border-radius: 9px;
   background: var(--ink);
   color: var(--canvas);
   font-family: var(--font-sans);
@@ -441,7 +441,7 @@ button {
   place-items: center;
   width: 22px;
   height: 22px;
-  border-radius: 10px;
+  border-radius: 7px;
   background: color-mix(in srgb, var(--platform-accent) 16%, var(--surface));
   color: var(--platform-accent);
 }
@@ -449,7 +449,7 @@ button {
 .platform-chip.is-compact .platform-chip-icon {
   width: 18px;
   height: 18px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .platform-chip-label {
@@ -478,7 +478,7 @@ button {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: var(--radius-btn);
+  border-radius: var(--radius);
   background: var(--sunken);
   color: var(--ink);
 }
@@ -499,7 +499,7 @@ button {
   height: 30px;
   padding: 0 8px 0 10px;
   border: 0;
-  border-radius: var(--radius-btn);
+  border-radius: var(--radius);
   background: var(--sunken);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -575,7 +575,7 @@ button {
   width: 100%;
   padding: 10px 12px;
   border: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   background: var(--sunken);
   color: var(--ink);
   text-align: left;
@@ -639,7 +639,7 @@ button {
   margin: 2px 12px 6px;
   padding: 8px 10px;
   border: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   background: var(--peach);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -771,7 +771,7 @@ label {
 input[type="text"] {
   width: 100%;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius);
   padding: 11px 13px;
   background: var(--surface);
   color: var(--ink);
@@ -852,13 +852,10 @@ input[type="text"]:disabled {
   position: relative;
   z-index: 9;
   flex: 0 0 auto;
-  width: calc(100% - 20px);
+  width: 100%;
   min-height: 132px;
   height: 148px;
-  margin: 0 10px;
   border: 0;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
   background: var(--canvas);
   color-scheme: light;
 }
@@ -1080,7 +1077,7 @@ button.chip:focus-visible {
   max-width: 100%;
   margin: 0;
   padding: 8px 14px;
-  border-radius: 20px;
+  border-radius: 4px 14px 14px 14px;
   background: var(--bubble, #adb49c);
   color: #0e1113;
   font-family: var(--font-sans);
@@ -1106,6 +1103,7 @@ button.chip:focus-visible {
 
 .msg.is-you .text {
   text-align: left;
+  border-radius: 16px 4px 16px 16px;
 }
 
 .msg.is-playback {
@@ -1152,7 +1150,7 @@ button.chip:focus-visible {
   flex: 0 0 auto;
   gap: 4px;
   padding: 9px 12px;
-  border-radius: 999px;
+  border-radius: 4px 14px 14px 14px;
   background: #2c3134;
 }
 
@@ -1218,7 +1216,7 @@ button.chip:focus-visible {
   min-height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-btn);
+  border-radius: var(--radius);
   background: var(--sunken);
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", ui-sans-serif, sans-serif;
   font-size: 16px;
@@ -1246,16 +1244,14 @@ button.chip:focus-visible {
 
 .composer input {
   flex: 1;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
+  min-height: 34px;
+  padding: 0 12px;
   font-size: 13px;
 }
 
 .send {
-  min-height: 36px;
-  padding: 0 16px;
-  border-radius: 999px;
+  padding: 0 14px;
+  border-radius: var(--radius);
   background: var(--ink);
   color: var(--canvas);
   font-family: var(--font-sans);
