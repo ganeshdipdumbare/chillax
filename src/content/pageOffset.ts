@@ -1,4 +1,4 @@
-import { OVERLAY_RESERVE } from "../shared/constants";
+import { OVERLAY_INSET, OVERLAY_PANEL_WIDTH, OVERLAY_RESERVE } from "../shared/constants";
 import { getState } from "../shared/store";
 import type { Platform } from "../shared/types";
 
@@ -620,13 +620,20 @@ export function pushPageOffset(platform: Platform, open: boolean) {
   watchHostParent();
 
   const root = document.documentElement;
+  const host = document.getElementById(HOST_ID);
   root.classList.toggle("chillax-overlay-open", docked);
   root.classList.toggle("chillax-lounge", lounge);
   root.classList.toggle("chillax-fs", fullscreen);
   root.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
+  root.style.setProperty("--chillax-panel", `${OVERLAY_PANEL_WIDTH}px`);
+  root.style.setProperty("--chillax-inset", `${OVERLAY_INSET}px`);
   root.style.marginRight = docked && !fullscreen ? `${OVERLAY_RESERVE}px` : "";
+  if (host) {
+    host.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
+    host.style.setProperty("--chillax-panel", `${OVERLAY_PANEL_WIDTH}px`);
+    host.style.setProperty("--chillax-inset", `${OVERLAY_INSET}px`);
+  }
 
-  const host = document.getElementById(HOST_ID);
   host?.classList.toggle("is-fullscreen", fullscreen);
   host?.classList.toggle("is-open", docked);
   host?.classList.toggle("is-lounge", lounge);

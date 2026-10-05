@@ -61,6 +61,7 @@ export default defineManifest({
         "assets/*",
         "icons/*",
         "fonts/*",
+        "reactions/*",
       ],
       matches: warMatches,
     },

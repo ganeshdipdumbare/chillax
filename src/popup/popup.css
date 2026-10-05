@@ -72,7 +72,7 @@ html.popup-page body {
 
 .popup-root .storyboard {
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: 20px;
   background: var(--peach);
   border: 1.5px solid #0e1113;
 }
@@ -143,7 +143,7 @@ html.popup-page body {
   color: var(--ink);
   background: var(--peach);
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: 16px;
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.4;

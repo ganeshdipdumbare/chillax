@@ -257,7 +257,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
               <p className="kicker">Handmade night in</p>
               <strong>Make the couch bigger.</strong>
               <span className="lede">
-                Pick a face, start a party, then chat on the right.
+                Pick a face, start a party, then yell at the screen.
               </span>
             </div>
             <label>

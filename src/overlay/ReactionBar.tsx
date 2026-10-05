@@ -1,5 +1,6 @@
 import type { ReactionEmoji } from "../shared/avatars";
-import { REACTIONS } from "../shared/avatars";
+import { REACTION_LIVE } from "../shared/avatars";
+import { LiveEmoji } from "./LiveEmoji";
 
 export function ReactionBar({
   disabled,
@@ -10,16 +11,16 @@ export function ReactionBar({
 }) {
   return (
     <div className="react-bar" role="toolbar" aria-label="Emoji reactions">
-      {REACTIONS.map((emoji) => (
+      {REACTION_LIVE.map((reaction) => (
         <button
-          key={emoji}
+          key={reaction.emoji}
           type="button"
           className="react-btn"
           disabled={disabled}
-          aria-label={`React with ${emoji}`}
-          onClick={() => onReact(emoji)}
+          aria-label={`React with ${reaction.label}`}
+          onClick={() => onReact(reaction.emoji)}
         >
-          {emoji}
+          <LiveEmoji emoji={reaction.emoji} />
         </button>
       ))}
     </div>

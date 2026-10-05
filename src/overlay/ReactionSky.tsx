@@ -1,4 +1,5 @@
 import type { ReactionBurst } from "../shared/types";
+import { LiveEmoji } from "./LiveEmoji";
 
 export function ReactionSky({ bursts }: { bursts: ReactionBurst[] }) {
   return (
@@ -18,7 +19,7 @@ export function ReactionSky({ bursts }: { bursts: ReactionBurst[] }) {
             ["--float-size" as string]: `${burst.size}px`,
           }}
         >
-          {burst.emoji}
+          <LiveEmoji emoji={burst.emoji} />
         </span>
       ))}
     </div>

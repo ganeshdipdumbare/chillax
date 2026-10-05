@@ -11,8 +11,8 @@ import {
 
 const pieces: { name: string; where: string; Art: ComponentType; paper: string; width: number }[] = [
   { name: "LoungeArt", where: "Setup card and website hero", Art: LoungeArt, paper: "#c3d3ce", width: 560 },
-  { name: "DisguiseArt", where: "Website: start on the left", Art: DisguiseArt, paper: "#c3d3ce", width: 360 },
-  { name: "ChatArt", where: "Empty chat and website: chat on the right", Art: ChatArt, paper: "#c3d3ce", width: 360 },
+  { name: "DisguiseArt", where: "Website: click Cx, open the lounge", Art: DisguiseArt, paper: "#c3d3ce", width: 360 },
+  { name: "ChatArt", where: "Empty chat and website: yell at the screen", Art: ChatArt, paper: "#c3d3ce", width: 360 },
   { name: "ReactionsArt", where: "Website: react without pausing", Art: ReactionsArt, paper: "#f8dbca", width: 360 },
   { name: "DevModeArt", where: "Website: install steps", Art: DevModeArt, paper: "#c3d3ce", width: 360 },
   { name: "StillWatchingArt", where: "Popup and website footer", Art: StillWatchingArt, paper: "#f8dbca", width: 360 },

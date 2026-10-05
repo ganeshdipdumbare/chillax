@@ -8,25 +8,25 @@ function randInt(min: number, max: number) {
   return Math.round(rand(min, max));
 }
 
+/** Start along the bottom of the video player, then float up. */
 export function makeBurst(emoji: string): ReactionBurst {
   return {
     id: crypto.randomUUID(),
     emoji,
-    x: rand(22, 78),
-    y: rand(58, 78),
-    spin: randInt(-16, 16),
-    delay: randInt(0, 240),
-    size: randInt(34, 52),
-    duration: randInt(1900, 2800),
-    rise: randInt(160, 280),
-    drift: randInt(-56, 56),
+    x: rand(8, 92),
+    y: rand(84, 94),
+    spin: randInt(-10, 10),
+    delay: 0,
+    size: randInt(44, 56),
+    duration: randInt(2000, 2600),
+    rise: randInt(220, 320),
+    drift: randInt(-32, 32),
   };
 }
 
-/** A few emoji that pop, drift up, and fade — Instagram Live style. */
+/** One live emoji pops, drifts up, and fades. */
 export function sprayBursts(emoji: string): ReactionBurst[] {
-  const count = randInt(4, 7);
-  return Array.from({ length: count }, () => makeBurst(emoji));
+  return [makeBurst(emoji)];
 }
 
 export function burstTtlMs(burst: ReactionBurst) {

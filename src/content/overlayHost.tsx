@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { OverlayApp } from "../overlay/App";
 import overlayCss from "../overlay/overlay.css?inline";
 import fontsCss from "../shared/fonts.css?inline";
-import { OVERLAY_RESERVE } from "../shared/constants";
+import { OVERLAY_INSET, OVERLAY_PANEL_WIDTH, OVERLAY_RESERVE } from "../shared/constants";
 import { watchTheme } from "../shared/theme";
 import { installKeyShield } from "./keyShield";
 import type { SessionController } from "./session";
@@ -57,6 +57,8 @@ export function mountOverlay(session: SessionController) {
   host.style.cssText =
     "position:fixed;top:0;right:0;bottom:0;width:0;overflow:visible;pointer-events:none;background:transparent;z-index:2147483646;";
   host.style.setProperty("--chillax-reserve", `${OVERLAY_RESERVE}px`);
+  host.style.setProperty("--chillax-panel", `${OVERLAY_PANEL_WIDTH}px`);
+  host.style.setProperty("--chillax-inset", `${OVERLAY_INSET}px`);
   document.documentElement.appendChild(host);
   watchTheme((_, dark) => host.classList.toggle("theme-dark", dark));
   const shadow = host.attachShadow({ mode: "closed" });

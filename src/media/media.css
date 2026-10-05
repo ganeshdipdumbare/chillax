@@ -61,7 +61,7 @@ body,
 .tile {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--sunken);
   aspect-ratio: 16 / 9;
   max-height: 72px;
@@ -125,7 +125,7 @@ body,
   min-height: 30px;
   padding: 0 8px;
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: 12px;

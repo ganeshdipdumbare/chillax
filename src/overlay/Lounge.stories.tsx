@@ -68,7 +68,7 @@ function SetupCard({ onVideo = true }: { onVideo?: boolean }) {
           </div>
           <p className="kicker">Handmade night in</p>
           <strong>Make the couch bigger.</strong>
-          <span className="lede">Pick a face, start a party, then chat on the right.</span>
+          <span className="lede">Pick a face, start a party, then yell at the screen.</span>
         </div>
         <label>
           Nickname
