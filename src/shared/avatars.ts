@@ -92,26 +92,28 @@ export function assignBubbleColors(
   return map;
 }
 
-/** Two rows of watch-party reactions. Glyphs stay on the wire; the overlay plays Noto live emoji. */
+/** Two rows of watch-party reactions. Positives first; glyphs stay on the wire. */
 export const REACTION_LIVE = [
   { emoji: "😂", code: "1f602", label: "Crying laughing" },
-  { emoji: "😭", code: "1f62d", label: "Sobbing" },
-  { emoji: "😱", code: "1f631", label: "Scream" },
-  { emoji: "🤯", code: "1f92f", label: "Mind blown" },
   { emoji: "🤩", code: "1f929", label: "Starstruck" },
-  { emoji: "🫣", code: "1fae3", label: "Peeking" },
-  { emoji: "🫠", code: "1fae0", label: "Melting" },
   { emoji: "😍", code: "1f60d", label: "Heart eyes" },
+  { emoji: "🥰", code: "1f970", label: "In love" },
+  { emoji: "❤️", code: "2764", label: "Love" },
   { emoji: "🔥", code: "1f525", label: "Fire" },
   { emoji: "👏", code: "1f44f", label: "Clap" },
+  { emoji: "🍿", code: "1f37f", label: "Popcorn" },
+  { emoji: "🎉", code: "1f389", label: "Party" },
+  { emoji: "🤯", code: "1f92f", label: "Mind blown" },
+  { emoji: "😭", code: "1f62d", label: "Sobbing" },
+  { emoji: "😱", code: "1f631", label: "Scream" },
+  { emoji: "🫣", code: "1fae3", label: "Peeking" },
+  { emoji: "🫠", code: "1fae0", label: "Melting" },
   { emoji: "💀", code: "1f480", label: "I'm dead" },
   { emoji: "👀", code: "1f440", label: "Eyes" },
-  { emoji: "🍿", code: "1f37f", label: "Popcorn" },
   { emoji: "👻", code: "1f47b", label: "Ghost" },
   { emoji: "😴", code: "1f634", label: "Sleeping" },
   { emoji: "😡", code: "1f621", label: "Rage" },
   { emoji: "💔", code: "1f494", label: "Broken heart" },
-  { emoji: "🎉", code: "1f389", label: "Party" },
 ] as const;
 
 export type ReactionEmoji = (typeof REACTION_LIVE)[number]["emoji"];
