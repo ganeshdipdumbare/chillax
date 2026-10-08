@@ -92,6 +92,7 @@ export class YoutubePlayer implements PlayerAdapter {
 
   onChange(handler: () => void): () => void {
     let video: HTMLVideoElement | null = null;
+    let lastAd = this.isAdPlaying();
     const events = ["play", "playing", "pause", "seeked", "ratechange"] as const;
     const bind = () => {
       const next = videoEl();
@@ -105,7 +106,14 @@ export class YoutubePlayer implements PlayerAdapter {
       }
     };
     bind();
-    const timer = window.setInterval(bind, 1500);
+    const timer = window.setInterval(() => {
+      bind();
+      const ads = this.isAdPlaying();
+      if (ads !== lastAd) {
+        lastAd = ads;
+        handler();
+      }
+    }, 400);
     return () => {
       window.clearInterval(timer);
       if (video) {
@@ -115,11 +123,19 @@ export class YoutubePlayer implements PlayerAdapter {
   }
 
   onNavigate(handler: () => void): () => void {
+    let last = location.href;
+    const check = () => {
+      if (location.href === last) return;
+      last = location.href;
+      handler();
+    };
     document.addEventListener("yt-navigate-finish", handler);
     window.addEventListener("yt-page-data-updated", handler);
+    const timer = window.setInterval(check, 500);
     return () => {
       document.removeEventListener("yt-navigate-finish", handler);
       window.removeEventListener("yt-page-data-updated", handler);
+      window.clearInterval(timer);
     };
   }
 }

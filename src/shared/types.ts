@@ -84,6 +84,7 @@ export type ContentState = {
     | "error";
   error: string | null;
   wrongTitle: { hostUrl: string; hostContentId: string } | null;
+  waitingForAds: { nickname: string } | null;
   needsGesture: boolean;
   overlayOpen: boolean;
   localPeerId: string | null;
@@ -145,6 +146,15 @@ export type ProtocolMessage =
       nickname: string;
       avatarId: string;
       typing: boolean;
+    }
+  | {
+      type: "ad-state";
+      from: string;
+      nickname: string;
+      avatarId: string;
+      adPlaying: boolean;
+      time: number;
+      sentAt: number;
     }
   | { type: "ping"; sentAt: number }
   | { type: "pong"; sentAt: number }

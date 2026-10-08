@@ -138,6 +138,7 @@ const tick = () => {
     contentId() ?? "",
     isPaused(player, video) ? "1" : "0",
     Math.round(currentTimeSeconds(player, video)),
+    adPlaying() ? "1" : "0",
     location.href,
   ].join("|");
   if (signature !== lastSignature) {

@@ -26,6 +26,7 @@ let state: OverlayState = {
   status: "idle",
   error: null,
   wrongTitle: null,
+  waitingForAds: null,
   needsGesture: false,
   overlayOpen: false,
   localPeerId: null,

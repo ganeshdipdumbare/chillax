@@ -42,15 +42,26 @@ let pendingRole: "host" | "guest" | null = null;
 let pendingRoomId: string | null = null;
 let pendingFreshHost = false;
 let booted = false;
-let followingHost = false;
 let unloading = false;
 let initTimer = 0;
 const HOST_ROOM_KEY = "chillax-host-room";
+const PARTY_SESSION_KEY = "chillax-party-session";
 const AUTOSTART_KEY = "chillax-autostart";
 const AUTOSTART_TTL_MS = 60_000;
 const FOLLOW_KEY = "chillax-follow";
 const FOLLOW_COOLDOWN_MS = 30_000;
 let autostartTimer = 0;
+let lastCleanPlayer: { paused: boolean; time: number } | null = null;
+let lastAdPlaying = false;
+let wasPlayingBeforeAdWait = false;
+const remoteAds = new Map<string, string>();
+
+type PartySession = {
+  role: "host" | "guest";
+  roomId: string;
+  overlayOpen: boolean;
+  controllers: string[];
+};
 
 function armAutostart() {
   try {
@@ -165,6 +176,53 @@ function rememberHostRoom(roomId: string | null) {
   }
 }
 
+function persistPartySession() {
+  const state = getState();
+  const role = state.party?.role || pendingRole;
+  const roomId = state.party?.roomId || pendingRoomId;
+  if (!role || !roomId) return;
+  try {
+    const previous = loadPartySession();
+    const session: PartySession = {
+      role,
+      roomId,
+      overlayOpen: state.overlayOpen,
+      controllers: state.controllers.length ? state.controllers : previous?.controllers ?? [],
+    };
+    sessionStorage.setItem(PARTY_SESSION_KEY, JSON.stringify(session));
+    if (role === "host") rememberHostRoom(roomId);
+    else rememberInviteToken(roomId);
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
+function loadPartySession(): PartySession | null {
+  try {
+    const raw = sessionStorage.getItem(PARTY_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PartySession>;
+    if (parsed.role !== "host" && parsed.role !== "guest") return null;
+    if (typeof parsed.roomId !== "string" || !parsed.roomId) return null;
+    return {
+      role: parsed.role,
+      roomId: parsed.roomId,
+      overlayOpen: parsed.overlayOpen !== false,
+      controllers: Array.isArray(parsed.controllers) ? parsed.controllers.filter((id) => typeof id === "string") : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function clearPartySession() {
+  try {
+    sessionStorage.removeItem(PARTY_SESSION_KEY);
+  } catch {
+    // Private mode can block sessionStorage.
+  }
+}
+
 function recentlyFollowed(hostContentId: string) {
   try {
     const raw = sessionStorage.getItem(FOLLOW_KEY);
@@ -201,7 +259,6 @@ function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId
         )
       : new URL(watchUrl, location.href).toString();
     if (dest === location.href) return false;
-    followingHost = true;
     noteFollow(hostContentId);
     if (roomId) rememberInviteToken(roomId);
     location.replace(dest);
@@ -213,10 +270,115 @@ function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId
 
 function maybeAutoJoin(session: SessionController) {
   if (getState().status !== "idle") return;
-  const token = normalizeRoomCode(parseRoomToken() || pendingInviteToken() || "");
+  const saved = loadPartySession();
+  const token = normalizeRoomCode(
+    parseRoomToken() || pendingInviteToken() || saved?.roomId || "",
+  );
   if (!token) return;
-  if (hostRoomFromSession() === token) session.startParty(token);
+  if (saved?.role === "host" || hostRoomFromSession() === token) session.startParty(token);
   else session.joinParty(token);
+}
+
+function snapshotCleanPlayer(adapter: PlayerAdapter) {
+  if (adapter.isAdPlaying()) return;
+  const player = adapter.getState();
+  if (player) lastCleanPlayer = { paused: player.paused, time: player.time };
+}
+
+function anyoneWaitingForAds() {
+  return remoteAds.size > 0;
+}
+
+function syncAdWaitBanner() {
+  const first = remoteAds.values().next().value as string | undefined;
+  setState({ waitingForAds: first ? { nickname: first } : null });
+}
+
+function pruneRemoteAds(people: { peerId: string; connected: boolean }[]) {
+  const live = new Set(people.filter((person) => person.connected).map((person) => person.peerId));
+  let changed = false;
+  for (const id of [...remoteAds.keys()]) {
+    if (!live.has(id)) {
+      remoteAds.delete(id);
+      changed = true;
+    }
+  }
+  if (changed) syncAdWaitBanner();
+}
+
+function noteRemoteAd(from: string, adPlaying: boolean, nickname: string) {
+  if (adPlaying) remoteAds.set(from, nickname || "Someone");
+  else remoteAds.delete(from);
+  syncAdWaitBanner();
+}
+
+async function pauseForAds(adapter: PlayerAdapter) {
+  if (adapter.isAdPlaying()) return;
+  const local = adapter.getState();
+  if (local && !local.paused) wasPlayingBeforeAdWait = true;
+  if (local && !local.paused) await adapter.pause();
+}
+
+async function resumeAfterAds(adapter: PlayerAdapter) {
+  if (adapter.isAdPlaying() || anyoneWaitingForAds()) return;
+  const shouldPlay = wasPlayingBeforeAdWait;
+  wasPlayingBeforeAdWait = false;
+  if (shouldPlay && canControlPlayback()) {
+    applying.current = true;
+    try {
+      await adapter.play();
+    } catch {
+      applying.current = false;
+      setState({ needsGesture: true });
+      return;
+    }
+    window.setTimeout(() => {
+      applying.current = false;
+    }, 500);
+    broadcastSync(adapter, "followup");
+    return;
+  }
+  if (shouldPlay && lastSync) {
+    void applyHostSync(adapter, { ...lastSync, paused: false }, applying);
+    return;
+  }
+  if (canControlPlayback()) broadcastSync(adapter, "followup");
+}
+
+function sendAdState(adapter: PlayerAdapter, adPlaying: boolean) {
+  const state = getState();
+  const from = myPeerId();
+  if (!state.party || state.status !== "in-party" || !from) return;
+  const time =
+    (adPlaying ? lastCleanPlayer : adapter.getState())?.time ?? lastCleanPlayer?.time ?? 0;
+  sendToMedia({
+    type: "send-protocol",
+    message: {
+      type: "ad-state",
+      from,
+      nickname: state.nickname,
+      avatarId: state.avatarId,
+      adPlaying,
+      time,
+      sentAt: Date.now(),
+    } satisfies ProtocolMessage,
+  });
+}
+
+function tickAds(adapter: PlayerAdapter) {
+  snapshotCleanPlayer(adapter);
+  const ads = adapter.isAdPlaying();
+  const inParty = Boolean(getState().party && getState().status === "in-party" && myPeerId());
+  if (!inParty) return;
+  if (ads === lastAdPlaying) return;
+  lastAdPlaying = ads;
+  sendAdState(adapter, ads);
+  if (ads) return;
+  if (anyoneWaitingForAds()) {
+    void pauseForAds(adapter);
+    return;
+  }
+  void resumeAfterAds(adapter);
 }
 
 function stopHeartbeat() {
@@ -395,7 +557,13 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
   if (!canControlPlayback()) return;
   const party = state.party;
   if (!party) return;
-  if (applying.current || adapter.isAdPlaying()) return;
+  snapshotCleanPlayer(adapter);
+  if (adapter.isAdPlaying()) {
+    if (reason !== "heartbeat") sendAdState(adapter, true);
+    return;
+  }
+  if (anyoneWaitingForAds()) return;
+  if (applying.current) return;
   const player = adapter.getState();
   if (!player) return;
   if (Date.now() < suppressOutUntil) {
@@ -447,7 +615,11 @@ function broadcastSync(adapter: PlayerAdapter, reason: "heartbeat" | "followup" 
 
 function startHeartbeat(adapter: PlayerAdapter) {
   stopHeartbeat();
-  heartbeat = window.setInterval(() => broadcastSync(adapter), HEARTBEAT_MS);
+  tickAds(adapter);
+  heartbeat = window.setInterval(() => {
+    tickAds(adapter);
+    broadcastSync(adapter);
+  }, HEARTBEAT_MS);
 }
 
 function addBurst(emoji: string) {
@@ -528,11 +700,22 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     applyControllers(message.guestPlayback ? ["*"] : []);
     return;
   }
+  if (message.type === "ad-state") {
+    if (!message.from || message.from === myPeerId()) return;
+    noteRemoteAd(message.from, message.adPlaying, message.nickname);
+    if (message.adPlaying) {
+      await pauseForAds(adapter);
+      return;
+    }
+    await resumeAfterAds(adapter);
+    return;
+  }
   if (message.type === "hello") {
     if (state.party?.role === "host") {
       sendControlPolicy();
       broadcastSync(adapter);
     }
+    if (adapter.isAdPlaying()) sendAdState(adapter, true);
   }
   if (message.type === "sync" || message.type === "hello") {
     const contentId = adapter.getContentId();
@@ -546,13 +729,19 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
       (!contentId && message.contentId) ||
       (contentId && message.contentId && message.contentId !== contentId)
     ) {
-      if (followHostWatch(adapter, message.watchUrl, message.contentId)) return;
-      setState({
-        wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
-      });
-      return;
+      const from = message.type === "hello" ? message.peerId : message.from;
+      const followable =
+        from === hostPeerId() || (message.type === "sync" && isController(from));
+      if (followable && followHostWatch(adapter, message.watchUrl, message.contentId)) return;
+      if (followable) {
+        setState({
+          wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
+        });
+        return;
+      }
+    } else {
+      setState({ wrongTitle: null });
     }
-    setState({ wrongTitle: null });
   }
   if (message.type === "sync" && message.controllers && message.from === hostPeerId()) {
     applyControllers(message.controllers);
@@ -560,6 +749,11 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
   if (message.type === "sync") {
     const mode = message.mode ?? "control";
     if (!canAcceptSyncFrom(message.from, message.sentAt, mode)) return;
+    if (adapter.isAdPlaying() || anyoneWaitingForAds()) {
+      lastSync = { paused: message.paused, time: message.time, sentAt: message.sentAt };
+      if (!message.paused) await pauseForAds(adapter);
+      return;
+    }
     const local = adapter.getState();
     if (mode !== "control" && local && local.paused !== message.paused && message.from !== hostPeerId()) {
       return;
@@ -604,15 +798,16 @@ export async function boot(adapter: PlayerAdapter) {
     startParty: (roomId) => {
       const status = getState().status;
       if (status === "connecting" || status === "in-party") return;
-      if (!adapter.isWatchPage() || !adapter.getContentId()) {
+      const known = normalizeRoomCode(roomId || "");
+      if (!known && (!adapter.isWatchPage() || !adapter.getContentId())) {
         setState({ error: "Open a video or title first.", overlayOpen: true });
         return;
       }
       pendingRole = "host";
-      const known = normalizeRoomCode(roomId || "");
       pendingFreshHost = !known;
       pendingRoomId = known || randomRoomId();
       rememberHostRoom(pendingRoomId);
+      persistPartySession();
       resetTyping();
       setState({
         status: "connecting",
@@ -668,6 +863,7 @@ export async function boot(adapter: PlayerAdapter) {
       }
       pendingRole = "guest";
       pendingRoomId = code;
+      persistPartySession();
       resetTyping();
       setState({
         status: "connecting",
@@ -691,6 +887,11 @@ export async function boot(adapter: PlayerAdapter) {
       pendingRoomId = null;
       pendingFreshHost = false;
       rememberHostRoom(null);
+      clearPartySession();
+      remoteAds.clear();
+      lastAdPlaying = false;
+      wasPlayingBeforeAdWait = false;
+      lastCleanPlayer = null;
       if (!unloading) forgetInviteToken();
       clearTokenFromLocation(adapter.platform);
       resetTyping();
@@ -699,6 +900,7 @@ export async function boot(adapter: PlayerAdapter) {
         status: "idle",
         error: null,
         wrongTitle: null,
+        waitingForAds: null,
         messages: [],
         participants: [],
         bursts: [],
@@ -784,6 +986,7 @@ export async function boot(adapter: PlayerAdapter) {
         ? withHostController([...current, peerId])
         : withHostController(current.filter((id) => id !== peerId));
       setState({ controllers: next });
+      persistPartySession();
       sendControlPolicy();
     },
     enablePlayback: () => {
@@ -882,15 +1085,20 @@ export async function boot(adapter: PlayerAdapter) {
       const firstJoin = Boolean(pendingRole);
       pendingRole = null;
       stopInitRetries();
+      const savedControllers = role === "host" ? loadPartySession()?.controllers : null;
       setState({
         status: "in-party",
         party: { role, roomId, inviteUrl },
         localPeerId: data.peerId,
-        controllers: firstJoin && role === "host" ? [data.peerId] : getState().controllers,
+        controllers:
+          firstJoin && role === "host"
+            ? withHostController(savedControllers?.length ? savedControllers : [data.peerId])
+            : getState().controllers,
         error: null,
         callDetail: null,
         callConnected: true,
       });
+      persistPartySession();
       if (firstJoin) {
         pushPageOffset(adapter.platform, true);
         startHeartbeat(adapter);
@@ -908,6 +1116,7 @@ export async function boot(adapter: PlayerAdapter) {
       const prev = getState().controllers;
       const controllers = withHostController(prev.filter((id) => id === "*" || allowed.has(id)));
       setState({ participants: people, controllers });
+      pruneRemoteAds(people);
       if (getState().party?.role === "host" && controllers.join() !== prev.join()) sendControlPolicy();
     }
     if (data.type === "local-media") {
@@ -939,7 +1148,9 @@ export async function boot(adapter: PlayerAdapter) {
   );
 
   adapter.onChange(() => {
+    tickAds(adapter);
     if (applying.current) return;
+    if (adapter.isAdPlaying() || anyoneWaitingForAds()) return;
     if (!canControlPlayback()) {
       if (lastSync) void applyHostSync(adapter, lastSync, applying);
       return;
@@ -947,35 +1158,28 @@ export async function boot(adapter: PlayerAdapter) {
     window.clearTimeout(syncOutTimer);
     syncOutTimer = window.setTimeout(() => broadcastSync(adapter, "control"), 120);
   });
-  let leaveWatchTimer: number | null = null;
   adapter.onNavigate(() => {
     const onWatch = adapter.isWatchPage();
     const contentId = adapter.getContentId();
     const prev = getState();
     if (prev.isWatchPage === onWatch && prev.contentId === contentId) return;
+    const switchedVideo = Boolean(prev.contentId && contentId && prev.contentId !== contentId);
     setState({
       isWatchPage: onWatch,
       contentId,
     });
     const party = getState().party;
-    if (leaveWatchTimer) {
-      window.clearTimeout(leaveWatchTimer);
-      leaveWatchTimer = null;
-    }
-    if (party && !onWatch) {
-      leaveWatchTimer = window.setTimeout(() => {
-        leaveWatchTimer = null;
-        if (getState().party && !adapter.isWatchPage()) session.leaveParty();
-      }, 1200);
-      return;
-    }
+    if (party) persistPartySession();
     if (party && contentId) {
       setState({
         party: {
           ...party,
           inviteUrl: buildInviteUrl(adapter.platform, contentId, party.roomId),
         },
+        wrongTitle: null,
       });
+      writeTokenToLocation(adapter.platform, party.roomId);
+      if (switchedVideo && canControlPlayback()) broadcastSync(adapter);
     }
     pushPageOffset(adapter.platform, getState().overlayOpen);
     maybeAutoJoin(session);
@@ -983,9 +1187,8 @@ export async function boot(adapter: PlayerAdapter) {
 
   window.addEventListener("pagehide", (event) => {
     if (event.persisted) return;
-    if (followingHost) return;
     unloading = true;
-    session.leaveParty();
+    persistPartySession();
   });
   maybeAutoJoin(session);
   watchAutostart();

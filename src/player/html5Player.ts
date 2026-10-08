@@ -93,6 +93,7 @@ export class Html5Player implements PlayerAdapter {
 
   onChange(handler: () => void): () => void {
     let video: HTMLVideoElement | null = null;
+    let lastAd = this.isAdPlaying();
     const bind = () => {
       const next = pickVideo();
       if (next === video) return;
@@ -105,7 +106,14 @@ export class Html5Player implements PlayerAdapter {
       }
     };
     bind();
-    const timer = window.setInterval(bind, 1500);
+    const timer = window.setInterval(() => {
+      bind();
+      const ads = this.isAdPlaying();
+      if (ads !== lastAd) {
+        lastAd = ads;
+        handler();
+      }
+    }, 400);
     return () => {
       window.clearInterval(timer);
       if (video) {

@@ -233,6 +233,12 @@ export function OverlayApp({ session }: { session: SessionController }) {
             </a>
           </div>
         ) : null}
+        {state.waitingForAds ? (
+          <div className="banner" role="status">
+            Paused — waiting for ads to finish
+            {state.waitingForAds.nickname ? ` for ${state.waitingForAds.nickname}` : ""}.
+          </div>
+        ) : null}
         {state.error ? (
           <div className="banner" role="alert">
             {state.error}

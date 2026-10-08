@@ -5,7 +5,9 @@ import { getState, subscribe } from "../shared/store";
 const LAUNCH_CLASS = "chillax-launch";
 const YT_BTN_ID = "chillax-yt-launch";
 const STYLE_ID = "chillax-site-launch-style";
-const GRADIENT = "linear-gradient(110deg, #1c525d 0%, #db704c 100%)";
+const INK = "#0e1113";
+const CREAM = "#fbfaf4";
+const CORAL = "#db704c";
 
 /** Anchored so titles like "How to play guitar" never count as a Play control. */
 const PLAY_HINT =
@@ -46,9 +48,9 @@ function installStyles() {
   flex: 0 0 auto !important;
   box-sizing: border-box !important;
   border: 0 !important;
-  border-radius: 999px !important;
-  background: ${GRADIENT} !important;
-  color: #fbfaf4 !important;
+  border-radius: 10px !important;
+  background: ${INK} !important;
+  color: ${CREAM} !important;
   font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
@@ -59,13 +61,14 @@ function installStyles() {
   vertical-align: middle !important;
   position: relative !important;
   z-index: 2 !important;
+  box-shadow: 2px 2px 0 ${CORAL} !important;
 }
 .${LAUNCH_CLASS}:hover,
 .${LAUNCH_CLASS}:focus-visible {
-  filter: brightness(1.08) !important;
+  filter: brightness(1.12) !important;
 }
 .${LAUNCH_CLASS}:focus-visible {
-  outline: 2px solid #fbfaf4 !important;
+  outline: 2px solid ${CREAM} !important;
   outline-offset: 2px !important;
 }
 .${LAUNCH_CLASS}[hidden] {
@@ -74,16 +77,13 @@ function installStyles() {
 .${LAUNCH_CLASS}--round {
   padding: 0 !important;
   letter-spacing: -0.04em !important;
+  transform: rotate(-4deg) !important;
 }
 .${LAUNCH_CLASS}--pill .chillax-launch-mark {
   display: grid !important;
   place-items: center !important;
-  width: 1.45em !important;
-  height: 1.45em !important;
-  border-radius: 50% !important;
-  background: rgb(251 250 244 / 0.92) !important;
-  color: #0e1113 !important;
-  font-size: 0.68em !important;
+  color: ${CREAM} !important;
+  font-size: 0.78em !important;
   letter-spacing: -0.04em !important;
 }
 #${YT_BTN_ID} {
@@ -94,23 +94,28 @@ function installStyles() {
   box-sizing: border-box !important;
   position: relative !important;
   padding: 0 !important;
+  overflow: visible !important;
   opacity: 1 !important;
+  background: transparent !important;
+  border: 0 !important;
 }
 #${YT_BTN_ID} .chillax-yt-mark {
   display: grid !important;
   place-items: center !important;
   flex: 0 0 auto !important;
-  border-radius: 50% !important;
-  background: ${GRADIENT} !important;
-  color: #fbfaf4 !important;
+  border-radius: 32% !important;
+  background: ${INK} !important;
+  color: ${CREAM} !important;
   font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: -0.04em !important;
   line-height: 1 !important;
-  box-shadow: 0 0 0 1.5px rgb(251 250 244 / 0.85) !important;
+  box-shadow: 2px 2px 0 ${CORAL} !important;
+  transform: rotate(-4deg) !important;
 }
-#${YT_BTN_ID}:hover .chillax-yt-mark {
-  filter: brightness(1.1) !important;
+#${YT_BTN_ID}:hover .chillax-yt-mark,
+#${YT_BTN_ID}:focus-visible .chillax-yt-mark {
+  filter: brightness(1.12) !important;
 }
 `;
   (document.head || document.documentElement).appendChild(style);
@@ -229,7 +234,11 @@ function mirrorPlay(btn: HTMLElement, play: HTMLElement) {
   btn.style.setProperty("max-height", h, "important");
   btn.style.setProperty("margin", `0 ${outer.marginRight} 0 ${outer.marginLeft}`, "important");
   btn.style.setProperty("align-self", "center", "important");
-  const radius = cs.borderRadius && cs.borderRadius !== "0px" ? cs.borderRadius : round ? "50%" : "4px";
+  const radius = round
+    ? `${Math.max(6, Math.round(height * (12 / 38)))}px`
+    : cs.borderRadius && cs.borderRadius !== "0px"
+      ? cs.borderRadius
+      : "10px";
   btn.style.setProperty("border-radius", radius, "important");
   if (round) {
     const w = `${width}px`;
@@ -325,7 +334,7 @@ function paintsBackground(el: HTMLElement) {
   );
 }
 
-/** Same box as YouTube's Play (size, margins, float), with the Cx disc matching its circle or glyph. */
+/** Same box as YouTube's Play (size, margins, float), with the ink Cx tile inside. */
 function mirrorYoutubePlay(btn: HTMLElement, play: HTMLElement) {
   const width = play.offsetWidth;
   const height = play.offsetHeight;
@@ -345,15 +354,15 @@ function mirrorYoutubePlay(btn: HTMLElement, play: HTMLElement) {
   btn.style.setProperty("float", cs.float, "important");
   btn.style.setProperty("vertical-align", cs.verticalAlign, "important");
   btn.style.setProperty("align-self", cs.alignSelf, "important");
-  btn.style.setProperty("border-radius", cs.borderRadius, "important");
   const side = Math.min(width, height);
-  // Modern player paints a circle behind Play; the classic one only shows a glyph.
-  const disc = Math.round(paintsBackground(play) ? side : side * 0.62);
+  // Leave room for the coral offset so the tile matches the toolbar mark.
+  const tile = Math.round((paintsBackground(play) ? side : side * 0.72) * 0.84);
   const mark = btn.firstElementChild as HTMLElement | null;
   if (mark) {
-    mark.style.setProperty("width", `${disc}px`, "important");
-    mark.style.setProperty("height", `${disc}px`, "important");
-    mark.style.setProperty("font-size", `${Math.max(10, Math.round(disc * 0.38))}px`, "important");
+    mark.style.setProperty("width", `${tile}px`, "important");
+    mark.style.setProperty("height", `${tile}px`, "important");
+    mark.style.setProperty("border-radius", `${Math.max(4, Math.round(tile * (12 / 38)))}px`, "important");
+    mark.style.setProperty("font-size", `${Math.max(10, Math.round(tile * 0.38))}px`, "important");
   }
   alignCenters(btn, play);
 }
