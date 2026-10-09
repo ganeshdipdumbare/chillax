@@ -1,10 +1,10 @@
-export type ThemePref = "system" | "light" | "dark";
+export type ThemePref = "light" | "dark";
 
 const THEME_KEY = "chillax.theme";
-const ORDER: ThemePref[] = ["system", "light", "dark"];
+const ORDER: ThemePref[] = ["light", "dark"];
 
 function parse(value: unknown): ThemePref {
-  return value === "light" || value === "dark" ? value : "system";
+  return value === "dark" ? "dark" : "light";
 }
 
 export function nextThemePref(pref: ThemePref): ThemePref {
@@ -17,9 +17,8 @@ export async function saveThemePref(pref: ThemePref): Promise<void> {
 
 /** Calls back with the stored preference and whether dark is in effect, now and on every change. */
 export function watchTheme(onChange: (pref: ThemePref, dark: boolean) => void): () => void {
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  let pref: ThemePref = "system";
-  const emit = () => onChange(pref, pref === "dark" || (pref === "system" && media.matches));
+  let pref: ThemePref = "light";
+  const emit = () => onChange(pref, pref === "dark");
   const onStorage = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
     if (area !== "local" || !(THEME_KEY in changes)) return;
     pref = parse(changes[THEME_KEY].newValue);
@@ -31,9 +30,7 @@ export function watchTheme(onChange: (pref: ThemePref, dark: boolean) => void): 
     emit();
   });
   chrome.storage.onChanged.addListener(onStorage);
-  media.addEventListener("change", emit);
   return () => {
     chrome.storage.onChanged.removeListener(onStorage);
-    media.removeEventListener("change", emit);
   };
 }

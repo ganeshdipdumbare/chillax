@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Chat } from "./Chat";
-import { CloseIcon, CopyIcon, HideIcon, IconButton, MoonIcon, SunIcon, SystemThemeIcon } from "./icons";
+import { CloseIcon, CopyIcon, HideIcon, IconButton, MoonIcon, SunIcon } from "./icons";
 import { AvatarFace } from "./AvatarFace";
 import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
@@ -15,10 +15,10 @@ import { appVersionLabel } from "../shared/version";
 import type { SessionController } from "../content/session";
 import { PlatformMark } from "./PlatformMark";
 
-const THEME_LABEL: Record<ThemePref, string> = { system: "System", light: "Light", dark: "Dark" };
+const THEME_LABEL: Record<ThemePref, string> = { light: "Light", dark: "Dark" };
 
 function ThemeButton() {
-  const [pref, setPref] = useState<ThemePref>("system");
+  const [pref, setPref] = useState<ThemePref>("light");
   useEffect(() => watchTheme((next) => setPref(next)), []);
   const next = nextThemePref(pref);
   return (
@@ -29,7 +29,7 @@ function ThemeButton() {
         void saveThemePref(next);
       }}
     >
-      {pref === "light" ? <SunIcon /> : pref === "dark" ? <MoonIcon /> : <SystemThemeIcon />}
+      {pref === "dark" ? <MoonIcon /> : <SunIcon />}
     </IconButton>
   );
 }

@@ -82,15 +82,6 @@ export function MoonIcon() {
   );
 }
 
-export function SystemThemeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="8" cy="8" r="5.8" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <path fill="currentColor" d="M8 2.2a5.8 5.8 0 0 1 0 11.6z" />
-    </svg>
-  );
-}
-
 export function MicIcon({ off }: { off?: boolean }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">

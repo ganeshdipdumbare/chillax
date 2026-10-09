@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AvatarPicker } from "./AvatarPicker";
 import { AvatarFace } from "./AvatarFace";
 import { Chat } from "./Chat";
-import { CopyIcon, HideIcon, IconButton, SystemThemeIcon } from "./icons";
+import { CopyIcon, HideIcon, IconButton, SunIcon } from "./icons";
 import { LoungeArt } from "./SpotArt";
 import { ReactionSky } from "./ReactionSky";
 import { burstTtlMs, sprayBursts } from "../shared/reactions";
@@ -145,8 +145,8 @@ function Lounge() {
             <p>YouTube night · host</p>
           </div>
         </div>
-        <IconButton label="Theme: System. Switch to Light" onClick={() => undefined}>
-          <SystemThemeIcon />
+        <IconButton label="Theme: Light. Switch to Dark" onClick={() => undefined}>
+          <SunIcon />
         </IconButton>
         <IconButton label="Copy invite link" onClick={() => undefined}>
           <CopyIcon />
