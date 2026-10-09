@@ -9,6 +9,7 @@ import {
   buildInviteUrl,
   clearTokenFromLocation,
   extensionOrigin,
+  mediaPageUrl,
   forgetInviteToken,
   normalizeRoomCode,
   parseRoomToken,
@@ -24,6 +25,7 @@ import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage, Typ
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
+import { reloadCallFrame } from "./callFrame";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
 import { findPlayControl, mountSiteLaunchButton } from "./siteLaunchButton";
@@ -44,6 +46,7 @@ let pendingFreshHost = false;
 let booted = false;
 let unloading = false;
 let initTimer = 0;
+let connectWatchdog = 0;
 const HOST_ROOM_KEY = "chillax-host-room";
 const PARTY_SESSION_KEY = "chillax-party-session";
 const AUTOSTART_KEY = "chillax-autostart";
@@ -151,7 +154,7 @@ function sendPartyInit(adapter: PlayerAdapter) {
     nickname: state.nickname,
     avatarId: state.avatarId,
     platform: adapter.platform,
-    contentId: adapter.getContentId(),
+    contentId: watchContentId(adapter) || adapter.getContentId(),
     watchUrl: currentWatchUrl(adapter, roomId),
   });
 }
@@ -167,7 +170,15 @@ function keepTryingInit(adapter: PlayerAdapter) {
   let tries = 0;
   initTimer = window.setInterval(() => {
     tries += 1;
-    if (!mediaWindow || !partyInitRole() || !partyInitRoomId() || tries > 40) {
+    if (getState().status === "in-party") {
+      stopInitRetries();
+      return;
+    }
+    if (!mediaWindow || !partyInitRole() || !partyInitRoomId()) {
+      if (tries > 120) stopInitRetries();
+      return;
+    }
+    if (tries > 120 && getState().status !== "connecting") {
       stopInitRetries();
       return;
     }
@@ -178,6 +189,36 @@ function keepTryingInit(adapter: PlayerAdapter) {
 function sendToMedia(payload: Record<string, unknown>) {
   if (!mediaWindow || mediaWindow === window) return;
   mediaWindow.postMessage({ source: MSG_SOURCE_CONTENT, ...payload }, "*");
+}
+
+function mediaMessageFrom(event: MessageEvent): boolean {
+  if (event.source === mediaWindow) return true;
+  try {
+    return event.origin === extensionOrigin();
+  } catch {
+    return false;
+  }
+}
+
+function stopConnectWatchdog() {
+  window.clearTimeout(connectWatchdog);
+  connectWatchdog = 0;
+}
+
+function armConnectWatchdog(adapter: PlayerAdapter) {
+  stopConnectWatchdog();
+  connectWatchdog = window.setTimeout(() => {
+    connectWatchdog = 0;
+    if (getState().status !== "connecting") return;
+    reloadCallFrame(mediaPageUrl());
+    mediaWindow = null;
+    window.dispatchEvent(new Event("chillax-media-reload"));
+    setState({
+      callDetail: "Still connecting… retrying the party link.",
+    });
+    keepTryingInit(adapter);
+    armConnectWatchdog(adapter);
+  }, 10_000);
 }
 
 function currentWatchUrl(adapter: PlayerAdapter, roomId?: string) {
@@ -885,6 +926,7 @@ export async function boot(adapter: PlayerAdapter) {
       });
       pushPageOffset(adapter.platform, true);
       playIfPaused(adapter);
+      armConnectWatchdog(adapter);
     },
     launchParty: (opts) => {
       const status = getState().status;
@@ -956,12 +998,14 @@ export async function boot(adapter: PlayerAdapter) {
         typing: [],
       });
       pushPageOffset(adapter.platform, true);
+      armConnectWatchdog(adapter);
     },
     leaveParty: () => {
       const keepLounge = getState().status === "connecting";
       sendToMedia({ type: "leave" });
       stopHeartbeat();
       stopInitRetries();
+      stopConnectWatchdog();
       pendingRole = null;
       pendingRoomId = null;
       pendingFreshHost = false;
@@ -1160,11 +1204,11 @@ export async function boot(adapter: PlayerAdapter) {
   window.addEventListener(
     "message",
     (event) => {
-    if (event.origin !== extensionOrigin()) return;
+    if (!mediaMessageFrom(event)) return;
     const data = event.data as MediaToContent;
     if (data?.source !== MSG_SOURCE_MEDIA) return;
     if (data.type === "iframe-ready") {
-      sendPartyInit(adapter);
+      keepTryingInit(adapter);
     }
     if (data.type === "ready" && data.peerId) {
       // The media frame reports "guest" when a known host code was already live and it joined instead.
@@ -1189,6 +1233,7 @@ export async function boot(adapter: PlayerAdapter) {
       const firstJoin = Boolean(pendingRole);
       pendingRole = null;
       stopInitRetries();
+      stopConnectWatchdog();
       const savedControllers = role === "host" ? loadPartySession()?.controllers : null;
       setState({
         status: "in-party",
@@ -1235,6 +1280,7 @@ export async function boot(adapter: PlayerAdapter) {
       pendingRoomId = null;
       stopHeartbeat();
       stopInitRetries();
+      stopConnectWatchdog();
       setState({ status: "error", error: data.message });
     }
     if (data.type === "call-status") {

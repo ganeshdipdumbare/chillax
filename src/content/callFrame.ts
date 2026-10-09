@@ -24,7 +24,7 @@ export function ensureCallFrame(src: string): HTMLIFrameElement {
     box.id = CALL_FRAME_ID;
     const iframe = document.createElement("iframe");
     iframe.title = "Chillax voice and video";
-    iframe.setAttribute("allow", "camera; microphone; autoplay");
+    iframe.setAttribute("allow", "camera; microphone; autoplay; encrypted-media");
     iframe.setAttribute("scrolling", "no");
     iframe.src = src;
     for (const [prop, value] of [
@@ -44,7 +44,7 @@ export function ensureCallFrame(src: string): HTMLIFrameElement {
     }
     box.appendChild(iframe);
     iframe.addEventListener("load", () => paintCallTheme());
-    park(box);
+    warmHold(box);
     bindChillaxGestureTarget(box);
     const root = document.getElementById("chillax-root");
     (root?.parentElement ?? document.documentElement).appendChild(box);
@@ -67,7 +67,7 @@ export function placeCallFrame(rect: DOMRect | null) {
     rect.left < window.innerWidth &&
     rect.top < window.innerHeight;
   if (!onScreen || !rect) {
-    park(box);
+    warmHold(box);
     paintCallTheme();
     return;
   }
@@ -80,6 +80,8 @@ export function placeCallFrame(rect: DOMRect | null) {
   important(box, "width", `${Math.round(rect.width)}px`);
   important(box, "height", `${Math.round(rect.height)}px`);
   important(box, "pointer-events", "auto");
+  important(box, "visibility", "visible");
+  important(box, "opacity", "1");
   paintCallTheme();
 }
 
@@ -118,23 +120,35 @@ export function parentCallFrameWith(host: HTMLElement) {
   parent.appendChild(box);
 }
 
-function park(box: HTMLElement) {
+/** iPad WebKit throttles 1×1 off-screen iframes — peer signaling never completes. */
+function warmHold(box: HTMLElement) {
   for (const [prop, value] of [
     ["position", "fixed"],
-    ["left", "-12000px"],
+    ["left", "0px"],
     ["top", "0px"],
-    ["width", "1px"],
-    ["height", "1px"],
+    ["width", "320px"],
+    ["height", "240px"],
     ["margin", "0px"],
     ["padding", "0px"],
     ["border", "0px"],
     ["overflow", "hidden"],
-    ["z-index", "2147483647"],
+    ["z-index", "2147483646"],
     ["pointer-events", "none"],
+    ["visibility", "hidden"],
+    ["opacity", "0"],
     ["background", "transparent"],
     ["max-width", "none"],
     ["max-height", "none"],
   ] as const) {
     important(box, prop, value);
   }
+}
+
+export function reloadCallFrame(src: string) {
+  const box = document.getElementById(CALL_FRAME_ID);
+  if (!(box instanceof HTMLElement)) return;
+  const iframe = box.querySelector("iframe");
+  if (!(iframe instanceof HTMLIFrameElement)) return;
+  iframe.src = src;
+  warmHold(box);
 }

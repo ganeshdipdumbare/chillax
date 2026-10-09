@@ -54,8 +54,11 @@ export function MediaApp() {
         | null;
       if (!data || data.source !== MSG_SOURCE_CONTENT) return;
       if (data.type === "init") {
-        initRef.current = data as InitPayload;
-        void startRoom(data as InitPayload);
+        const incoming = data as InitPayload;
+        if (roomRef.current?.peerId) return;
+        if (startingRef.current || roomRef.current) hangup(false);
+        initRef.current = incoming;
+        void startRoom(incoming);
       }
       if (data.type === "send-protocol" && data.message) {
         roomRef.current?.send(data.message);
@@ -81,7 +84,7 @@ export function MediaApp() {
     };
     ping();
     const timer = window.setInterval(() => {
-      if (initRef.current) {
+      if (roomRef.current?.peerId) {
         window.clearInterval(timer);
         return;
       }
@@ -96,7 +99,8 @@ export function MediaApp() {
   }, []);
 
   async function startRoom(init: InitPayload) {
-    if (roomRef.current || startingRef.current) return;
+    if (roomRef.current?.peerId) return;
+    if (startingRef.current || roomRef.current) hangup(false);
     startingRef.current = true;
     const generation = generationRef.current;
     const placeholder = placeholderLocalStream();

@@ -79,8 +79,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
     };
     iframe.addEventListener("load", onLoad);
     onLoad();
+    const onReload = () => onLoad();
+    window.addEventListener("chillax-media-reload", onReload);
     return () => {
       iframe.removeEventListener("load", onLoad);
+      window.removeEventListener("chillax-media-reload", onReload);
     };
   }, [session, needMedia, mediaSrc]);
 
