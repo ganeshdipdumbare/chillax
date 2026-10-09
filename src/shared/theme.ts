@@ -15,6 +15,13 @@ export async function saveThemePref(pref: ThemePref): Promise<void> {
   await chrome.storage.local.set({ [THEME_KEY]: pref });
 }
 
+/** Light or dark only. Never `light dark`, which lets iPad paint half the page from the system. */
+export function applyDocumentTheme(dark: boolean) {
+  document.documentElement.classList.toggle("theme-dark", dark);
+  document.documentElement.style.colorScheme = dark ? "dark" : "light";
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", dark ? "dark" : "light");
+}
+
 /** Calls back with the stored preference and whether dark is in effect, now and on every change. */
 export function watchTheme(onChange: (pref: ThemePref, dark: boolean) => void): () => void {
   let pref: ThemePref = "light";

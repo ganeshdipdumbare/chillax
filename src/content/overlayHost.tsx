@@ -4,6 +4,7 @@ import overlayCss from "../overlay/overlay.css?inline";
 import fontsCss from "../shared/fonts.css?inline";
 import { OVERLAY_INSET, OVERLAY_PANEL_WIDTH, OVERLAY_RESERVE } from "../shared/constants";
 import { watchTheme } from "../shared/theme";
+import { setCallTheme } from "./callFrame";
 import { bindChillaxGestureTarget, bindChillaxTapReplay, installKeyShield } from "./keyShield";
 import type { SessionController } from "./session";
 
@@ -63,7 +64,11 @@ export function mountOverlay(session: SessionController) {
   host.style.setProperty("--chillax-panel", `${OVERLAY_PANEL_WIDTH}px`);
   host.style.setProperty("--chillax-inset", `${OVERLAY_INSET}px`);
   document.documentElement.appendChild(host);
-  watchTheme((_, dark) => host.classList.toggle("theme-dark", dark));
+  watchTheme((_, dark) => {
+    host.classList.toggle("theme-dark", dark);
+    host.style.colorScheme = dark ? "dark" : "light";
+    setCallTheme(dark);
+  });
   const shadow = host.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
   style.textContent = overlayCss;

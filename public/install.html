@@ -14,8 +14,7 @@
       content="Watch together on the big streaming sites. Synced playback, group chat, voice, and floating reactions &mdash; without the Chrome Web Store."
     />
     <meta property="og:image" content="art/hero.svg" />
-    <meta name="theme-color" content="#fbfaf4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e1113" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fbfaf4" />
     <link rel="icon" type="image/png" href="icons/icon32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="icons/icon128.png" />
     <link rel="preload" href="fonts/inclusive-sans.woff2" as="font" type="font/woff2" crossorigin />
@@ -33,7 +32,7 @@
         font-display: swap;
       }
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
         --canvas: #fbfaf4;
         --surface: #ffffff;
         --sunken: #f2f1eb;
@@ -64,37 +63,6 @@
         --radius-lg: 24px;
         --radius-xl: 28px;
         --radius-pill: 16px;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --canvas: #0e1113;
-          --surface: #15191b;
-          --sunken: #181e1d;
-          --inset: #262c2f;
-          --ink: #fbfaf4;
-          --ink-2: rgb(251 250 244 / 0.82);
-          --mute: rgb(251 250 244 / 0.58);
-          --line: rgb(251 250 244 / 0.1);
-          --line-strong: rgb(251 250 244 / 0.24);
-          --tint: rgb(251 250 244 / 0.07);
-          --teal: #1c525d;
-          --peach: #4d2a1f;
-          --link: #c3d3ce;
-          --ink-hover: #fff;
-          --nav-bg: rgb(14 17 19 / 0.7);
-          --shadow-card: 0 1px 0 rgb(251 250 244 / 0.04) inset, 0 24px 60px -28px rgb(0 0 0 / 0.8);
-          --shadow-art: 0 2px 0 rgb(0 0 0 / 0.9), 0 30px 80px -30px rgb(0 0 0 / 0.9);
-          --shadow-btn: 0 1px 0 rgb(255 255 255 / 0.5) inset, 0 12px 28px -12px rgb(0 0 0 / 0.9);
-        }
-        body::before {
-          background:
-            radial-gradient(ellipse 70% 55% at 12% 8%, rgb(28 82 93 / 0.45), transparent 62%),
-            radial-gradient(ellipse 55% 45% at 92% 4%, rgb(77 42 31 / 0.4), transparent 58%),
-            radial-gradient(ellipse 50% 40% at 78% 42%, rgb(28 82 93 / 0.22), transparent 65%),
-            radial-gradient(ellipse 45% 35% at 18% 72%, rgb(77 42 31 / 0.2), transparent 60%),
-            radial-gradient(ellipse 40% 30% at 88% 88%, rgb(28 82 93 / 0.25), transparent 55%),
-            var(--canvas);
-        }
       }
       * {
         box-sizing: border-box;

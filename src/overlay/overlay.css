@@ -70,6 +70,14 @@
   color-scheme: dark;
 }
 
+:host(.theme-dark) .panel,
+:host(.theme-dark) .tab,
+:host(.theme-dark) input,
+:host(.theme-dark) button,
+:host(.theme-dark) textarea {
+  color-scheme: dark;
+}
+
 :host {
   display: block;
   position: fixed;

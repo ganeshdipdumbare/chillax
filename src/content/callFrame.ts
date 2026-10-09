@@ -1,6 +1,11 @@
+import { MSG_SOURCE_CONTENT } from "../shared/constants";
 import { bindChillaxGestureTarget } from "./keyShield";
 
 export const CALL_FRAME_ID = "chillax-call";
+
+const LIGHT_CANVAS = "#fbfaf4";
+const DARK_CANVAS = "#0e1113";
+let callDark = false;
 
 /**
  * The call UI has to stay a tiny fixed box. On iPad, WebKit hit-tests an iframe
@@ -38,6 +43,7 @@ export function ensureCallFrame(src: string): HTMLIFrameElement {
       important(iframe, prop, value);
     }
     box.appendChild(iframe);
+    iframe.addEventListener("load", () => paintCallTheme());
     park(box);
     bindChillaxGestureTarget(box);
     const root = document.getElementById("chillax-root");
@@ -45,6 +51,7 @@ export function ensureCallFrame(src: string): HTMLIFrameElement {
   }
   const iframe = box.querySelector("iframe");
   if (!(iframe instanceof HTMLIFrameElement)) throw new Error("missing call frame");
+  paintCallTheme();
   return iframe;
 }
 
@@ -61,6 +68,7 @@ export function placeCallFrame(rect: DOMRect | null) {
     rect.top < window.innerHeight;
   if (!onScreen || !rect) {
     park(box);
+    paintCallTheme();
     return;
   }
   const parent = box.parentElement;
@@ -72,6 +80,30 @@ export function placeCallFrame(rect: DOMRect | null) {
   important(box, "width", `${Math.round(rect.width)}px`);
   important(box, "height", `${Math.round(rect.height)}px`);
   important(box, "pointer-events", "auto");
+  paintCallTheme();
+}
+
+/** The call frame is its own document, so the panel theme has to be pushed in. */
+export function setCallTheme(dark: boolean) {
+  callDark = dark;
+  paintCallTheme();
+}
+
+function paintCallTheme() {
+  const box = document.getElementById(CALL_FRAME_ID);
+  if (!(box instanceof HTMLElement)) return;
+  const canvas = callDark ? DARK_CANVAS : LIGHT_CANVAS;
+  const scheme = callDark ? "dark" : "light";
+  important(box, "background", canvas);
+  important(box, "color-scheme", scheme);
+  const iframe = box.querySelector("iframe");
+  if (!(iframe instanceof HTMLIFrameElement)) return;
+  important(iframe, "background", canvas);
+  important(iframe, "color-scheme", scheme);
+  iframe.contentWindow?.postMessage(
+    { source: MSG_SOURCE_CONTENT, type: "theme", dark: callDark },
+    "*",
+  );
 }
 
 export function removeCallFrame() {
