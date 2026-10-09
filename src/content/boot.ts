@@ -242,13 +242,23 @@ function noteFollow(hostContentId: string) {
   }
 }
 
-function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId: string): boolean {
+function followHostWatch(
+  adapter: PlayerAdapter,
+  watchUrl: string,
+  hostContentId: string,
+  roomIdOverride?: string | null,
+): boolean {
   if (!watchUrl && !hostContentId) return false;
   const mine = adapter.getContentId();
   if (mine && hostContentId && mine === hostContentId) return false;
   // The site may land us on a different id for the same title; don't reload in a loop.
   if (recentlyFollowed(hostContentId)) return false;
-  const roomId = pendingRoomId || getState().party?.roomId || parseRoomToken() || parseRoomToken(watchUrl);
+  const roomId =
+    roomIdOverride ||
+    pendingRoomId ||
+    getState().party?.roomId ||
+    parseRoomToken() ||
+    parseRoomToken(watchUrl);
   try {
     const dest = roomId
       ? buildInviteUrl(
@@ -268,6 +278,14 @@ function followHostWatch(adapter: PlayerAdapter, watchUrl: string, hostContentId
   }
 }
 
+function restorePendingFromSession() {
+  const saved = loadPartySession();
+  if (!saved) return;
+  pendingRole = saved.role;
+  pendingRoomId = saved.roomId;
+  if (saved.overlayOpen) setState({ overlayOpen: true });
+}
+
 function maybeAutoJoin(session: SessionController) {
   if (getState().status !== "idle") return;
   const saved = loadPartySession();
@@ -275,8 +293,28 @@ function maybeAutoJoin(session: SessionController) {
     parseRoomToken() || pendingInviteToken() || saved?.roomId || "",
   );
   if (!token) return;
-  if (saved?.role === "host" || hostRoomFromSession() === token) session.startParty(token);
-  else session.joinParty(token);
+  if (saved?.role === "guest") {
+    session.joinParty(token);
+    return;
+  }
+  if (saved?.role === "host" || hostRoomFromSession() === token) {
+    session.startParty(token);
+    return;
+  }
+  // Fresh invite link — join the live party, don't claim the code as host.
+  session.joinParty(token);
+}
+
+/** YouTube can expose `?v=` before the player element is wired up. */
+function effectiveContentId(adapter: PlayerAdapter): string | null {
+  const id = adapter.getContentId();
+  if (id) return id;
+  if (adapter.platform !== "youtube") return null;
+  try {
+    return new URLSearchParams(location.search).get("v");
+  } catch {
+    return null;
+  }
 }
 
 function snapshotCleanPlayer(adapter: PlayerAdapter) {
@@ -421,6 +459,12 @@ function isController(from?: string) {
   const state = getState();
   if (state.controllers.includes("*")) return true;
   return state.controllers.includes(from);
+}
+
+/** Follow the host or anyone the host has given playback control to. */
+function shouldFollowWatch(from?: string) {
+  if (!from) return false;
+  return from === hostPeerId() || isController(from);
 }
 
 function canAcceptSyncFrom(
@@ -718,7 +762,7 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
     if (adapter.isAdPlaying()) sendAdState(adapter, true);
   }
   if (message.type === "sync" || message.type === "hello") {
-    const contentId = adapter.getContentId();
+    const contentId = effectiveContentId(adapter);
     if (message.platform !== adapter.platform) {
       setState({
         wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
@@ -730,9 +774,13 @@ async function handleProtocol(adapter: PlayerAdapter, message: ProtocolMessage) 
       (contentId && message.contentId && message.contentId !== contentId)
     ) {
       const from = message.type === "hello" ? message.peerId : message.from;
-      const followable =
-        from === hostPeerId() || (message.type === "sync" && isController(from));
-      if (followable && followHostWatch(adapter, message.watchUrl, message.contentId)) return;
+      const followable = shouldFollowWatch(from);
+      if (
+        followable &&
+        followHostWatch(adapter, message.watchUrl, message.contentId, hostPeerId())
+      ) {
+        return;
+      }
       if (followable) {
         setState({
           wrongTitle: { hostUrl: message.watchUrl, hostContentId: message.contentId },
@@ -832,6 +880,17 @@ export async function boot(adapter: PlayerAdapter) {
       if (!opts?.href && playerReady(adapter)) {
         clearAutostart();
         session.startParty();
+        return;
+      }
+      if (
+        !opts?.href &&
+        adapter.platform === "youtube" &&
+        adapter.isWatchPage() &&
+        adapter.getContentId()
+      ) {
+        armAutostart();
+        setState({ error: null, overlayOpen: true });
+        watchAutostart();
         return;
       }
       if (opts?.href) {
@@ -1160,17 +1219,19 @@ export async function boot(adapter: PlayerAdapter) {
   });
   adapter.onNavigate(() => {
     const onWatch = adapter.isWatchPage();
-    const contentId = adapter.getContentId();
+    const contentId = effectiveContentId(adapter);
     const prev = getState();
     if (prev.isWatchPage === onWatch && prev.contentId === contentId) return;
-    const switchedVideo = Boolean(prev.contentId && contentId && prev.contentId !== contentId);
+    const switchedVideo = Boolean(
+      prev.contentId && contentId && prev.contentId !== contentId,
+    );
     setState({
       isWatchPage: onWatch,
       contentId,
     });
     const party = getState().party;
     if (party) persistPartySession();
-    if (party && contentId) {
+    if (party && contentId && canControlPlayback()) {
       setState({
         party: {
           ...party,
@@ -1179,7 +1240,7 @@ export async function boot(adapter: PlayerAdapter) {
         wrongTitle: null,
       });
       writeTokenToLocation(adapter.platform, party.roomId);
-      if (switchedVideo && canControlPlayback()) broadcastSync(adapter);
+      if (switchedVideo) broadcastSync(adapter);
     }
     pushPageOffset(adapter.platform, getState().overlayOpen);
     maybeAutoJoin(session);
@@ -1190,6 +1251,7 @@ export async function boot(adapter: PlayerAdapter) {
     unloading = true;
     persistPartySession();
   });
+  restorePendingFromSession();
   maybeAutoJoin(session);
   watchAutostart();
   } catch (error) {

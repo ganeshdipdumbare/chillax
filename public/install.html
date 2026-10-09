@@ -14,7 +14,8 @@
       content="Watch together on the big streaming sites. Synced playback, group chat, voice, and floating reactions &mdash; without the Chrome Web Store."
     />
     <meta property="og:image" content="art/hero.svg" />
-    <meta name="theme-color" content="#fbfaf4" />
+    <meta name="theme-color" content="#0e1113" />
+    <meta name="color-scheme" content="dark" />
     <link rel="icon" type="image/png" href="icons/icon32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="icons/icon128.png" />
     <link rel="preload" href="fonts/inclusive-sans.woff2" as="font" type="font/woff2" crossorigin />
@@ -32,28 +33,28 @@
         font-display: swap;
       }
       :root {
-        color-scheme: light;
-        --canvas: #fbfaf4;
-        --surface: #ffffff;
-        --sunken: #f2f1eb;
-        --inset: #e9e8e0;
-        --ink: #0e1113;
-        --ink-2: #2c3134;
-        --mute: rgb(14 17 19 / 0.6);
-        --line: rgb(14 17 19 / 0.1);
-        --line-strong: rgb(14 17 19 / 0.22);
-        --tint: rgb(14 17 19 / 0.05);
-        --teal: #c3d3ce;
-        --peach: #f8dbca;
+        color-scheme: dark;
+        --canvas: #0e1113;
+        --surface: #15191b;
+        --sunken: #1b2023;
+        --inset: #262c2f;
+        --ink: #fbfaf4;
+        --ink-2: rgb(251 250 244 / 0.82);
+        --mute: rgb(251 250 244 / 0.6);
+        --line: rgb(251 250 244 / 0.12);
+        --line-strong: rgb(251 250 244 / 0.22);
+        --tint: rgb(251 250 244 / 0.07);
+        --teal: #1c525d;
+        --peach: #4d2a1f;
         --coral: #db704c;
         --sun: #f6c453;
-        --deep: #1c525d;
-        --link: #1c525d;
-        --ink-hover: #000;
-        --nav-bg: rgb(251 250 244 / 0.72);
-        --shadow-card: 0 1px 2px rgb(14 17 19 / 0.06), 0 24px 60px -28px rgb(14 17 19 / 0.35);
-        --shadow-art: 0 2px 0 rgb(14 17 19 / 0.9), 0 30px 80px -30px rgb(14 17 19 / 0.45);
-        --shadow-btn: 0 1px 0 rgb(255 255 255 / 0.14) inset, 0 12px 28px -12px rgb(14 17 19 / 0.7);
+        --deep: #c3d3ce;
+        --link: #c3d3ce;
+        --ink-hover: #fff;
+        --nav-bg: rgb(14 17 19 / 0.82);
+        --shadow-card: 0 1px 2px rgb(0 0 0 / 0.45), 0 24px 60px -28px rgb(0 0 0 / 0.65);
+        --shadow-art: 0 2px 0 rgb(251 250 244 / 0.85), 0 30px 80px -30px rgb(0 0 0 / 0.75);
+        --shadow-btn: 0 1px 0 rgb(255 255 255 / 0.12) inset, 0 12px 28px -12px rgb(0 0 0 / 0.85);
         --sans: "Chillax Sans", "Inclusive Sans", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
         --mono: "Chillax Mono", "JetBrains Mono", SFMono-Regular, ui-monospace, Menlo, monospace;
         --ease: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -75,8 +76,8 @@
         scroll-padding-top: 88px;
       }
       ::selection {
-        background: #c3d3ce;
-        color: #0e1113;
+        background: #1c525d;
+        color: #fbfaf4;
       }
       body {
         margin: 0;
@@ -97,11 +98,11 @@
         inset: 0;
         z-index: 0;
         background:
-          radial-gradient(ellipse 70% 55% at 12% 8%, rgb(195 211 206 / 0.55), transparent 62%),
-          radial-gradient(ellipse 55% 45% at 92% 4%, rgb(248 219 202 / 0.48), transparent 58%),
-          radial-gradient(ellipse 50% 40% at 78% 42%, rgb(173 180 156 / 0.2), transparent 65%),
-          radial-gradient(ellipse 45% 35% at 18% 72%, rgb(248 219 202 / 0.22), transparent 60%),
-          radial-gradient(ellipse 40% 30% at 88% 88%, rgb(195 211 206 / 0.28), transparent 55%),
+          radial-gradient(ellipse 70% 55% at 12% 8%, rgb(28 82 93 / 0.35), transparent 62%),
+          radial-gradient(ellipse 55% 45% at 92% 4%, rgb(219 112 76 / 0.12), transparent 58%),
+          radial-gradient(ellipse 50% 40% at 78% 42%, rgb(28 82 93 / 0.15), transparent 65%),
+          radial-gradient(ellipse 45% 35% at 18% 72%, rgb(219 112 76 / 0.08), transparent 60%),
+          radial-gradient(ellipse 40% 30% at 88% 88%, rgb(28 82 93 / 0.2), transparent 55%),
           var(--canvas);
       }
       a {
@@ -437,7 +438,7 @@
       .art-card {
         overflow: hidden;
         border-radius: var(--radius-xl);
-        border: 2px solid #0e1113;
+        border: 2px solid var(--line-strong);
         background: var(--teal);
         box-shadow: var(--shadow-art);
       }
@@ -455,14 +456,14 @@
         z-index: 2;
         padding: 8px 14px;
         border-radius: 14px;
-        border: 2px solid #0e1113;
-        color: #0e1113;
+        border: 2px solid var(--ink);
+        color: var(--canvas);
         font-size: 14px;
         font-weight: 700;
         letter-spacing: -0.02em;
         line-height: 1.2;
         white-space: nowrap;
-        box-shadow: 3px 3px 0 #0e1113;
+        box-shadow: 3px 3px 0 var(--ink);
       }
       .sticker-a {
         top: -18px;
@@ -473,7 +474,8 @@
       .sticker-b {
         right: -10px;
         bottom: -18px;
-        background: #fbfaf4;
+        background: var(--surface);
+        color: var(--ink);
         transform: rotate(4deg);
       }
 
@@ -639,7 +641,7 @@
         height: 32px;
         border-radius: 50%;
         background: var(--coral);
-        color: #fbfaf4;
+        color: var(--canvas);
         font-weight: 700;
         font-size: 17px;
       }
@@ -761,7 +763,7 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #fbfaf4;
+        background: var(--ink);
         animation: toggle-nudge 3s ease-in-out infinite;
       }
       .fake-btn {
@@ -807,7 +809,7 @@
       }
       button.copy.done {
         background: var(--deep);
-        color: #fbfaf4;
+        color: var(--canvas);
       }
 
       /* Footer */
