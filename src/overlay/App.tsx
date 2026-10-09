@@ -5,6 +5,7 @@ import { AvatarFace } from "./AvatarFace";
 import { LoungeArt } from "./SpotArt";
 import { AvatarPicker } from "./AvatarPicker";
 import { ReactionSky } from "./ReactionSky";
+import { ensureCallFrame, placeCallFrame, removeCallFrame } from "../content/callFrame";
 import { mediaPageUrl, parseRoomToken } from "../shared/ids";
 import { PLATFORM_COLOR } from "../shared/platformColors";
 import { platformNightLabel } from "../shared/platforms";
@@ -38,7 +39,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
   const [copied, setCopied] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState(() => getState().nickname);
   const [joinCode, setJoinCode] = useState(() => parseRoomToken() ?? "");
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const slotRef = useRef<HTMLDivElement>(null);
   const mediaSrc = useMemo(() => mediaPageUrl(), []);
 
   useEffect(() => subscribe(() => {
@@ -67,14 +68,11 @@ export function OverlayApp({ session }: { session: SessionController }) {
 
   useEffect(() => {
     if (!needMedia) {
+      removeCallFrame();
       session.registerMediaWindow(null);
       return;
     }
-    const iframe = iframeRef.current;
-    if (!iframe) {
-      session.registerMediaWindow(null);
-      return;
-    }
+    const iframe = ensureCallFrame(mediaSrc);
     const onLoad = () => {
       const win = iframe.contentWindow;
       if (win && win !== window) session.registerMediaWindow(win);
@@ -84,7 +82,46 @@ export function OverlayApp({ session }: { session: SessionController }) {
     return () => {
       iframe.removeEventListener("load", onLoad);
     };
-  }, [session, needMedia]);
+  }, [session, needMedia, mediaSrc]);
+
+  useEffect(() => {
+    if (!needMedia) return;
+    const slot = slotRef.current;
+    if (!slot) return;
+    let frame = 0;
+    const place = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const node = slotRef.current;
+        if (!node) return;
+        const root = node.getRootNode();
+        const host = root instanceof ShadowRoot ? root.host : null;
+        if (host instanceof HTMLElement) {
+          const viewport = window.visualViewport;
+          const covered = viewport ? Math.max(0, window.innerHeight - viewport.offsetTop - viewport.height) : 0;
+          host.style.setProperty("--chillax-keyboard", `${covered > 80 ? Math.round(covered) : 0}px`);
+        }
+        placeCallFrame(node.getBoundingClientRect());
+      });
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(slot);
+    window.addEventListener("resize", place);
+    window.visualViewport?.addEventListener("resize", place);
+    window.visualViewport?.addEventListener("scroll", place);
+    document.addEventListener("fullscreenchange", place);
+    document.addEventListener("webkitfullscreenchange", place);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("scroll", place);
+      document.removeEventListener("fullscreenchange", place);
+      document.removeEventListener("webkitfullscreenchange", place);
+    };
+  }, [needMedia, panelOpen, state.error, state.needsGesture, state.wrongTitle, state.waitingForAds]);
 
   const hostId = state.party?.roomId;
   const me = state.localPeerId;
@@ -244,15 +281,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
             {state.error}
           </div>
         ) : null}
-        {needMedia ? (
-          <iframe
-            ref={iframeRef}
-            className="media-frame"
-            title="Chillax voice and video"
-            allow="camera; microphone; autoplay"
-            src={mediaSrc}
-          />
-        ) : null}
+        {needMedia ? <div ref={slotRef} className="media-slot" /> : null}
 
         {lounge ? (
           <div className="idle">

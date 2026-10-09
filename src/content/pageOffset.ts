@@ -1,3 +1,4 @@
+import { parentCallFrameWith } from "./callFrame";
 import { OVERLAY_INSET, OVERLAY_PANEL_WIDTH, OVERLAY_RESERVE } from "../shared/constants";
 import { getState } from "../shared/store";
 import type { Platform } from "../shared/types";
@@ -581,10 +582,11 @@ function placeHost() {
   const host = document.getElementById(HOST_ID);
   if (!host) return;
   const target = fullscreenTarget();
-  if (host.parentElement === target) return;
+  const alreadyInside =
+    host.parentElement === target || (target !== document.documentElement && target.contains(host));
   // Moving an already-visible host reloads the call iframe.
-  if (target !== document.documentElement && target.contains(host)) return;
-  target.appendChild(host);
+  if (!alreadyInside) target.appendChild(host);
+  parentCallFrameWith(host);
 }
 
 function watchHostParent() {

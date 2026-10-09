@@ -139,6 +139,7 @@ button {
   line-height: 1.2;
   text-transform: uppercase;
   cursor: pointer;
+  touch-action: manipulation;
   box-shadow: 0 12px 30px rgb(0 0 0 / 0.15);
 }
 
@@ -156,6 +157,7 @@ button {
 
 .panel {
   pointer-events: auto;
+  touch-action: manipulation;
   position: absolute;
   top: 0;
   right: 0;
@@ -177,7 +179,7 @@ button {
 :host(.is-party) .panel:not(.is-lounge) {
   top: var(--chillax-inset, 12px);
   right: var(--chillax-inset, 12px);
-  bottom: var(--chillax-inset, 12px);
+  bottom: calc(var(--chillax-inset, 12px) + var(--chillax-keyboard, 0px));
 }
 
 .panel.is-collapsed {
@@ -800,7 +802,7 @@ input[type="text"] {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
@@ -871,27 +873,16 @@ input[type="text"]:disabled {
   line-height: 1;
 }
 
-.media-frame {
-  pointer-events: auto;
+.media-slot {
   position: relative;
-  z-index: 9;
+  z-index: 0;
   flex: 0 0 auto;
   width: 100%;
-  min-height: 132px;
   height: 148px;
-  border: 0;
-  background: var(--canvas);
-  color-scheme: light;
-}
-
-.media-frame.is-hid {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  min-height: 0;
-  opacity: 0;
-  pointer-events: none;
+  min-height: 148px;
+  max-height: 148px;
   overflow: hidden;
+  background: var(--canvas);
 }
 
 .panel.story {
@@ -1279,7 +1270,14 @@ button.chip:focus-visible {
   flex: 1;
   min-height: 34px;
   padding: 0 12px;
-  font-size: 13px;
+  font-size: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  input[type="text"],
+  .composer input {
+    font-size: 13px;
+  }
 }
 
 .send {

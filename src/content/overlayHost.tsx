@@ -4,7 +4,7 @@ import overlayCss from "../overlay/overlay.css?inline";
 import fontsCss from "../shared/fonts.css?inline";
 import { OVERLAY_INSET, OVERLAY_PANEL_WIDTH, OVERLAY_RESERVE } from "../shared/constants";
 import { watchTheme } from "../shared/theme";
-import { installKeyShield } from "./keyShield";
+import { bindChillaxGestureTarget, bindChillaxTapReplay, installKeyShield } from "./keyShield";
 import type { SessionController } from "./session";
 
 // @font-face is ignored inside shadow roots, so the faces live in the page document.
@@ -16,7 +16,7 @@ function installFonts() {
   (document.head || document.documentElement).appendChild(style);
 }
 
-function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
+function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot, mount: HTMLElement) {
   const onKey = (event: KeyboardEvent) => {
     const active = shadow.activeElement;
     if (!(active instanceof HTMLElement)) return;
@@ -37,6 +37,9 @@ function shieldPageShortcuts(host: HTMLElement, shadow: ShadowRoot) {
     event.stopImmediatePropagation();
   };
   installKeyShield().handler = onKey;
+  // Players cancel the touch on window; release that seal at the host and keep the gesture here.
+  bindChillaxGestureTarget(host, { lockScroll: true });
+  bindChillaxTapReplay(mount);
   // Players like ororo bind document wheel to volume and cancel the scroll.
   host.addEventListener("wheel", (event) => event.stopPropagation(), { passive: true });
   document.addEventListener(
@@ -69,6 +72,6 @@ export function mountOverlay(session: SessionController) {
     "position:absolute;inset:0;overflow:visible;pointer-events:none;background:transparent;";
   shadow.appendChild(style);
   shadow.appendChild(mount);
-  shieldPageShortcuts(host, shadow);
+  shieldPageShortcuts(host, shadow, mount);
   createRoot(mount).render(<OverlayApp session={session} />);
 }
