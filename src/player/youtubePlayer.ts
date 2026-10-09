@@ -37,11 +37,19 @@ export class YoutubePlayer implements PlayerAdapter {
     return Boolean(this.getContentId());
   }
 
+  isPlayerOpen(): boolean {
+    return Boolean(moviePlayer() || videoEl());
+  }
+
   getState(): PlayerState | null {
     const player = moviePlayer();
     const video = videoEl();
+    if (!player && !video) return null;
     const time = player?.getCurrentTime?.() ?? video?.currentTime;
-    if (typeof time !== "number" || Number.isNaN(time)) return null;
+    if (typeof time !== "number" || Number.isNaN(time)) {
+      // iPad often has the watch shell up before currentTime / YT's API is readable.
+      return { paused: true, time: 0 };
+    }
     const state = player?.getPlayerState?.();
     const paused =
       state === 1 || state === 3

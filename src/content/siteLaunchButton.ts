@@ -98,6 +98,10 @@ function installStyles() {
   opacity: 1 !important;
   background: transparent !important;
   border: 0 !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  cursor: pointer !important;
+  z-index: 64 !important;
 }
 #${YT_BTN_ID} .chillax-yt-mark {
   display: grid !important;
@@ -306,11 +310,18 @@ function ensureYoutubeButton(session: SessionController): HTMLButtonElement {
   btn.type = "button";
   btn.className = "ytp-button";
   btn.replaceChildren(markSpan("chillax-yt-mark"));
-  btn.addEventListener("click", (event) => {
+  let lastLaunchAt = 0;
+  const launch = (event: Event) => {
     event.preventDefault();
     event.stopPropagation();
+    const now = Date.now();
+    if (now - lastLaunchAt < 500) return;
+    lastLaunchAt = now;
     session.launchParty();
-  });
+  };
+  btn.addEventListener("click", launch);
+  // iPad WebKit often skips click when the player bar swallowed touchstart.
+  btn.addEventListener("touchend", launch, { passive: false });
   return btn;
 }
 

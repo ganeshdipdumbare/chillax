@@ -90,10 +90,37 @@ function autostartPending() {
   }
 }
 
+/** YouTube can expose `?v=` before the player element is wired up. */
+function effectiveContentId(adapter: PlayerAdapter): string | null {
+  const id = adapter.getContentId();
+  if (id) return id;
+  if (adapter.platform !== "youtube") return null;
+  try {
+    return new URLSearchParams(location.search).get("v");
+  } catch {
+    return null;
+  }
+}
+
+function watchContentId(adapter: PlayerAdapter) {
+  return adapter.platform === "youtube" ? effectiveContentId(adapter) : adapter.getContentId();
+}
+
 function playerReady(adapter: PlayerAdapter) {
-  if (!adapter.isWatchPage() || !adapter.getContentId()) return false;
+  if (!watchContentId(adapter) || !adapter.isWatchPage()) return false;
   if (adapter.isPlayerOpen && !adapter.isPlayerOpen()) return false;
-  return adapter.getState() !== null;
+  if (adapter.getState() !== null) return true;
+  // YouTube on iPad: player chrome can be up while time stays unreadable for a while.
+  return adapter.platform === "youtube" && Boolean(adapter.isPlayerOpen?.());
+}
+
+function youtubeCanStartNow(adapter: PlayerAdapter) {
+  return (
+    adapter.platform === "youtube" &&
+    Boolean(watchContentId(adapter)) &&
+    adapter.isWatchPage() &&
+    playerReady(adapter)
+  );
 }
 
 function playIfPaused(adapter: PlayerAdapter) {
@@ -303,18 +330,6 @@ function maybeAutoJoin(session: SessionController) {
   }
   // Fresh invite link — join the live party, don't claim the code as host.
   session.joinParty(token);
-}
-
-/** YouTube can expose `?v=` before the player element is wired up. */
-function effectiveContentId(adapter: PlayerAdapter): string | null {
-  const id = adapter.getContentId();
-  if (id) return id;
-  if (adapter.platform !== "youtube") return null;
-  try {
-    return new URLSearchParams(location.search).get("v");
-  } catch {
-    return null;
-  }
 }
 
 function snapshotCleanPlayer(adapter: PlayerAdapter) {
@@ -838,7 +853,7 @@ export async function boot(adapter: PlayerAdapter) {
       nickname,
       avatarId,
       isWatchPage: adapter.isWatchPage(),
-      contentId: adapter.getContentId(),
+      contentId: watchContentId(adapter),
       overlayOpen: false,
     });
 
@@ -847,7 +862,7 @@ export async function boot(adapter: PlayerAdapter) {
       const status = getState().status;
       if (status === "connecting" || status === "in-party") return;
       const known = normalizeRoomCode(roomId || "");
-      if (!known && (!adapter.isWatchPage() || !adapter.getContentId())) {
+      if (!known && (!adapter.isWatchPage() || !watchContentId(adapter))) {
         setState({ error: "Open a video or title first.", overlayOpen: true });
         return;
       }
@@ -882,11 +897,16 @@ export async function boot(adapter: PlayerAdapter) {
         session.startParty();
         return;
       }
+      if (youtubeCanStartNow(adapter)) {
+        clearAutostart();
+        session.startParty();
+        return;
+      }
       if (
         !opts?.href &&
         adapter.platform === "youtube" &&
         adapter.isWatchPage() &&
-        adapter.getContentId()
+        watchContentId(adapter)
       ) {
         armAutostart();
         setState({ error: null, overlayOpen: true });
@@ -1062,20 +1082,45 @@ export async function boot(adapter: PlayerAdapter) {
   function watchAutostart() {
     window.clearInterval(autostartTimer);
     if (!autostartPending()) return;
+    let tries = 0;
     autostartTimer = window.setInterval(() => {
+      tries += 1;
       const status = getState().status;
       if (!autostartPending() || status === "connecting" || status === "in-party") {
         clearAutostart();
         return;
       }
-      if (!playerReady(adapter)) return;
-      clearAutostart();
-      session.startParty();
+      if (playerReady(adapter)) {
+        clearAutostart();
+        session.startParty();
+        return;
+      }
+      // Don't hang forever on iPad waiting for a readable currentTime.
+      if (
+        adapter.platform === "youtube" &&
+        watchContentId(adapter) &&
+        adapter.isWatchPage() &&
+        tries >= 8
+      ) {
+        clearAutostart();
+        session.startParty();
+      }
     }, 400);
   }
 
   mountOverlay(session);
   mountSiteLaunchButton(session, adapter.platform);
+  if (adapter.platform === "youtube") {
+    const syncWatchMeta = () => {
+      const id = watchContentId(adapter);
+      if (!id) return;
+      const state = getState();
+      if (state.contentId === id && state.isWatchPage) return;
+      setState({ contentId: id, isWatchPage: true });
+    };
+    syncWatchMeta();
+    window.setInterval(syncWatchMeta, 500);
+  }
   pushPageOffset(adapter.platform, getState().overlayOpen);
   watchFullscreen(adapter.platform, () => getState().overlayOpen);
 
