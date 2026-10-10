@@ -6,23 +6,29 @@ function reducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function floatKeyframes(burst: ReactionBurst): Keyframe[] {
-  const spin = burst.spin;
-  const rise = burst.rise;
-  const drift = burst.drift;
-  const at = (t: number, y: number, scale: number, opacity: number, spinMul: number): Keyframe => ({
-    offset: t,
-    opacity,
-    transform: `translate(calc(-50% + ${drift * t}px), ${y}px) scale(${scale}) rotate(${spin * spinMul}deg)`,
-  });
-  return [
-    at(0, 8, 0.4, 0, 1),
-    at(0.08, -4, 1.18, 1, 1),
-    at(0.16, -18, 1, 1, 0.85),
-    at(0.45, -(rise * 0.45), 1.02, 1, 0.4),
-    at(0.7, -(rise * 0.72), 0.98, 0.85, 0.15),
-    at(1, -rise, 0.88, 0, 0),
-  ];
+/** Paint the float ourselves. iPad WebKit drops CSS/WAAPI transforms that use calc() or var(). */
+function driveFloat(el: HTMLElement, burst: ReactionBurst, onFinish: () => void) {
+  const reduced = reducedMotion();
+  const dur = reduced ? 420 : burst.duration;
+  const rise = reduced ? 40 : burst.rise;
+  const drift = reduced ? 0 : burst.drift;
+  const spin = reduced ? 0 : burst.spin;
+  const x0 = -burst.size / 2;
+  const t0 = performance.now();
+  let raf = 0;
+  const frame = (now: number) => {
+    const t = Math.min(1, (now - t0) / dur);
+    const y = 8 * (1 - t) - rise * t;
+    const x = x0 + drift * t;
+    const scale = reduced ? 1 : t < 0.1 ? 0.4 + t * 7.8 : t > 0.85 ? 1 - (t - 0.85) * 0.8 : 1;
+    const opacity = t < 0.08 ? t / 0.08 : t > 0.72 ? (1 - t) / 0.28 : 1;
+    el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+    el.style.transform = `translate(${x}px, ${y}px) scale(${Math.max(0.4, scale)}) rotate(${spin * (1 - t)}deg)`;
+    if (t < 1) raf = requestAnimationFrame(frame);
+    else onFinish();
+  };
+  raf = requestAnimationFrame(frame);
+  return () => cancelAnimationFrame(raf);
 }
 
 function Floatie({ burst, onDone }: { burst: ReactionBurst; onDone?: (id: string) => void }) {
@@ -40,30 +46,7 @@ function Floatie({ burst, onDone }: { burst: ReactionBurst; onDone?: (id: string
       doneRef.current = true;
       onDoneRef.current?.(burst.id);
     };
-
-    if (reducedMotion() || typeof el.animate !== "function") {
-      el.style.opacity = "1";
-      const timer = window.setTimeout(finish, reducedMotion() ? 450 : burst.duration + burst.delay);
-      return () => window.clearTimeout(timer);
-    }
-
-    const anim = el.animate(floatKeyframes(burst), {
-      duration: burst.duration,
-      delay: burst.delay,
-      easing: "linear",
-      fill: "forwards",
-    });
-    anim.onfinish = finish;
-    // iPad YouTube throttles timers; onfinish can also miss if the node is reparented.
-    const fallback = window.setTimeout(finish, Math.max(0, burst.until - Date.now() + 80));
-    return () => {
-      window.clearTimeout(fallback);
-      try {
-        anim.cancel();
-      } catch {
-        // Animation already finished.
-      }
-    };
+    return driveFloat(el, burst, finish);
   }, [burst]);
 
   return (
@@ -77,7 +60,7 @@ function Floatie({ burst, onDone }: { burst: ReactionBurst; onDone?: (id: string
         height: burst.size,
       }}
     >
-      <LiveEmoji emoji={burst.emoji} playKey={burst.id} />
+      <LiveEmoji emoji={burst.emoji} />
     </span>
   );
 }

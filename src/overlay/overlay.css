@@ -245,22 +245,19 @@ button {
 
 .sky {
   pointer-events: none;
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 50;
   overflow: hidden;
   background: transparent;
 }
 
-:host(.is-party) .sky,
-:host(.is-fullscreen) .sky {
-  inset: 0;
-  width: auto;
-  height: auto;
-}
-
 :host(.is-party.is-open) .sky,
 :host(.is-fullscreen.is-open) .sky {
+  width: calc(100vw - var(--chillax-reserve, 384px));
   right: var(--chillax-reserve, 384px);
 }
 
@@ -276,9 +273,8 @@ button {
   line-height: 1;
   font-style: normal;
   font-variant-emoji: emoji;
-  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.28));
   transform-origin: center;
-  transform: translate(-50%, 8px);
+  transform: translate(-22px, 8px);
   opacity: 0;
   pointer-events: none;
 }

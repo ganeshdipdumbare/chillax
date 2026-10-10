@@ -864,17 +864,35 @@ function startHeartbeat(adapter: PlayerAdapter) {
   }, HEARTBEAT_MS);
 }
 
+let burstJanitor = 0;
+
+function stopBurstJanitor() {
+  if (burstJanitor) cancelAnimationFrame(burstJanitor);
+  burstJanitor = 0;
+}
+
 function pruneBursts() {
   const now = Date.now();
   const bursts = getState().bursts;
   const next = bursts.filter((burst) => burst.until > now);
   if (next.length !== bursts.length) setState({ bursts: next });
+  return next.length;
+}
+
+function armBurstJanitor() {
+  if (burstJanitor) return;
+  const tick = () => {
+    burstJanitor = 0;
+    if (pruneBursts()) burstJanitor = requestAnimationFrame(tick);
+  };
+  burstJanitor = requestAnimationFrame(tick);
 }
 
 function addBurst(emoji: string) {
   pruneBursts();
   const extra = sprayBursts(emoji);
   setState({ bursts: [...getState().bursts, ...extra].slice(-64) });
+  armBurstJanitor();
 }
 
 let typingSentAt = 0;
@@ -1157,6 +1175,7 @@ export async function boot(adapter: PlayerAdapter) {
       const keepLounge = getState().status === "connecting";
       sendToMedia({ type: "leave" });
       destroyInlineRoom();
+      stopBurstJanitor();
       stopHeartbeat();
       stopInitRetries();
       stopConnectWatchdog();
