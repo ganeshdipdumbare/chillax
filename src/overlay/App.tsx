@@ -9,7 +9,7 @@ import { ensureCallFrame, placeCallFrame, removeCallFrame } from "../content/cal
 import { mediaPageUrl, parseRoomToken } from "../shared/ids";
 import { PLATFORM_COLOR } from "../shared/platformColors";
 import { platformNightLabel } from "../shared/platforms";
-import { getState, subscribe } from "../shared/store";
+import { getState, setState, subscribe } from "../shared/store";
 import { nextThemePref, saveThemePref, watchTheme, type ThemePref } from "../shared/theme";
 import { appVersionLabel } from "../shared/version";
 import type { SessionController } from "../content/session";
@@ -204,7 +204,14 @@ export function OverlayApp({ session }: { session: SessionController }) {
           Chillax chat
         </button>
       )}
-      <ReactionSky bursts={state.bursts} />
+      <ReactionSky
+        bursts={state.bursts}
+        onDone={(id) => {
+          const bursts = getState().bursts;
+          if (!bursts.some((burst) => burst.id === id)) return;
+          setState({ bursts: bursts.filter((burst) => burst.id !== id) });
+        }}
+      />
       <div className={panelClass}>
       <header className="header">
         <div className="brand">

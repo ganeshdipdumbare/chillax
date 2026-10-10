@@ -10,17 +10,20 @@ function randInt(min: number, max: number) {
 
 /** Start along the bottom of the video player, then float up. */
 export function makeBurst(emoji: string): ReactionBurst {
+  const duration = randInt(2000, 2600);
+  const delay = 0;
   return {
     id: crypto.randomUUID(),
     emoji,
     x: rand(8, 92),
     y: rand(84, 94),
     spin: randInt(-10, 10),
-    delay: 0,
+    delay,
     size: randInt(44, 56),
-    duration: randInt(2000, 2600),
+    duration,
     rise: randInt(220, 320),
     drift: randInt(-32, 32),
+    until: Date.now() + delay + duration + 200,
   };
 }
 

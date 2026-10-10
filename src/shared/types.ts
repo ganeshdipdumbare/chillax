@@ -64,6 +64,8 @@ export type ReactionBurst = {
   rise: number;
   /** Sideways drift over the float (px). */
   drift: number;
+  /** Drop from the sky after this time (ms epoch). */
+  until: number;
 };
 
 export type ContentState = {

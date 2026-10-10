@@ -20,7 +20,7 @@ import {
 } from "../shared/ids";
 import { loadAvatarId, loadNickname, saveAvatarId, saveNickname } from "../shared/storage";
 import { getState, setState } from "../shared/store";
-import { burstTtlMs, sprayBursts } from "../shared/reactions";
+import { sprayBursts } from "../shared/reactions";
 import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage, TypingPeer } from "../shared/types";
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
@@ -860,17 +860,21 @@ function startHeartbeat(adapter: PlayerAdapter) {
   heartbeat = window.setInterval(() => {
     tickAds(adapter);
     broadcastSync(adapter);
+    pruneBursts();
   }, HEARTBEAT_MS);
 }
 
+function pruneBursts() {
+  const now = Date.now();
+  const bursts = getState().bursts;
+  const next = bursts.filter((burst) => burst.until > now);
+  if (next.length !== bursts.length) setState({ bursts: next });
+}
+
 function addBurst(emoji: string) {
+  pruneBursts();
   const extra = sprayBursts(emoji);
   setState({ bursts: [...getState().bursts, ...extra].slice(-64) });
-  for (const burst of extra) {
-    window.setTimeout(() => {
-      setState({ bursts: getState().bursts.filter((item) => item.id !== burst.id) });
-    }, burstTtlMs(burst));
-  }
 }
 
 let typingSentAt = 0;

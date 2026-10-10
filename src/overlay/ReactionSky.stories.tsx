@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useState } from "react";
 import { ReactionSky } from "./ReactionSky";
 import { REACTIONS } from "../shared/avatars";
-import { burstTtlMs, sprayBursts } from "../shared/reactions";
+import { sprayBursts } from "../shared/reactions";
 import type { ReactionBurst } from "../shared/types";
 
 function LiveRain() {
@@ -12,17 +12,15 @@ function LiveRain() {
       const emoji = REACTIONS[Math.floor(Math.random() * REACTIONS.length)];
       const extra = sprayBursts(emoji);
       setBursts((current) => [...current, ...extra].slice(-64));
-      for (const burst of extra) {
-        window.setTimeout(() => {
-          setBursts((current) => current.filter((item) => item.id !== burst.id));
-        }, burstTtlMs(burst));
-      }
     }, 1600);
     return () => window.clearInterval(tick);
   }, []);
   return (
     <div className="story-stage">
-      <ReactionSky bursts={bursts} />
+      <ReactionSky
+        bursts={bursts}
+        onDone={(id) => setBursts((current) => current.filter((item) => item.id !== id))}
+      />
       <p className="status" style={{ position: "absolute", bottom: 16, left: 16, zIndex: 5 }}>
         One tap floats one emoji up from the bottom of the video.
       </p>

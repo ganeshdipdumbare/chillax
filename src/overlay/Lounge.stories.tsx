@@ -6,7 +6,7 @@ import { Chat } from "./Chat";
 import { CopyIcon, HideIcon, IconButton, SunIcon } from "./icons";
 import { LoungeArt } from "./SpotArt";
 import { ReactionSky } from "./ReactionSky";
-import { burstTtlMs, sprayBursts } from "../shared/reactions";
+import { sprayBursts } from "../shared/reactions";
 import type { ChatMessage, ReactionBurst } from "../shared/types";
 import type { ReactionEmoji } from "../shared/avatars";
 
@@ -126,16 +126,14 @@ function Lounge() {
   function react(emoji: ReactionEmoji) {
     const extra = sprayBursts(emoji);
     setBursts((current) => [...current, ...extra].slice(-64));
-    for (const burst of extra) {
-      window.setTimeout(() => {
-        setBursts((current) => current.filter((item) => item.id !== burst.id));
-      }, burstTtlMs(burst));
-    }
   }
 
   return (
     <div className="story-stage">
-      <ReactionSky bursts={bursts} />
+      <ReactionSky
+        bursts={bursts}
+        onDone={(id) => setBursts((current) => current.filter((item) => item.id !== id))}
+      />
       <div className="panel story">
       <header className="header">
         <div className="brand">
