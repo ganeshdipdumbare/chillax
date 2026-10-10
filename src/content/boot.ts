@@ -25,7 +25,7 @@ import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage, Typ
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
 import type { SessionController } from "./session";
-import { reloadCallFrame } from "./callFrame";
+import { ensureCallFrame, reloadCallFrame } from "./callFrame";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
 import { findPlayControl, mountSiteLaunchButton } from "./siteLaunchButton";
@@ -189,6 +189,15 @@ function keepTryingInit(adapter: PlayerAdapter) {
 function sendToMedia(payload: Record<string, unknown>) {
   if (!mediaWindow || mediaWindow === window) return;
   mediaWindow.postMessage({ source: MSG_SOURCE_CONTENT, ...payload }, "*");
+}
+
+/** Don't wait for React to paint — iPad WebKit throttles a late iframe and never opens PeerJS. */
+function attachMediaFrame(adapter: PlayerAdapter) {
+  const iframe = ensureCallFrame(mediaPageUrl());
+  const win = iframe.contentWindow;
+  if (!win || win === window) return;
+  mediaWindow = win;
+  keepTryingInit(adapter);
 }
 
 function mediaMessageFrom(event: MessageEvent): boolean {
@@ -925,6 +934,7 @@ export async function boot(adapter: PlayerAdapter) {
         typing: [],
       });
       pushPageOffset(adapter.platform, true);
+      attachMediaFrame(adapter);
       playIfPaused(adapter);
       armConnectWatchdog(adapter);
     },
@@ -998,6 +1008,7 @@ export async function boot(adapter: PlayerAdapter) {
         typing: [],
       });
       pushPageOffset(adapter.platform, true);
+      attachMediaFrame(adapter);
       armConnectWatchdog(adapter);
     },
     leaveParty: () => {

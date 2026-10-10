@@ -327,7 +327,9 @@ function ensureYoutubeButton(session: SessionController): HTMLButtonElement {
 
 /** YouTube's own Play lives in the player bar; sit right beside it at the same size. */
 function placeYoutubeButton(session: SessionController) {
-  const play = document.querySelector<HTMLElement>("#movie_player .ytp-play-button");
+  const play = document.querySelector<HTMLElement>(
+    "#movie_player .ytp-play-button, .html5-video-player .ytp-play-button",
+  );
   if (!play) return;
   const btn = ensureYoutubeButton(session);
   const label = busy() ? "Open Chillax" : "Start Chillax party";

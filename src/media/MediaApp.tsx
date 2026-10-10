@@ -55,8 +55,10 @@ export function MediaApp() {
       if (!data || data.source !== MSG_SOURCE_CONTENT) return;
       if (data.type === "init") {
         const incoming = data as InitPayload;
-        if (roomRef.current?.peerId) return;
-        if (startingRef.current || roomRef.current) hangup(false);
+        // Parent retries init every 400ms. Tearing down a live attempt
+        // (the old iPad "retry" path) never lets PeerJS finish opening.
+        if (roomRef.current?.peerId || startingRef.current) return;
+        if (roomRef.current) hangup(false);
         initRef.current = incoming;
         void startRoom(incoming);
       }
@@ -99,16 +101,27 @@ export function MediaApp() {
   }, []);
 
   async function startRoom(init: InitPayload) {
-    if (roomRef.current?.peerId) return;
-    if (startingRef.current || roomRef.current) hangup(false);
+    if (roomRef.current?.peerId || startingRef.current) return;
+    if (roomRef.current) hangup(false);
     startingRef.current = true;
     const generation = generationRef.current;
-    const placeholder = placeholderLocalStream();
+    let placeholder: ReturnType<typeof placeholderLocalStream>;
+    try {
+      placeholder = placeholderLocalStream();
+    } catch (error) {
+      startingRef.current = false;
+      const message =
+        error instanceof Error ? error.message : "Could not start the party connection.";
+      setStatus(message);
+      postToParent({ type: "error", message });
+      return;
+    }
     if (placeholder.ctx.state === "suspended") {
       // Chrome leaves resume() pending until a user gesture, which never comes on invite-link joins.
       void placeholder.ctx.resume().catch(() => undefined);
     }
     if (generation !== generationRef.current) {
+      startingRef.current = false;
       placeholder.stream.getTracks().forEach((track) => track.stop());
       await placeholder.ctx.close().catch(() => undefined);
       return;
@@ -178,6 +191,7 @@ export function MediaApp() {
         await room.join(init.roomId, placeholder.stream, init.nickname, init.avatarId || "fox");
       }
       if (generation !== generationRef.current) {
+        startingRef.current = false;
         room.destroy();
         placeholder.stream.getTracks().forEach((track) => track.stop());
         return;

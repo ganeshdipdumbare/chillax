@@ -11,14 +11,26 @@ type YTMoviePlayer = HTMLElement & {
 };
 
 function moviePlayer(): YTMoviePlayer | null {
-  return document.querySelector("#movie_player");
+  return (
+    document.querySelector("#movie_player") ||
+    document.querySelector(".html5-video-player")
+  );
+}
+
+function keepInline(video: HTMLVideoElement) {
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
 }
 
 function videoEl(): HTMLVideoElement | null {
   const player = moviePlayer();
-  return (player?.querySelector("video") as HTMLVideoElement | null) ??
+  return (
+    (player?.querySelector("video") as HTMLVideoElement | null) ??
     document.querySelector("video.html5-main-video") ??
-    document.querySelector("video");
+    document.querySelector("video.video-stream") ??
+    document.querySelector("video")
+  );
 }
 
 export class YoutubePlayer implements PlayerAdapter {
@@ -61,12 +73,13 @@ export class YoutubePlayer implements PlayerAdapter {
   }
 
   async play(): Promise<void> {
+    const video = videoEl();
+    if (video) keepInline(video);
     const player = moviePlayer();
     if (player?.playVideo) {
       player.playVideo();
       return;
     }
-    const video = videoEl();
     if (video) await video.play();
   }
 

@@ -50,8 +50,13 @@ export async function captureMicTrack(): Promise<MediaStreamTrack> {
 
 export function placeholderLocalStream(): { stream: MediaStream; ctx: AudioContext } {
   const silent = createSilentAudio();
-  const stream = new MediaStream([silent.track, placeholderVideoTrack()]);
-  return { stream, ctx: silent.ctx };
+  const tracks: MediaStreamTrack[] = [silent.track];
+  try {
+    tracks.push(placeholderVideoTrack());
+  } catch {
+    // iPad can reject canvas.captureStream in a hidden extension iframe.
+  }
+  return { stream: new MediaStream(tracks), ctx: silent.ctx };
 }
 
 export function partyFull(memberCount: number): boolean {
