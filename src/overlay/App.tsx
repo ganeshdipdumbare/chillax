@@ -62,7 +62,7 @@ export function OverlayApp({ session }: { session: SessionController }) {
   const canWatch = state.isWatchPage && Boolean(state.contentId);
   const docked = state.status === "in-party" || state.status === "connecting";
   const connecting = state.status === "connecting";
-  const needMedia = docked;
+  const needMedia = docked && !state.inlineSignaling;
   const lounge = !docked;
   const panelOpen = state.overlayOpen;
 

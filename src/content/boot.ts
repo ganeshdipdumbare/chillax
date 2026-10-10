@@ -24,8 +24,10 @@ import { burstTtlMs, sprayBursts } from "../shared/reactions";
 import type { MediaToContent, PlaybackAction, PopupRequest, ProtocolMessage, TypingPeer } from "../shared/types";
 import { applyHostSync } from "../player/types";
 import type { PlayerAdapter } from "../player/types";
+import { placeholderLocalStream } from "../p2p/mesh";
+import { PeerRoom } from "../p2p/room";
 import type { SessionController } from "./session";
-import { ensureCallFrame, reloadCallFrame } from "./callFrame";
+import { ensureCallFrame } from "./callFrame";
 import { mountOverlay } from "./overlayHost";
 import { pushPageOffset, watchFullscreen } from "./pageOffset";
 import { findPlayControl, mountSiteLaunchButton } from "./siteLaunchButton";
@@ -47,6 +49,11 @@ let booted = false;
 let unloading = false;
 let initTimer = 0;
 let connectWatchdog = 0;
+let inlineRoom: PeerRoom | null = null;
+let inlineStream: MediaStream | null = null;
+let inlineStarting = false;
+let inlineGen = 0;
+let onMediaEvent: ((data: MediaToContent) => void) | null = null;
 const HOST_ROOM_KEY = "chillax-host-room";
 const PARTY_SESSION_KEY = "chillax-party-session";
 const AUTOSTART_KEY = "chillax-autostart";
@@ -187,8 +194,128 @@ function keepTryingInit(adapter: PlayerAdapter) {
 }
 
 function sendToMedia(payload: Record<string, unknown>) {
+  if (inlineRoom) {
+    if (payload.type === "send-protocol" && payload.message) {
+      inlineRoom.send(payload.message as ProtocolMessage);
+    }
+    if (payload.type === "leave") destroyInlineRoom();
+    if (payload.type === "nickname" && typeof payload.nickname === "string") {
+      inlineRoom.localNickname = payload.nickname;
+      if (typeof payload.avatarId === "string") inlineRoom.localAvatarId = payload.avatarId;
+    }
+    return;
+  }
   if (!mediaWindow || mediaWindow === window) return;
   mediaWindow.postMessage({ source: MSG_SOURCE_CONTENT, ...payload }, "*");
+}
+
+/** iPad reports as Macintosh + touch. WebKit throttles the extension call iframe there. */
+function prefersInlineSignaling() {
+  const touch = navigator.maxTouchPoints > 1;
+  if (!touch) return false;
+  return /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent);
+}
+
+function destroyInlineRoom(sayBye = true) {
+  inlineGen += 1;
+  inlineStarting = false;
+  const room = inlineRoom;
+  const stream = inlineStream;
+  inlineRoom = null;
+  inlineStream = null;
+  try {
+    room?.destroy(sayBye);
+  } catch {
+    // PeerJS can throw if the socket is already gone.
+  }
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
+async function startInlineRoom(adapter: PlayerAdapter) {
+  if (inlineStarting || inlineRoom?.peerId) return;
+  if (inlineRoom) destroyInlineRoom(false);
+  const role = partyInitRole();
+  const roomId = partyInitRoomId();
+  if (!role || !roomId) return;
+  const gen = ++inlineGen;
+  inlineStarting = true;
+  stopInitRetries();
+  setState({ inlineSignaling: true });
+  try {
+    const placeholder = placeholderLocalStream();
+    if (placeholder.ctx.state === "suspended") {
+      void placeholder.ctx.resume().catch(() => undefined);
+    }
+    if (gen !== inlineGen) {
+      placeholder.stream.getTracks().forEach((track) => track.stop());
+      await placeholder.ctx.close().catch(() => undefined);
+      return;
+    }
+    inlineStream = placeholder.stream;
+    const room = new PeerRoom({
+      onReady: (peerId, readyRole) => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "ready", peerId, role: readyRole });
+      },
+      onDataOpen: () => {
+        const peerId = room.peerId;
+        const state = getState();
+        if (!peerId) return;
+        room.send({
+          type: "hello",
+          nickname: state.nickname,
+          avatarId: state.avatarId || "fox",
+          peerId,
+          platform: adapter.platform,
+          contentId: watchContentId(adapter) || "",
+          watchUrl: currentWatchUrl(adapter, partyInitRoomId() || undefined),
+        });
+        void room.setMuted(true);
+        void room.setCameraOn(false);
+      },
+      onProtocol: (message) => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "protocol", message });
+      },
+      onParticipants: (participants) => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "participants", participants });
+      },
+      onError: (message) => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "error", message });
+      },
+      onCallStatus: (connected, detail) => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "call-status", connected, detail });
+      },
+      onHostLeft: () => {
+        onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "host-left" });
+      },
+    });
+    inlineRoom = room;
+    room.bindSilentAudio(placeholder.ctx);
+    const state = getState();
+    if (role === "host") {
+      await room.startHost(
+        roomId,
+        placeholder.stream,
+        state.nickname,
+        state.avatarId || "fox",
+        pendingFreshHost && !state.party,
+      );
+    } else {
+      await room.join(roomId, placeholder.stream, state.nickname, state.avatarId || "fox");
+    }
+    if (gen !== inlineGen) {
+      room.destroy();
+      placeholder.stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    inlineStarting = false;
+  } catch (error) {
+    if (gen !== inlineGen) return;
+    inlineStarting = false;
+    destroyInlineRoom(false);
+    const message =
+      error instanceof Error ? error.message : "Could not start the party connection.";
+    onMediaEvent?.({ source: MSG_SOURCE_MEDIA, type: "error", message });
+  }
 }
 
 /** Don't wait for React to paint — iPad WebKit throttles a late iframe and never opens PeerJS. */
@@ -219,15 +346,20 @@ function armConnectWatchdog(adapter: PlayerAdapter) {
   connectWatchdog = window.setTimeout(() => {
     connectWatchdog = 0;
     if (getState().status !== "connecting") return;
-    reloadCallFrame(mediaPageUrl());
-    mediaWindow = null;
-    window.dispatchEvent(new Event("chillax-media-reload"));
+    if (inlineRoom || inlineStarting) {
+      setState({ callDetail: "Still opening the party link…" });
+      armConnectWatchdog(adapter);
+      return;
+    }
+    // Iframe signaling stalled (common on iPad). Take over in this page instead of
+    // reloading a throttled frame every 10s — that loop never finishes.
     setState({
       callDetail: "Still connecting… retrying the party link.",
+      inlineSignaling: true,
     });
-    keepTryingInit(adapter);
+    void startInlineRoom(adapter);
     armConnectWatchdog(adapter);
-  }, 10_000);
+  }, 12_000);
 }
 
 function currentWatchUrl(adapter: PlayerAdapter, roomId?: string) {
@@ -922,6 +1054,7 @@ export async function boot(adapter: PlayerAdapter) {
       rememberHostRoom(pendingRoomId);
       persistPartySession();
       resetTyping();
+      const inline = prefersInlineSignaling();
       setState({
         status: "connecting",
         error: null,
@@ -932,9 +1065,11 @@ export async function boot(adapter: PlayerAdapter) {
         participants: [],
         bursts: [],
         typing: [],
+        inlineSignaling: inline,
       });
       pushPageOffset(adapter.platform, true);
-      attachMediaFrame(adapter);
+      if (inline) void startInlineRoom(adapter);
+      else attachMediaFrame(adapter);
       playIfPaused(adapter);
       armConnectWatchdog(adapter);
     },
@@ -996,6 +1131,7 @@ export async function boot(adapter: PlayerAdapter) {
       pendingRoomId = code;
       persistPartySession();
       resetTyping();
+      const inline = prefersInlineSignaling();
       setState({
         status: "connecting",
         error: null,
@@ -1006,14 +1142,17 @@ export async function boot(adapter: PlayerAdapter) {
         participants: [],
         bursts: [],
         typing: [],
+        inlineSignaling: inline,
       });
       pushPageOffset(adapter.platform, true);
-      attachMediaFrame(adapter);
+      if (inline) void startInlineRoom(adapter);
+      else attachMediaFrame(adapter);
       armConnectWatchdog(adapter);
     },
     leaveParty: () => {
       const keepLounge = getState().status === "connecting";
       sendToMedia({ type: "leave" });
+      destroyInlineRoom();
       stopHeartbeat();
       stopInitRetries();
       stopConnectWatchdog();
@@ -1043,6 +1182,7 @@ export async function boot(adapter: PlayerAdapter) {
         controllers: [],
         localPeerId: null,
         overlayOpen: keepLounge,
+        inlineSignaling: false,
       });
       lastSync = null;
       lastControlPlayer = null;
@@ -1212,14 +1352,11 @@ export async function boot(adapter: PlayerAdapter) {
     return false;
   });
 
-  window.addEventListener(
-    "message",
-    (event) => {
-    if (!mediaMessageFrom(event)) return;
-    const data = event.data as MediaToContent;
-    if (data?.source !== MSG_SOURCE_MEDIA) return;
+  const handleMediaEvent = (data: MediaToContent) => {
     if (data.type === "iframe-ready") {
+      if (inlineRoom || inlineStarting) return;
       keepTryingInit(adapter);
+      return;
     }
     if (data.type === "ready" && data.peerId) {
       // The media frame reports "guest" when a known host code was already live and it joined instead.
@@ -1289,10 +1426,11 @@ export async function boot(adapter: PlayerAdapter) {
       }
       pendingRole = null;
       pendingRoomId = null;
+      destroyInlineRoom(false);
       stopHeartbeat();
       stopInitRetries();
       stopConnectWatchdog();
-      setState({ status: "error", error: data.message });
+      setState({ status: "error", error: data.message, inlineSignaling: false });
     }
     if (data.type === "call-status") {
       setState({
@@ -1304,7 +1442,17 @@ export async function boot(adapter: PlayerAdapter) {
       session.leaveParty();
       setState({ error: "The host left the party." });
     }
-  },
+  };
+  onMediaEvent = handleMediaEvent;
+
+  window.addEventListener(
+    "message",
+    (event) => {
+      if (!mediaMessageFrom(event)) return;
+      const data = event.data as MediaToContent;
+      if (data?.source !== MSG_SOURCE_MEDIA) return;
+      handleMediaEvent(data);
+    },
     true,
   );
 

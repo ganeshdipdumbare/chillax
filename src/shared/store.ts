@@ -10,6 +10,8 @@ export type OverlayState = ContentState & {
   cameraOn: boolean;
   callConnected: boolean;
   callDetail: string | null;
+  /** PeerJS runs in the content script — iPad WebKit throttles the call iframe. */
+  inlineSignaling: boolean;
 };
 
 const listeners = new Set<() => void>();
@@ -39,6 +41,7 @@ let state: OverlayState = {
   cameraOn: false,
   callConnected: true,
   callDetail: null,
+  inlineSignaling: false,
 };
 
 export function getState(): OverlayState {

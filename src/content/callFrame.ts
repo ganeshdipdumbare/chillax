@@ -6,6 +6,7 @@ export const CALL_FRAME_ID = "chillax-call";
 const LIGHT_CANVAS = "#fbfaf4";
 const DARK_CANVAS = "#0e1113";
 let callDark = false;
+let lastSlot: DOMRect | null = null;
 
 /**
  * The call UI has to stay a tiny fixed box. On iPad, WebKit hit-tests an iframe
@@ -71,6 +72,7 @@ export function placeCallFrame(rect: DOMRect | null) {
     paintCallTheme();
     return;
   }
+  lastSlot = rect;
   const parent = box.parentElement;
   const nested = parent && parent !== document.documentElement && parent !== document.body;
   const origin = nested ? parent.getBoundingClientRect() : { left: 0, top: 0 };
@@ -109,6 +111,7 @@ function paintCallTheme() {
 }
 
 export function removeCallFrame() {
+  lastSlot = null;
   document.getElementById(CALL_FRAME_ID)?.remove();
 }
 
@@ -120,22 +123,25 @@ export function parentCallFrameWith(host: HTMLElement) {
   parent.appendChild(box);
 }
 
-/** iPad WebKit throttles 1×1 off-screen iframes — peer signaling never completes. */
+/**
+ * Keep the document live. iPad WebKit throttles `visibility: hidden` / off-screen
+ * iframes, so PeerJS never opens and the overlay sits on “retrying the party link”.
+ */
 function warmHold(box: HTMLElement) {
   for (const [prop, value] of [
     ["position", "fixed"],
-    ["left", "0px"],
-    ["top", "0px"],
+    ["left", "8px"],
+    ["top", "8px"],
     ["width", "320px"],
     ["height", "240px"],
     ["margin", "0px"],
     ["padding", "0px"],
     ["border", "0px"],
     ["overflow", "hidden"],
-    ["z-index", "2147483646"],
+    ["z-index", "1"],
     ["pointer-events", "none"],
-    ["visibility", "hidden"],
-    ["opacity", "0"],
+    ["visibility", "visible"],
+    ["opacity", "0.02"],
     ["background", "transparent"],
     ["max-width", "none"],
     ["max-height", "none"],
@@ -150,5 +156,6 @@ export function reloadCallFrame(src: string) {
   const iframe = box.querySelector("iframe");
   if (!(iframe instanceof HTMLIFrameElement)) return;
   iframe.src = src;
-  warmHold(box);
+  if (lastSlot) placeCallFrame(lastSlot);
+  else warmHold(box);
 }

@@ -458,7 +458,7 @@ export class PeerRoom {
       await new Promise<void>((resolve, reject) => {
         const timer = window.setTimeout(
           () => reject(new Error("Could not reach the signaling broker.")),
-          12000,
+          20000,
         );
         peer.once("open", (peerId) => {
           window.clearTimeout(timer);
